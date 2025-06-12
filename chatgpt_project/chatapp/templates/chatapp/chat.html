@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ChatGPT Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .bubble { padding: 10px; margin: 5px 0; border-radius: 5px; max-width: 60%; }
+        .user { background: #d1e7dd; align-self: flex-end; }
+        .assistant { background: #f8d7da; align-self: flex-start; }
+        #chat { display: flex; flex-direction: column; }
+    </style>
+</head>
+<body>
+    <h1>ChatGPT Demo</h1>
+    <button id="toggle">Chain-of-Thought: {{ 'on' if show_cot else 'off' }}</button>
+    <div id="chat">
+        {% for msg in conversation %}
+            <div class="bubble {{ msg.role }}">{{ msg.content }}</div>
+        {% endfor %}
+    </div>
+    <textarea id="message" rows="3" cols="60"></textarea><br>
+    <button id="send">Send</button>
+
+<script>
+async function sendMessage(){
+    const message = document.getElementById('message').value;
+    const res = await fetch('{% url 'ask' %}', {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token }}'},
+        body: new URLSearchParams({message})
+    });
+    const data = await res.json();
+    addBubble('user', message);
+    addBubble('assistant', data.reply);
+    document.getElementById('message').value = '';
+}
+function addBubble(role, text){
+    const div = document.createElement('div');
+    div.className = 'bubble ' + role;
+    div.textContent = text;
+    document.getElementById('chat').appendChild(div);
+    div.scrollIntoView();
+}
+async function toggle(){
+    const res = await fetch('{% url 'toggle_cot' %}');
+    const data = await res.json();
+    document.getElementById('toggle').innerText = 'Chain-of-Thought: ' + (data.show_cot ? 'on':'off');
+}
+document.getElementById('send').onclick = sendMessage;
+document.getElementById('toggle').onclick = toggle;
+</script>
+</body>
+</html>
