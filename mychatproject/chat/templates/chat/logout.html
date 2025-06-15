@@ -1,8 +1,14 @@
 {% extends 'base.html' %}
+{% block title %}Logout{% endblock %}
 {% block content %}
-  <h2>Are you sure you want to log out?</h2>
-  <form method="post">
-    {% csrf_token %}
-    <button type="submit">Logout</button>
-  </form>
+<div class="row justify-content-center">
+  <div class="col-md-6 text-center">
+    <h2 class="mb-4">Are you sure you want to log out?</h2>
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Logout</button>
+      <a href="{% url 'chat_page' %}" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+  </div>
+</div>
 {% endblock %}
