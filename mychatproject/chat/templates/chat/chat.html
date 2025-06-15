@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ChatGPT-like Chat App</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
+        .chat-container { max-width: 600px; margin: 50px auto; background: white; border-radius: 8px; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .chat-log { max-height: 400px; overflow-y: auto; margin-bottom: 10px; }
+        .message { margin: 10px 0; padding: 10px 15px; border-radius: 20px; display: inline-block; max-width: 80%; }
+        .user { background: #DCF8C6; align-self: flex-end; float: right; clear: both; }
+        .bot { background: #EAEAEA; align-self: flex-start; float: left; clear: both; }
+        .input-container { display: flex; margin-top: 10px; }
+        input[type="text"] { flex: 1; padding: 10px; font-size: 16px; }
+        button { padding: 10px 20px; font-size: 16px; margin-left: 10px; }
+        .toggle-container { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+             <!-- Django Messages -->
+            {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+
+             <!-- Header with login/logout links -->
+            {% if user.is_authenticated %}
+                <div style="margin: 10px;">
+                    Welcome, {{ user.username }} |
+                    <a href="{% url 'logout' %}">Logout</a>
+                </div>
+            {% else %}
+                <div style="margin: 10px;">
+                    <a href="{% url 'login' %}">Login</a> |
+                    <a href="{% url 'register' %}">Register</a>
+                </div>
+            {% endif %}
+         <!-- Chat UI -->
+    <div class="chat-container">
+        <div class="toggle-container">
+            <label>
+                <input type="checkbox" id="cotToggle"> Enable Chain of Thought
+            </label>
+        </div>
+        <div class="chat-log" id="chatLog"></div>
+        <div class="input-container">
+            <input type="text" id="messageInput" placeholder="Type your message..." />
+            <button onclick="sendMessage()">Send</button>
+            <button onclick="resetChat()">🔄 New Chat</button>
+        </div>
+    </div>
+
+    <script>
+
+
+
+
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const chatLog = document.getElementById('chatLog');
+            const cotToggle = document.getElementById('cotToggle');
+
+            const message = messageInput.value;
+            const use_cot = cotToggle.checked;
+            console.log("message is ",message)
+            
+            if (message.trim() === '') return;
+
+            // Display user message immediately
+            chatLog.innerHTML += `<div class="message user">${message}</div>`;
+            chatLog.scrollTop = chatLog.scrollHeight;
+
+            messageInput.value = '';
+            const chatUrl = "{% url 'chat_api' %}";
+            // Send to backend
+            {% comment %} const response = await fetch('/api/chat/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message, use_cot: use_cot })
+            }); {% endcomment %}
+
+            const response = await fetch(chatUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message, use_cot: use_cot })
+            });
+
+            const data = await response.json();
+
+            // Clear chat log and redraw history
+            chatLog.innerHTML = '';
+            data.history.forEach(msg => {
+                const cls = msg.sender === 'user' ? 'user' : 'bot';
+                chatLog.innerHTML += `<div class="message ${cls}">${msg.message}</div>`;
+            });
+
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+        async function resetChat(){
+            const response = await fetch('/api/reset/',{
+                method:'POST'
+            });
+
+            if(response.ok){
+                console.log(response.json);
+                document.getElementById("chatLog").innerHTML = '';
+                console.log("Chat reset!");
+            }
+        }
+    </script>
+</body>
+</html>

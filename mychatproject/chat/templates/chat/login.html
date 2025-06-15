@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <!-- Custom styled messages -->
+  <style>
+    .alert-success {
+      color: green;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .alert-error {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert-{{ message.tags }}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <h2>Login</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Log in</button>
+  </form>
+{% endblock %}
