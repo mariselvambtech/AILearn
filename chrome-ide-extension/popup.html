@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Selenium IDE Lite</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Selenium IDE Lite</h1>
+      <p class="subtitle">Record, save, and replay browser actions.</p>
+    </header>
+    <main>
+      <section class="controls">
+        <button id="startBtn">Start Recording</button>
+        <button id="stopBtn" disabled>Stop Recording</button>
+        <button id="playBtn" disabled>Play Recording</button>
+      </section>
+
+      <section class="save">
+        <label for="recordingName">Recording name</label>
+        <div class="save-row">
+          <input id="recordingName" type="text" placeholder="e.g. login flow" />
+          <button id="saveBtn" disabled>Save</button>
+        </div>
+      </section>
+
+      <section class="list">
+        <div class="list-header">
+          <h2>Saved recordings</h2>
+          <button id="refreshBtn" title="Refresh recordings">↻</button>
+        </div>
+        <ul id="recordings"></ul>
+      </section>
+
+      <section class="status">
+        <h2>Status</h2>
+        <p id="statusMessage">Idle</p>
+      </section>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

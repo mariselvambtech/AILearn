@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Selenium IDE Lite",
+  "description": "Record and replay browser interactions with start/stop, save, and playback controls.",
+  "version": "0.1.0",
+  "permissions": ["activeTab", "storage", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Selenium IDE Lite"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
