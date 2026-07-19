@@ -7,6 +7,17 @@ from database import test_connection, init_db, engine
 from sqlalchemy import text
 
 def main():
+    """
+    Execute the database initialization workflow.
+    
+    This workflow consists of three steps:
+    1. Testing the ODBC connection to the SQL Server via `test_connection()`.
+    2. Verifying that the connected database is indeed `webai_automation`.
+    3. Creating all tables defined in `models.py` by calling `init_db()`.
+    
+    Returns:
+        bool: True if initialization was fully successful, False otherwise.
+    """
     print("="*60)
     print("WebAI Database Initialization")
     print("="*60)

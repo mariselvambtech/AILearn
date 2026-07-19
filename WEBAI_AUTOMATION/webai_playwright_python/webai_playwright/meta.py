@@ -1,3 +1,9 @@
+"""
+Metadata definitions for the WebAI Playwright Client.
+
+Maintains versioning, authorship, and licensing information for the 
+`webai_playwright` package.
+"""
 from __future__ import annotations
 
 import json
@@ -26,4 +32,4 @@ def _load_meta() -> Optional[Dict[str, Any]]:
 
 def get_version() -> str:
     meta = _load_meta()
-    return (meta or {}).get("version", "0.0.0")
+    return (meta or {}).get("version", "0.0.1")

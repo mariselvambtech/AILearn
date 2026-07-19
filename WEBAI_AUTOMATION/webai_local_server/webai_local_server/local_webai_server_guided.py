@@ -17,7 +17,12 @@ import websockets
 # ============================================================================
 
 def _save_txt_extraction(filepath: str, mode: str, data: Dict[str, Any]) -> None:
-    """Save extraction to text file"""
+    """
+    Save the extracted data to a simple text file.
+    
+    This fulfills the extraction saving requirement where scraped data 
+    (e.g., prices, text) is written persistently for the user.
+    """
     import os
     from datetime import datetime
     
@@ -41,7 +46,12 @@ def _save_txt_extraction(filepath: str, mode: str, data: Dict[str, Any]) -> None
 
 
 def _save_excel_extraction(filepath: str, mode: str, data: Dict[str, Any]) -> None:
-    """Save extraction to Excel file"""
+    """
+    Save the extracted data to an Excel file using openpyxl.
+    
+    Creates a new workbook or appends to an existing one, formatting the 
+    data into a structured table (Variable, Value, Type, Attribute, URL, Timestamp).
+    """
     try:
         import openpyxl
         from openpyxl.styles import Font
@@ -91,7 +101,12 @@ def _save_excel_extraction(filepath: str, mode: str, data: Dict[str, Any]) -> No
 
 
 def _save_word_extraction(filepath: str, mode: str, data: Dict[str, Any]) -> None:
-    """Save extraction to Word file"""
+    """
+    Save the extracted data to a Microsoft Word document using python-docx.
+    
+    Creates a new document or appends to an existing one, organizing the 
+    data sequentially with headings and paragraphs.
+    """
     try:
         from docx import Document
     except ImportError:
@@ -123,15 +138,30 @@ def _save_word_extraction(filepath: str, mode: str, data: Dict[str, Any]) -> Non
 
 
 def _task_hash(task_text: str) -> str:
+    """
+    Generate a short SHA-256 hash for a given natural language task.
+    
+    This hash is used as a cache key so that previously resolved task plans 
+    can be reused without calling the LLM again.
+    """
     task_text = (task_text or "").strip().encode("utf-8", errors="replace")
     return hashlib.sha256(task_text).hexdigest()[:12]
 
 
 def _tid(task_id: str) -> str:
+    """
+    Shorten a task ID for logging purposes (first 8 characters).
+    """
     return (task_id or "unknown")[:8]
 
 
 def _fmt_target(target: dict) -> str:
+    """
+    Format a target dictionary (locator strategy) into a readable string.
+    
+    Converts a JSON-based locator object (e.g., `{"by": "label", "label": "Email"}`)
+    into a human-readable format for logs and the LLM context.
+    """
     if not isinstance(target, dict):
         return str(target)
     by = (target.get("by") or "").strip().lower()
@@ -147,7 +177,12 @@ def _fmt_target(target: dict) -> str:
 
 
 class TaskDone(Exception):
-    """Raised internally when the plan outputs action=done and we finish the task."""
+    """
+    Exception raised internally when the LLM outputs `action=done`.
+    
+    This signals the control loop that the current natural language task 
+    has been fully completed and verified by the LLM.
+    """
     pass
 
 BASE_PROMPT = (
@@ -169,6 +204,14 @@ SUBGOALS = ("navigate", "act", "verify")
 
 
 def build_subgoal_prompt(subgoal: str, base_prompt: str) -> str:
+    """
+    Construct a prompt tailored to a specific phase (subgoal) of task execution.
+    
+    The AI Brain executes tasks in three distinct phases to reduce hallucination:
+    1. 'navigate' -> Focuses strictly on `goto` and `scroll_page`.
+    2. 'act' -> Focuses strictly on interacting with the page (`click`, `type`, etc.).
+    3. 'verify' -> Focuses strictly on verifying state (`wait_text`, `verify_url`).
+    """
     if subgoal == "navigate":
         return (
             base_prompt
@@ -714,6 +757,17 @@ def _has_progress(prev_url: Optional[str], prev_title: Optional[str], url: str, 
 
 
 async def handle_client(ws: Any):
+    """
+    Core WebSocket connection handler for incoming automation clients.
+    
+    This function implements the "AI Brain" component of the 3-tier architecture. 
+    It receives raw DOM snapshots from the Playwright browser robot, constructs 
+    contextual prompts based on the current step, queries the local Ollama LLM, 
+    and sends structured execution commands back to the browser.
+    
+    It manages the lifecycle of a task execution, including subgoal transitions 
+    (navigate -> act -> verify), API server logging, and fallback recovery.
+    """
     did_any_action = False
 
     path = get_request_path(ws)
@@ -1613,6 +1667,13 @@ async def handle_client(ws: Any):
 
 
 async def main():
+    """
+    Entrypoint for the Local WebAI Server.
+    
+    Starts a WebSocket server that listens for connections from the 
+    Playwright Browser Client. Initializes server configuration from 
+    environment variables and sets up the event loop.
+    """
     host = _env("HOST", "localhost")
     port = int(_env("PORT", "8765"))
     path = _env("WS_PATH", "/api")

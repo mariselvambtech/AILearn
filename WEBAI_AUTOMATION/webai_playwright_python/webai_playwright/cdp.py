@@ -1,3 +1,11 @@
+"""
+Chrome DevTools Protocol (CDP) Accessibility Tree Extractor.
+
+This module is responsible for bridging Playwright with Chrome's CDP. 
+It traverses the browser's accessibility tree to identify interactive elements 
+(buttons, inputs, links) and assigns them unique, stable IDs (backendNodeId). 
+This generated tree is the core context sent to the AI Brain for decision making.
+"""
 from __future__ import annotations
 
 import asyncio

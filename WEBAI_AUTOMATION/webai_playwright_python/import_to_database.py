@@ -1,5 +1,11 @@
 """
-Import recorded_steps.json into the WebAI API database
+Import recorded_steps.json into the WebAI API database.
+
+This script bridges the local recording tool (Playwright CDP) with the 
+centralized API Server (Warehouse). It reads a locally generated 
+`recorded_steps.json` file, authenticates with the FastAPI backend, and 
+creates a new database-backed automation record so that the steps can be 
+scheduled, shared, and securely parameterized.
 """
 import json
 import requests

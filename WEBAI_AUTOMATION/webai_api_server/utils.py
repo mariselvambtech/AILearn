@@ -1,5 +1,21 @@
 """
-Utility functions for automation processing
+Utility functions for automation processing.
+
+This file is the "fill-in-the-blanks" tool of the WebAI API server
+(see walkthrough.md → "Component 1: The Warehouse" → Variable Substitution).
+
+Recorded steps can contain placeholders like `{{irctc_username}}`. At
+playback time the API merges the user's config (plain variables + decrypted
+secrets) and `substitute_variables()` replaces every placeholder with its
+real value, so the browser robot receives concrete steps with no secrets
+left in the database.
+
+Other helpers:
+- `extract_variables_from_steps` — list which placeholders a recording uses
+  (useful for prompting the user to fill them in).
+- `validate_config_variables` — check that every placeholder has a value.
+- `merge_secrets_with_variables` — combine plain variables and decrypted
+  secrets into one dict for substitution.
 """
 import re
 import json

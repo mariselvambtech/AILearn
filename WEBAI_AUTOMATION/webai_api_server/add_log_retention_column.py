@@ -5,6 +5,12 @@ from database import get_db
 from sqlalchemy import text
 
 def add_log_retention_column():
+    """
+    Apply a schema migration to add the `log_retention_days` column.
+    
+    Adds the column to the `automation_configs` table with a default value of 7,
+    enabling the log cleanup policy defined in `log_crud.py`.
+    """
     db = next(get_db())
     
     try:

@@ -9,7 +9,12 @@ from datetime import datetime
 # ===== LOG SCHEMAS =====
 
 class LogEntryCreate(BaseModel):
-    """Schema for creating a single log entry"""
+    """
+    Schema for creating a single log entry.
+    
+    This payload represents a single event recorded during automation playback, such
+    as clicking an element, a navigation action, or an error.
+    """
     timestamp: datetime
     level: str  # INFO, WARN, ERROR, DEBUG
     source: str  # client, server, api
@@ -18,7 +23,13 @@ class LogEntryCreate(BaseModel):
 
 
 class LogBatchCreate(BaseModel):
-    """Schema for creating multiple log entries at once (efficient)"""
+    """
+    Schema for creating multiple log entries at once.
+    
+    This is the primary way the Playwright client and AI Brain upload logs to the API
+    Server. By buffering logs and sending them in a single batch array, it avoids 
+    excessive HTTP overhead during dense action sequences.
+    """
     execution_id: int
     logs: List[LogEntryCreate]
 

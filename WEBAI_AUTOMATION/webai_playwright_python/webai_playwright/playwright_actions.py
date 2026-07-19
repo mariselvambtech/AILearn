@@ -1,3 +1,10 @@
+"""
+Action execution layer mapping semantic AI commands to Playwright primitives.
+
+This module is responsible for taking the structured JSON commands (like `click`, 
+`type`, `hover`) emitted by the local AI Brain and translating them into robust 
+Playwright interactions on the actual browser page, handling waiting and targeting.
+"""
 from __future__ import annotations
 
 import base64

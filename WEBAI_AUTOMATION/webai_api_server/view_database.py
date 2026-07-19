@@ -9,6 +9,13 @@ from database import SessionLocal
 from models import User, Automation, ExecutionHistory, ExecutionLog
 
 def main():
+    """
+    Print a summary of the current database state to the console.
+    
+    Queries the users, automations, execution_history, and execution_logs tables,
+    and prints a formatted overview of the data. Useful for quick debugging and 
+    verification of the database contents without needing SQL Server Management Studio.
+    """
     db = SessionLocal()
     try:
         print("="*60)

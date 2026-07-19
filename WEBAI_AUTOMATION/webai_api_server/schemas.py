@@ -1,155 +1,53 @@
-"""
-Pydantic schemas for API request/response validation
-"""
-from pydantic import BaseModel, EmailStr
-from typing import List, Dict, Optional, Any
-from datetime import datetime
-
-
-# ===== USER SCHEMAS =====
+from pydantic import BaseModel, Field
+import datetime
 
 class UserCreate(BaseModel):
+    """
+    Pydantic schema for user registration (`POST /auth/register`).
+
+    Fields:
+        username (str): The chosen username. Must be unique.
+        password (str): The raw password (will be bcrypt-hashed before storage).
+        email (Optional[str]): An optional email address for the user.
+    """
     username: str
-    email: EmailStr
     password: str
-
-
+    email: Optional[str] = None
 class UserResponse(BaseModel):
+    """
+    Pydantic schema for returning user details.
+
+    Returned by registration and auth endpoints. Excludes the hashed password,
+    but includes the `api_key` which the user must send in the `X-API-Key`
+    header for all subsequent authenticated requests.
+
+    Fields:
+        id (int): The unique identifier.
+        username (str): The username.
+        email (Optional[str]): The email address.
+        created_at (datetime.datetime): When the account was registered.
+    """
     id: int
     username: str
-    email: str
-    created_at: datetime
-    is_active: bool
-    
-    class Config:
-        from_attributes = True
-
-
+    email: Optional[str] = None
+    created_at: datetime.datetime
 class LoginRequest(BaseModel):
+    """
+    Pydantic model for login request.
+
+    Fields:
+        username (str): The username of the user.
+        password (str): The hashed password of the user.
+    """
     username: str
     password: str
-
-
 class Token(BaseModel):
+    """
+    Pydantic model for representing a token response.
+
+    Fields:
+        access_token (str): The access token.
+        token_type (str): The type of the token.
+    """
     access_token: str
     token_type: str
-    api_key: str
-
-
-# ===== AUTOMATION SCHEMAS =====
-
-class AutomationCreate(BaseModel):
-    name: str
-    description: Optional[str] = None
-    base_url: Optional[str] = None
-    steps_json: List[Dict[str, Any]]  # The recorded steps
-    is_template: bool = False
-    template_category: Optional[str] = None
-
-
-class AutomationUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    steps_json: Optional[List[Dict[str, Any]]] = None
-    is_template: Optional[bool] = None
-
-
-class AutomationResponse(BaseModel):
-    id: int
-    user_id: int
-    name: str
-    description: Optional[str]
-    base_url: Optional[str]
-    is_template: bool
-    template_category: Optional[str]
-    created_at: datetime
-    updated_at: datetime
-    
-    class Config:
-        from_attributes = True
-
-
-class AutomationWithSteps(AutomationResponse):
-    """
-    Automation with actual steps included
-    """
-    steps_json: List[Dict[str, Any]]
-
-
-# ===== CONFIG SCHEMAS =====
-
-class ConfigCreate(BaseModel):
-    automation_id: int
-    variables: Optional[Dict[str, Any]] = {}
-    secrets: Optional[Dict[str, str]] = {}  # Will be encrypted server-side
-
-
-class ConfigUpdate(BaseModel):
-    variables: Optional[Dict[str, Any]] = None
-    secrets: Optional[Dict[str, str]] = None
-    is_active: Optional[bool] = None
-
-
-class ConfigResponse(BaseModel):
-    id: int
-    automation_id: int
-    user_id: int
-    variables: Dict[str, Any]
-    is_active: bool
-    created_at: datetime
-    
-    class Config:
-        from_attributes = True
-
-
-# ===== EXECUTION SCHEMAS =====
-
-class ExecutionRequest(BaseModel):
-    automation_id: int
-    config_id: Optional[int] = None  # If None, use default config
-
-
-class ExecutionResponse(BaseModel):
-    id: int
-    automation_id: int
-    user_id: int
-    started_at: datetime
-    completed_at: Optional[datetime]
-    status: str
-    error_message: Optional[str]
-    duration_seconds: Optional[float]
-    steps_completed: int
-    steps_failed: int
-    
-    class Config:
-        from_attributes = True
-
-
-class ExecutionWithData(ExecutionResponse):
-    """
-    Execution with extracted data included
-    """
-    extracted_data: Optional[Dict[str, Any]]
-
-
-# ===== SCHEDULE SCHEMAS =====
-
-class ScheduleCreate(BaseModel):
-    automation_id: int
-    cron_expression: str  # e.g., "0 9 * * *"
-    is_active: bool = True
-
-
-class ScheduleResponse(BaseModel):
-    id: int
-    automation_id: int
-    user_id: int
-    cron_expression: str
-    is_active: bool
-    next_run_at: Optional[datetime]
-    last_run_at: Optional[datetime]
-    last_status: Optional[str]
-    created_at: datetime
-    
-    class Config:
-        from_attributes = True

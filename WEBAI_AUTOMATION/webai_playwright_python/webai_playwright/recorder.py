@@ -1,3 +1,11 @@
+"""
+Browser Interaction Recorder utilizing Chrome DevTools Protocol (CDP).
+
+This module intercepts raw user interactions (mouse clicks, keystrokes, scrolling) 
+directly from the browser using CDP and synthesizes them into structured JSON 
+steps (`recorded_steps.json`). These steps act as the ground-truth automation 
+that can later be replayed locally or uploaded to the API Server.
+"""
 from __future__ import annotations
 
 import asyncio

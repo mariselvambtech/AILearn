@@ -1,3 +1,9 @@
+"""
+Test suite for the WebAI Playwright Client.
+
+This module contains tests verifying the functionality of the Playwright 
+integration, CDP accessibility tree extraction, and AI command execution.
+"""
 
 import pytest
 import importlib

@@ -5,7 +5,16 @@ from database import get_db
 from sqlalchemy import text
 
 def migrate_database():
-    """Apply database schema improvements"""
+    """
+    Apply advanced schema improvements to the database.
+    
+    This migration script performs two major updates:
+    1. Adds computed columns (`started_at_ist`, `completed_at_ist`, `timestamp_ist`) 
+       to execution tables. These columns use SQL Server's `DATEADD` to automatically 
+       offset UTC times by 330 minutes for Indian Standard Time (IST) readability.
+    2. Adds an indexed `automation_id` foreign key to `execution_logs` to optimise 
+       filtering logs by automation without requiring table joins.
+    """
     db = next(get_db())
     
     try:
