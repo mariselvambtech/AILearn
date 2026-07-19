@@ -1,0 +1,10 @@
+[project]
+name = "webai-playwright"
+version = "0.1.0"
+description = "Token-based Playwright automation client (Python)"
+requires-python = ">=3.9"
+dependencies = ["playwright>=1.40.0", "websockets>=11.0"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["webai_playwright*"]

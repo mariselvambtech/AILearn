@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Dropdown E2E</title></head>
+<body>
+  <h1>Dropdown E2E</h1>
+
+  <label for="native">Country</label>
+  <select id="native">
+    <option>India</option>
+    <option>Japan</option>
+  </select>
+
+  <div style="margin-top:24px">
+    <div id="mui-label">City</div>
+    <div role="combobox" aria-labelledby="mui-label" tabindex="0" id="combo" style="display:inline-block;border:1px solid #999;padding:6px;">
+      Select city
+    </div>
+  </div>
+
+  <div id="portal" style="position:relative"></div>
+
+  <script>
+    const combo = document.getElementById('combo');
+    let open = false;
+    combo.addEventListener('click', () => {
+      if (open) return;
+      open = true;
+      const list = document.createElement('div');
+      list.setAttribute('role','listbox');
+      list.setAttribute('id','listbox');
+      list.style.border='1px solid #999';
+      list.style.width='160px';
+      list.style.marginTop='4px';
+
+      const mkOpt = (txt) => {
+        const o = document.createElement('div');
+        o.setAttribute('role','option');
+        o.textContent = txt;
+        o.style.padding='6px';
+        o.addEventListener('click', () => {
+          combo.textContent = txt;
+          list.remove();
+          open = false;
+        });
+        return o;
+      };
+
+      list.appendChild(mkOpt('Chennai'));
+      list.appendChild(mkOpt('Bengaluru'));
+      // render in "portal" (outside combobox subtree)
+      document.getElementById('portal').appendChild(list);
+    });
+  </script>
+</body>
+</html>

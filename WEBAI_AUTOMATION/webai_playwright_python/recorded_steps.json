@@ -1,0 +1,98 @@
+[
+  {
+    "action": "open",
+    "url": "https://www.sastra.edu/",
+    "name": null,
+    "value": null,
+    "key": null,
+    "ts": 1777816621.7817037,
+    "locators": null,
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null
+  },
+  {
+    "action": "click",
+    "url": "https://www.sastra.edu/",
+    "name": "About",
+    "value": null,
+    "key": null,
+    "ts": 1777816621.7817037,
+    "locators": [
+      {
+        "type": "href",
+        "value": "/about-us.html"
+      },
+      {
+        "type": "css",
+        "value": "a:nth-child(1)"
+      },
+      {
+        "type": "text",
+        "value": "About"
+      },
+      {
+        "type": "role",
+        "value": "link",
+        "name": "About"
+      },
+      {
+        "type": "xpath",
+        "value": "//div/div[2]/ul/li[2]/a"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null
+  },
+  {
+    "action": "navigate",
+    "url": "https://www.sastra.edu/about-us.html",
+    "name": null,
+    "value": null,
+    "key": null,
+    "ts": 1777816635.6592858,
+    "locators": null,
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null
+  },
+  {
+    "action": "click",
+    "url": "https://www.sastra.edu/about-us.html",
+    "name": "National Scholarship Portal",
+    "value": null,
+    "key": null,
+    "ts": 1777816635.6592858,
+    "locators": [
+      {
+        "type": "href",
+        "value": "http://www.scholarships.gov.in/"
+      },
+      {
+        "type": "css",
+        "value": "a:nth-child(1)"
+      },
+      {
+        "type": "text",
+        "value": "National Scholarship Portal"
+      },
+      {
+        "type": "role",
+        "value": "link",
+        "name": "National Scholarship Portal"
+      },
+      {
+        "type": "xpath",
+        "value": "//div/div/ul/li[1]/a"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null
+  }
+]

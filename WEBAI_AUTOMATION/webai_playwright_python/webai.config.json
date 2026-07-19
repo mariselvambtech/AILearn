@@ -1,0 +1,5 @@
+{
+  "TOKEN": "local-dev",
+  "WEBSOCKET_PROTOCOL": "ws",
+  "WEBSOCKET_HOST": "localhost:8765"
+}
