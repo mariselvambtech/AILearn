@@ -1,3 +1,11 @@
+"""
+WebSocket Communication Client for the AI Brain.
+
+This module establishes and manages the persistent two-way WebSocket connection 
+between the Playwright Browser Client and the Local AI Server (`local_webai_server_guided.py`). 
+It handles transmitting the DOM accessibility tree for analysis and receiving the 
+subsequent action commands for execution.
+"""
 from __future__ import annotations
 
 import asyncio

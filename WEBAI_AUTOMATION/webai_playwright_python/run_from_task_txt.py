@@ -1,3 +1,11 @@
+"""
+Execute an automation derived from a natural language task (Standard Mode).
+
+This script reads a natural language command from `generated_task.txt` and uses 
+the standard AI translation layer to execute it in a Playwright browser. 
+For the advanced, self-correcting 3-tier architecture implementation, 
+see `run_from_task_txt_guided.py`.
+"""
 import asyncio
 import re
 from pathlib import Path

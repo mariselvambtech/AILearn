@@ -1,6 +1,11 @@
 """
-Run automation from API database - Simple file-based approach
-Fetches automation from API and saves to file, then runs existing playback
+Run automation from API database - Simple file-based approach.
+
+This script demonstrates the end-to-end integration of the "Client" (this script) 
+with the "Warehouse" (API Server) and the "Brain" (Local AI Server). It fetches 
+a stored automation and its decrypted secrets from the API Server, saves the 
+steps locally, creates an execution record, and then delegates the actual 
+browser playback to `run_from_task_txt_guided.py` while tracking logs.
 """
 import json
 import requests

@@ -1,3 +1,12 @@
+"""
+Execute an automation via the Guided Local AI Server.
+
+This script represents the Playwright "Client" in the WebAI 3-tier architecture. 
+It connects via WebSocket to the "Brain" (`local_webai_server_guided.py`), 
+sends it full DOM accessibility trees, and blindly executes the commands 
+(clicks, typing, navigation) that the Brain dictates in response to the 
+user's natural language goal.
+"""
 import asyncio
 import json
 from pathlib import Path

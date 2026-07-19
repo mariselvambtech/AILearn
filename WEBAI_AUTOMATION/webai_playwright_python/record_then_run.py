@@ -5,6 +5,14 @@
 # - After recording, asks: "Run AI after recording? (y/n)"
 # - Saves: recorded_steps.json, generated_task.txt
 
+"""
+Dual-phase script: Record actions and immediately replay them.
+
+This script launches an interactive browser where user actions are intercepted 
+via the Chrome DevTools Protocol (CDP) and recorded into `recorded_steps.json`.
+Once the user closes the browser, it immediately launches a new instance to 
+replay the recorded JSON sequence.
+"""
 import asyncio
 import json
 import sys

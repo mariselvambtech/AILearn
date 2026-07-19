@@ -1,5 +1,23 @@
 """
-SQLAlchemy Models for WebAI Automation System
+SQLAlchemy Models for WebAI Automation System.
+
+This file is the "blueprints" of the WebAI API server (see walkthrough.md →
+"Component 1: The Warehouse"). Each class below becomes one table in the
+Microsoft SQL Server database. The tables and their relationships:
+
+    users
+      └── automations            (a user owns many automations)
+            ├── automation_configs    (per-user variables + encrypted secrets)
+            ├── execution_history     (one row per run)
+            │     └── execution_logs  (step-by-step diary of each run)
+            └── scheduled_runs        (cron schedules)
+
+Run `python init_db.py` once to create all these tables. After that,
+`crud.py` reads and writes them, and `main.py` exposes them over the API.
+
+Note on time: all timestamps are stored in UTC. IST (Indian Standard Time)
+columns (`*_ist`) are SQL Server computed columns that add 330 minutes —
+they're added by `migrate_ist_and_automation_id.py`, not by this file.
 """
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Float, ForeignKey, JSON, Interval, FetchedValue
 from sqlalchemy.orm import relationship
@@ -9,7 +27,14 @@ from database import Base
 
 class User(Base):
     """
-    User table - Stores user accounts
+    User accounts — one row per registered user.
+
+    Stores the username, a bcrypt-hashed password (never plain text), a
+    unique API key used for machine-to-machine auth, and an `is_active`
+    flag so an admin can disable an account without deleting it.
+
+    Relationships: a user owns many automations, configs, executions, and
+    schedules; deleting a user cascades to delete all of them.
     """
     __tablename__ = 'users'
     
@@ -33,8 +58,15 @@ class User(Base):
 
 class Automation(Base):
     """
-    Automation table - Stores automation blueprints (steps)
-    This replaces the recorded_steps.json file
+    Recorded automations — the "recipe book" of the system.
+
+    Each row is one recorded set of browser steps, stored as a JSON array
+    in `steps_json` (e.g. `[{"action": "click", "locators": [...]}, ...]`).
+    This table replaces the old `recorded_steps.json` file so automations
+    can be shared, scheduled, and replayed by ID.
+
+    `is_template=True` marks an automation as public — other users can
+    browse and clone it via `GET /templates`.
     """
     __tablename__ = 'automations'
     
@@ -70,8 +102,16 @@ class Automation(Base):
 
 class AutomationConfig(Base):
     """
-    Configuration for an automation run
-    Allows different users to have different settings for the same automation
+    Per-user settings for an automation — variables and encrypted secrets.
+
+    Lets two users run the same automation with different values: e.g.
+    Alice's `irctc_password` differs from Bob's. `variables` is plain JSON
+    (for non-sensitive values like wait_time); `encrypted_secrets` is a
+    Fernet-encrypted blob (see `encryption.py`) for passwords and API keys.
+
+    `log_retention_days` controls how long this automation's logs are kept
+    (default 7 days). `is_active` lets a user disable a config without
+    deleting it.
     """
     __tablename__ = 'automation_configs'
     
@@ -107,8 +147,16 @@ class AutomationConfig(Base):
 
 class ExecutionHistory(Base):
     """
-    Track automation execution history
-    Used for debugging, analytics, and audit trail
+    One row per automation run — the "logbook" of the system.
+
+    Created with status "running" when a run starts (see
+    `crud.create_execution`) and updated to "success" or "failed" when it
+    ends (see `crud.update_execution`, which also fills `completed_at` and
+    `duration_seconds`). `extracted_data` holds any scraped data from the
+    run as JSON.
+
+    Used to answer "why did my automation fail at 3 AM?" and "how long does
+    this usually take?".
     """
     __tablename__ = 'execution_history'
     
@@ -143,8 +191,16 @@ class ExecutionHistory(Base):
 
 class ExecutionLog(Base):
     """
-    Detailed logs for each execution
-    Stores client and server logs for debugging and analytics
+    Step-by-step diary of a single execution — the most detailed log level.
+
+    Each row is one event during a run: a click, a type, a navigation, an
+    error, etc. `level` is INFO/WARN/ERROR/DEBUG, `source` is which
+    component wrote it (client = browser robot, server = AI brain,
+    api = this server). `log_metadata` holds structured extras like
+    `{"step_number": 5, "locator_type": "role", "duration_ms": 234}`.
+
+    Logs are usually saved in batches via `POST /logs/batch` (see
+    `log_crud.create_log_batch`) to avoid one HTTP request per log line.
     """
     __tablename__ = 'execution_logs'
     
@@ -176,8 +232,13 @@ class ExecutionLog(Base):
 
 class ScheduledRun(Base):
     """
-    Scheduled automation runs
-    Supports cron-based scheduling for recurring automations
+    Cron-based schedules — the "alarm clock" for recurring automations.
+
+    `cron_expression` is a standard cron string (e.g. "0 9 * * *" = daily
+    at 9 AM). `next_run_at` is precomputed by `croniter` when the schedule
+    is created (see `crud.create_schedule`); an external worker checks
+    `get_due_schedules()` to find runs that are due and kicks them off.
+    `last_run_at` / `last_status` record the most recent execution.
     """
     __tablename__ = 'scheduled_runs'
     

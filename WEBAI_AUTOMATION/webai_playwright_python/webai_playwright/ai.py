@@ -1,3 +1,11 @@
+"""
+High-level AI Integration Module for the Playwright Client.
+
+This module exposes the `ai()` function, which acts as the main entrypoint 
+for executing natural language tasks. It handles connecting to the Local 
+AI Server via WebSocket, extracting the accessibility tree, sending it for 
+analysis, and translating the returned AI commands into Playwright actions.
+"""
 from __future__ import annotations
 
 import asyncio

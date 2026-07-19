@@ -1,6 +1,10 @@
 """
-Server-side logging module for WebAI local server
-Sends logs to API database during automation execution
+Server-side logging module for the WebAI local WebSocket server.
+
+This module is responsible for batching and asynchronously transmitting 
+diagnostic and execution logs from the AI server (the Brain) to the 
+FastAPI backend (the Warehouse) via `POST /logs/batch`. By batching logs, 
+it avoids excessive HTTP overhead during high-frequency reasoning steps.
 """
 import requests
 from datetime import datetime

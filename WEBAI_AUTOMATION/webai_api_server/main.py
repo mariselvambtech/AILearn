@@ -40,7 +40,13 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup():
-    """Test database connection on startup"""
+    """
+    Test database connection on startup.
+    
+    This function is executed when the FastAPI application starts up. It calls `test_connection()`
+    to verify that the API server can successfully connect to the MSSQL database using the
+    credentials defined in the environment variables.
+    """
     print("🚀 Starting WebAI API Server...")
     if test_connection():
         print("✅ Database connected successfully")
@@ -50,7 +56,12 @@ async def startup():
 
 @app.get("/")
 async def root():
-    """Health check endpoint"""
+    """
+    Health check endpoint for the root URL.
+    
+    Returns a simple JSON payload indicating that the WebAI Automation API service is online.
+    Useful for basic uptime monitoring.
+    """
     return {
         "status": "online",
         "service": "WebAI Automation API",
@@ -60,7 +71,13 @@ async def root():
 
 @app.get("/health")
 async def health_check(db: Session = Depends(get_db)):
-    """Detailed health check"""
+    """
+    Detailed health check for system dependencies.
+    
+    Executes a simple query (`SELECT 1`) against the MSSQL database to ensure the connection is active
+    and verifies if the Fernet encryption key (`ENCRYPTION_KEY`) is configured for credential management.
+    This endpoint is used by the AI Brain and load balancers to determine system health.
+    """
     try:
         # Test DB connection
         db.execute(text("SELECT 1"))
@@ -82,8 +99,11 @@ async def health_check(db: Session = Depends(get_db)):
 @app.post("/auth/register", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
 async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     """
-    Register new user
-    Returns user info with API key
+    Register a new user in the system.
+    
+    Accepts user details, hashes the provided password using bcrypt, generates a unique
+    `X-API-Key`, and stores the user in the database. Returns the user's information
+    including their newly generated API key, which must be used for subsequent authenticated requests.
     """
     # Check if username exists
     existing_user = crud.get_user_by_username(db, user.username)
@@ -101,8 +121,10 @@ async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db))
 @app.post("/auth/login", response_model=schemas.Token)
 async def login(login_data: schemas.LoginRequest, db: Session = Depends(get_db)):
     """
-    Login with username/password
-    Returns JWT access token and API key
+    Authenticate a user using their username and password.
+    
+    Validates the credentials against the hashed password in the database. If successful,
+    generates and returns a JWT access token along with the user's API key.
     """
     user = auth.authenticate_user(db, login_data.username, login_data.password)
     if not user:
@@ -135,8 +157,11 @@ async def create_automation(
     db: Session = Depends(get_db)
 ):
     """
-    Create new automation
-    Requires API key authentication
+    Create a new automation recording (recipe).
+    
+    Receives automation details including the `steps_json` array which contains actions recorded
+    by the WebAI browser extension. The automation is saved to the MSSQL database and associated
+    with the authenticated user.
     """
     return crud.create_automation(db, automation, current_user.id)
 
@@ -149,7 +174,10 @@ async def list_automations(
     db: Session = Depends(get_db)
 ):
     """
-    List all automations owned by current user
+    List all automations owned by the authenticated user.
+    
+    Supports pagination through `skip` and `limit` query parameters. Public templates
+    owned by other users are not included in this response.
     """
     return crud.get_user_automations(db, current_user.id, skip, limit)
 
@@ -161,7 +189,10 @@ async def get_automation(
     db: Session = Depends(get_db)
 ):
     """
-    Get specific automation with steps
+    Retrieve a specific automation and its recorded steps.
+    
+    The authenticated user must either own the automation or the automation must be flagged
+    as a public template (`is_template=True`).
     """
     automation = crud.get_automation(db, automation_id, current_user.id)
     if not automation:
@@ -180,7 +211,10 @@ async def update_automation(
     db: Session = Depends(get_db)
 ):
     """
-    Update automation
+    Update details or steps of an existing automation.
+    
+    Only fields provided in the request body are updated. The authenticated user
+    must be the owner of the automation.
     """
     automation = crud.update_automation(db, automation_id, current_user.id, updates)
     if not automation:
@@ -198,7 +232,10 @@ async def delete_automation(
     db: Session = Depends(get_db)
 ):
     """
-    Delete automation
+    Permanently delete an automation owned by the user.
+    
+    This operation cascades, meaning all associated configurations, execution history,
+    logs, and schedules will also be removed.
     """
     success = crud.delete_automation(db, automation_id, current_user.id)
     if not success:
@@ -217,8 +254,10 @@ async def list_templates(
     db: Session = Depends(get_db)
 ):
     """
-    List public automation templates
-    No authentication required
+    Retrieve a list of public automation templates.
+    
+    Optionally filter by `category` (e.g., "E-commerce"). These templates can be viewed
+    and cloned by any user. No API key authentication is required for this endpoint.
     """
     return crud.get_template_automations(db, category)
 
@@ -232,8 +271,10 @@ async def create_config(
     db: Session = Depends(get_db)
 ):
     """
-    Create configuration for an automation
-    Secrets are automatically encrypted
+    Create a variable and secret configuration for an automation.
+    
+    Secrets provided in the payload are automatically encrypted using Fernet symmetric encryption
+    before being stored in the database. This ensures passwords/tokens remain secure at rest.
     """
     return crud.create_automation_config(db, config, current_user.id)
 
@@ -245,7 +286,10 @@ async def get_automation_config(
     db: Session = Depends(get_db)
 ):
     """
-    Get user's configuration for specific automation
+    Retrieve the active configuration (variables) for a specific automation.
+    
+    Encrypted secrets are not returned decrypted by this endpoint; they are only decrypted
+    during execution step generation via the `/execute/{id}/steps` endpoint.
     """
     config = crud.get_automation_config(db, automation_id, current_user.id)
     if not config:
@@ -264,7 +308,10 @@ async def update_config(
     db: Session = Depends(get_db)
 ):
     """
-    Update configuration
+    Update an existing automation configuration.
+    
+    Can update variables, re-encrypt updated secrets, or toggle the `is_active` status.
+    The user must own the configuration being modified.
     """
     config = crud.update_automation_config(db, config_id, current_user.id, updates)
     if not config:
@@ -284,9 +331,11 @@ async def execute_automation(
     db: Session = Depends(get_db)
 ):
     """
-    Execute an automation
-    This creates an execution record and returns the prepared steps
-    The actual execution happens on the client side (playback server)
+    Initiate the execution of an automation.
+    
+    Creates a new execution record in the `execution_history` table with a 'running' status.
+    Returns the execution ID. The actual browser automation execution is performed by the
+    AI Brain client which polls steps from the `/execute/{automation_id}/steps` endpoint.
     """
     # Get automation
     automation = crud.get_automation(db, request.automation_id, current_user.id)
@@ -317,8 +366,11 @@ async def get_execution_steps(
     db: Session = Depends(get_db)
 ):
     """
-    Get automation steps with variables substituted
-    Returns ready-to-execute steps
+    Retrieve automation steps with variable substitution applied.
+    
+    Fetches the `steps_json`, decrypts any associated secrets using the Fernet key,
+    and substitutes `{{variable_name}}` placeholders in the steps with actual values.
+    Returns the prepared, ready-to-execute step payload.
     """
     # Get automation
     automation = crud.get_automation(db, automation_id, current_user.id)
@@ -373,7 +425,11 @@ async def update_execution_status(
     db: Session = Depends(get_db)
 ):
     """
-    Update execution status (called by playback client)
+    Update the final status and results of an execution.
+    
+    Called by the playback client (AI Brain/Browser robot) upon completion.
+    Records success/failure, any error messages, and saves data extracted during
+    the run (e.g., scraped web tables) into the database.
     """
     execution = crud.update_execution(
         db, execution_id, status, error_message, 
@@ -397,7 +453,10 @@ async def list_executions(
     db: Session = Depends(get_db)
 ):
     """
-    List execution history for current user
+    List the execution history for the current user.
+    
+    Returns a paginated list of past executions ordered by `started_at` descending,
+    acting as an audit trail for all triggered automations.
     """
     return crud.get_user_executions(db, current_user.id, skip, limit)
 
@@ -409,7 +468,10 @@ async def get_execution(
     db: Session = Depends(get_db)
 ):
     """
-    Get specific execution with results
+    Retrieve details of a specific execution.
+    
+    Includes execution status, timestamps, steps metrics, and any extracted data.
+    Requires ownership of the execution record.
     """
     execution = crud.get_execution(db, execution_id, current_user.id)
     if not execution:
@@ -429,7 +491,10 @@ async def create_schedule(
     db: Session = Depends(get_db)
 ):
     """
-    Create scheduled automation run
+    Schedule an automation to run automatically at intervals.
+    
+    Validates and accepts a cron expression (e.g., `0 9 * * *`), calculating the
+    initial `next_run_at` timestamp.
     """
     try:
         return crud.create_schedule(db, schedule, current_user.id)
@@ -446,7 +511,7 @@ async def list_schedules(
     db: Session = Depends(get_db)
 ):
     """
-    List all schedules for current user
+    List all active and inactive cron schedules owned by the current user.
     """
     return crud.get_user_schedules(db, current_user.id)
 
@@ -461,7 +526,10 @@ async def create_log(
     db: Session = Depends(get_db)
 ):
     """
-    Create a single log entry for an execution
+    Create a single log entry associated with an execution.
+    
+    Primarily used for rare standalone logging. For high-volume execution logs,
+    the `/logs/batch` endpoint is preferred for efficiency.
     """
     # Verify execution belongs to user
     execution = crud.get_execution(db, execution_id, current_user.id)
@@ -481,7 +549,11 @@ async def create_log_batch(
     db: Session = Depends(get_db)
 ):
     """
-    Create multiple log entries at once (efficient for bulk inserts)
+    Insert a batch of log entries for an execution.
+    
+    This is the primary logging endpoint used by the Playwright client (`run_from_database.py`)
+    and AI server (`server_logger.py`). They buffer logs during execution and flush them in bulk
+    to reduce HTTP overhead.
     """
     # Verify execution belongs to user  
     execution = crud.get_execution(db, batch.execution_id, current_user.id)
@@ -506,11 +578,10 @@ async def get_execution_logs(
     db: Session = Depends(get_db)
 ):
     """
-    Get logs for an execution with optional filtering
-    - level: Filter by log level (INFO, WARN, ERROR, DEBUG)
-    - source: Filter by source (client, server, api)
-    - start_time/end_time: Filter by timestamp range
-    - limit: Maximum number of logs to return
+    Retrieve logs for an execution with optional filtering parameters.
+    
+    Provides an audit trail interface, allowing filtering by log `level` (INFO, WARN, ERROR, DEBUG),
+    `source` (client, server, api), and timestamp ranges.
     """
     # Verify execution belongs to user
     execution = crud.get_execution(db, execution_id, current_user.id)
@@ -532,8 +603,10 @@ async def get_log_stats(
     db: Session = Depends(get_db)
 ):
     """
-    Get statistics about logs for an execution
-    Returns total logs, errors, warnings, info counts
+    Fetch aggregate statistics for the logs of a specific execution.
+    
+    Returns metrics such as the total number of logs, and counts for errors,
+    warnings, and informational messages. Useful for quick dashboards.
     """
     # Verify execution belongs to user
     execution = crud.get_execution(db, execution_id, current_user.id)
@@ -553,9 +626,10 @@ async def cleanup_old_logs(
     db: Session = Depends(get_db)
 ):
     """
-    Delete logs older than specified days (retention policy)
-    Default: 7 days, Max: 10 days
-    Requires authentication to prevent abuse
+    Enforce log retention policies by deleting logs older than a specified duration.
+    
+    Removes logs older than `days` (default 7, max 10) to prevent unbound database growth.
+    Requires authentication to trigger.
     """
     if days < 1 or days > 10:
         raise HTTPException(
@@ -577,7 +651,10 @@ async def import_recording(
     db: Session = Depends(get_db)
 ):
     """
-    Import existing recorded_steps.json file into database
+    Import an existing `recorded_steps.json` payload into the database.
+    
+    Used by the `import_to_database.py` script to migrate local file-based recordings
+    into the managed MSSQL database infrastructure.
     """
     automation = crud.create_automation(
         db,

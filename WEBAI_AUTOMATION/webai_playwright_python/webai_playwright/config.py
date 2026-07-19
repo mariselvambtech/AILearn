@@ -1,3 +1,10 @@
+"""
+Configuration Manager for the Playwright Client.
+
+This module handles parsing settings from `webai.config.json` and environment 
+variables, establishing the base configuration for API URLs, debugging flags, 
+and local server endpoints used throughout the client execution.
+"""
 from __future__ import annotations
 
 import json

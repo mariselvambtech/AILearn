@@ -1,5 +1,10 @@
 """
 Helper functions for fallback extraction strategies.
+
+This module provides heuristics and fuzzy matching logic (e.g., Levenshtein distance) 
+to locate elements when strict Playwright selectors fail. It's a critical part of the 
+"self-healing" mechanism allowing the Playwright Client to gracefully handle minor 
+UI changes without immediately throwing an error back to the AI Brain.
 """
 
 from typing import List, Dict

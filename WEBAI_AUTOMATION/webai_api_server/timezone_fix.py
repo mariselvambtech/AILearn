@@ -10,7 +10,12 @@ from datetime import datetime, timezone, timedelta
 IST = timezone(timedelta(hours=5, minutes=30))
 
 def get_ist_now():
-    """Get current time in IST"""
+    """
+    Get the current time in Indian Standard Time (IST).
+    
+    This helper is used to consistently generate IST timestamps (UTC+5:30) 
+    across the application where necessary.
+    """
     return datetime.now(IST)
 
 # Usage in models.py:
