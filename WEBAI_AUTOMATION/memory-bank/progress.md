@@ -192,6 +192,11 @@
 - Template cloning flow
 - Encryption/decryption round-trip with real credentials
 
+## Recently Fixed Issues
+
+1. **API Server Startup Failures (Schemas)**: `schemas.py` was accidentally truncated in a draft commit, causing `AutomationCreate` missing errors. Restored the original schemas and replaced `EmailStr` with `Optional[str]` to fix `email-validator` import errors.
+2. **Windows UnicodeEncodeError**: Removed unicode emojis (🚀, ✅, ❌) from `run.py`, `main.py`, and `database.py` print statements, which were causing the server to crash on startup in Windows terminals using `cp1252` encoding.
+
 ## What's Left to Build
 
 ### High Priority (User Requested)

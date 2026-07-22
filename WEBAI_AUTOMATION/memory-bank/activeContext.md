@@ -27,6 +27,11 @@ The project is **functional and feature-complete** for its current scope. All th
 
 ## Recent Work Completed
 
+### API Server Startup Bug Fixes ✅
+- Restored `schemas.py` that was accidentally truncated, resolving missing schema errors (`AutomationCreate`).
+- Removed `EmailStr` and used `Optional[str]` in `schemas.py` because `email-validator` was not installed.
+- Removed unicode emojis (🚀, ✅, ❌) from `run.py`, `main.py`, and `database.py` print statements to prevent `UnicodeEncodeError` crashes on Windows terminals using `cp1252` encoding.
+
 ### Phase 8.2: Save Extracted Data ✅
 - Implemented save options dialog (Excel/Word/TXT checkboxes)
 - File configuration dialog (folder, filename, append/overwrite mode)
