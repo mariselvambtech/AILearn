@@ -46,12 +46,15 @@ async def startup():
     This function is executed when the FastAPI application starts up. It calls `test_connection()`
     to verify that the API server can successfully connect to the MSSQL database using the
     credentials defined in the environment variables.
+
+    Note: Emojis were removed from print statements here to prevent 
+    UnicodeEncodeError on Windows terminals using cp1252 encoding.
     """
-    print("🚀 Starting WebAI API Server...")
+    print("Starting WebAI API Server...")
     if test_connection():
-        print("✅ Database connected successfully")
+        print("Database connected successfully")
     else:
-        print("❌ Database connection failed - check your .env file")
+        print("Database connection failed - check your .env file")
 
 
 @app.get("/")

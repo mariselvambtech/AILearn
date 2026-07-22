@@ -106,6 +106,9 @@ def test_connection():
     Used on server startup (see `main.py` → `startup()`) and by
     `init_db.py` before creating tables. Prints a friendly status line.
 
+    Note: Emojis were removed from the status print statements to prevent
+    UnicodeEncodeError on Windows terminals.
+
     Returns:
         bool: True if the query succeeded, False if the connection failed
         (wrong password, database missing, ODBC driver not installed, etc.).
@@ -114,8 +117,8 @@ def test_connection():
     try:
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-        print("✅ Database connection successful!")
+        print("Database connection successful!")
         return True
     except Exception as e:
-        print(f"❌ Database connection failed: {e}")
+        print(f"Database connection failed: {e}")
         return False
