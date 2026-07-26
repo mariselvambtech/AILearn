@@ -27,6 +27,10 @@ The project is **functional and feature-complete** for its current scope. All th
 
 ## Recent Work Completed
 
+### Hermes 3 Model Integration ✅
+- Switched default Ollama LLM brain from `llama3.1` to `hermes3` for superior tool-calling and action planning capabilities.
+- Added `OLLAMA_MODEL=hermes3` to `.env`.
+
 ### API Server Startup Bug Fixes ✅
 - Restored `schemas.py` that was accidentally truncated, resolving missing schema errors (`AutomationCreate`).
 - Removed `EmailStr` and used `Optional[str]` in `schemas.py` because `email-validator` was not installed.
