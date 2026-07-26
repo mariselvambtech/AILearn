@@ -12,12 +12,12 @@ def test_recorded_steps_structure():
     
     steps_file = Path("recorded_steps.json")
     if not steps_file.exists():
-        print("❌ recorded_steps.json not found!")
+        print(" recorded_steps.json not found!")
         return False
     
     steps = json.loads(steps_file.read_text())
     
-    print(f"✅ Found {len(steps)} recorded steps")
+    print(f" Found {len(steps)} recorded steps")
     
     # Test each step
     for i, step in enumerate(steps, 1):
@@ -50,7 +50,7 @@ def test_recorded_steps_structure():
             key = step.get("key")
             print(f"  Key: {key}")
             
-    print("\n✅ All steps have valid structure!")
+    print("\n All steps have valid structure!")
     return True
 
 
@@ -62,23 +62,23 @@ def test_task_text_generation():
     
     task_file = Path("generated_task.txt")
     if not task_file.exists():
-        print("❌ generated_task.txt not found!")
+        print(" generated_task.txt not found!")
         return False
     
     task_text = task_file.read_text().strip()
     lines = [l for l in task_text.split("\n") if l.strip() and not l.startswith("Finish")]
     
-    print(f"✅ Generated {len(lines)} task lines:")
+    print(f" Generated {len(lines)} task lines:")
     for i, line in enumerate(lines, 1):
         print(f"  {i}. {line}")
     
     # Check for type actions
     type_lines = [l for l in lines if l.startswith("Type")]
-    print(f"\n✅ Found {len(type_lines)} typing actions")
+    print(f"\n Found {len(type_lines)} typing actions")
     
     # Check for click actions
     click_lines = [l for l in lines if l.startswith("Click")]
-    print(f"✅ Found {len(click_lines)} click actions")
+    print(f" Found {len(click_lines)} click actions")
     
     return True
 
@@ -92,14 +92,14 @@ if __name__ == "__main__":
         
         if result1 and result2:
             print("\n" + "=" * 60)
-            print("✅ ALL TESTS PASSED!")
+            print(" ALL TESTS PASSED!")
             print("=" * 60)
         else:
-            print("\n❌ SOME TESTS FAILED")
+            print("\n SOME TESTS FAILED")
             exit(1)
             
     except Exception as e:
-        print(f"\n❌ Test failed with error: {e}")
+        print(f"\n Test failed with error: {e}")
         import traceback
         traceback.print_exc()
         exit(1)

@@ -70,6 +70,7 @@ Once all three servers are running, you can run the actual automation client scr
    ```
 
 ### Available Client Scripts:
-- `run_from_database.py`: Fetches and runs a previously recorded automation from the database.
+- `record_then_run.py`: Opens an interactive browser to record steps, saves them locally, and prompts to automatically upload/import the recording into the SQL Database.
+- `import_to_database.py`: Imports a previously recorded `recorded_steps.json` into the API Server and MSSQL Database.
+- `run_from_database.py`: Fetches and runs a previously recorded automation from the database using its Automation ID.
 - `run_from_task_txt_guided.py`: Runs a guided AI automation based on a natural language task description.
-- `record_then_run.py`: Opens a browser for you to manually record steps, saves them, and then replays them.

@@ -136,18 +136,18 @@ if __name__ == "__main__":
     print("Running CDP and Playwright Actions tests...")
     
     asyncio.run(test_cdp_get_dom_snapshot())
-    print("✅ test_cdp_get_dom_snapshot passed")
+    print(" test_cdp_get_dom_snapshot passed")
     
     asyncio.run(test_cdp_get_interactive_elements())
-    print("✅ test_cdp_get_interactive_elements passed")
+    print(" test_cdp_get_interactive_elements passed")
     
     asyncio.run(test_playwright_actions_get_dom_snapshot())
-    print("✅ test_playwright_actions_get_dom_snapshot passed")
+    print(" test_playwright_actions_get_dom_snapshot passed")
     
     asyncio.run(test_playwright_actions_get_interactive_elements())
-    print("✅ test_playwright_actions_get_interactive_elements passed")
+    print(" test_playwright_actions_get_interactive_elements passed")
     
     asyncio.run(test_playwright_actions_get_snapshot())
-    print("✅ test_playwright_actions_get_snapshot passed")
+    print(" test_playwright_actions_get_snapshot passed")
     
-    print("\n✅ All tests passed!")
+    print("\n All tests passed!")

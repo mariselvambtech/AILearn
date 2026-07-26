@@ -94,6 +94,16 @@ async def main():
 
         await browser.close()
 
+        # Prompt user to save recording to SQL database
+        save_db = ask_yes_no("Save this recording to SQL database?", default="y")
+        if save_db:
+            try:
+                import import_to_database
+                print("\n=== Uploading Recording to SQL Database ===")
+                import_to_database.main()
+            except Exception as db_err:
+                print(f"Failed to upload to SQL database: {db_err}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

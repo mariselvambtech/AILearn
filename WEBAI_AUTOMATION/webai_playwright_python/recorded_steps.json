@@ -1,98 +1,11 @@
 [
   {
     "action": "open",
-    "url": "https://en.wikipedia.org/wiki/Main_Page",
+    "url": "https://sastra.edu/",
     "name": null,
     "value": null,
     "key": null,
-    "ts": 1771074249.1668544,
-    "locators": null,
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null
-  },
-  {
-    "action": "type",
-    "url": "https://en.wikipedia.org/wiki/Main_Page",
-    "name": "Search Wikipedia",
-    "value": "tamil nadu",
-    "key": null,
-    "ts": 1771074249.1668544,
-    "locators": [
-      {
-        "type": "name",
-        "value": "search"
-      },
-      {
-        "type": "aria-label",
-        "value": "Search Wikipedia"
-      },
-      {
-        "type": "placeholder",
-        "value": "Search Wikipedia"
-      },
-      {
-        "type": "title",
-        "value": "Search Wikipedia [alt-f]"
-      },
-      {
-        "type": "css",
-        "value": "input.cdx-text-input__input.cdx-text-input__input--has-value[type=\"search\"]"
-      },
-      {
-        "type": "role",
-        "value": "combobox",
-        "name": "Search Wikipedia"
-      },
-      {
-        "type": "xpath",
-        "value": "//form/div/div/div[1]/input"
-      }
-    ],
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null
-  },
-  {
-    "action": "click",
-    "url": "https://en.wikipedia.org/wiki/Main_Page",
-    "name": "Search",
-    "value": null,
-    "key": null,
-    "ts": 1771074249.259412,
-    "locators": [
-      {
-        "type": "css",
-        "value": "button.cdx-button.cdx-button--action-default:nth-child(1)"
-      },
-      {
-        "type": "text",
-        "value": "Search"
-      },
-      {
-        "type": "role",
-        "value": "button",
-        "name": "Search"
-      },
-      {
-        "type": "xpath",
-        "value": "//div/div/form/div/button"
-      }
-    ],
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null
-  },
-  {
-    "action": "navigate",
-    "url": "https://en.wikipedia.org/wiki/Tamil_Nadu",
-    "name": null,
-    "value": null,
-    "key": null,
-    "ts": 1771074266.6705942,
+    "ts": 1785067274.6274512,
     "locators": null,
     "extract_type": null,
     "attribute_name": null,
@@ -101,19 +14,15 @@
   },
   {
     "action": "click",
-    "url": "https://en.wikipedia.org/wiki/Tamil_Nadu",
-    "name": "Discuss improvements to the content page [alt-t]",
+    "url": "https://sastra.edu/",
+    "name": "Academics",
     "value": null,
     "key": null,
-    "ts": 1771074266.6705942,
+    "ts": 1785067274.6274512,
     "locators": [
-      {
-        "type": "title",
-        "value": "Discuss improvements to the content page [alt-t]"
-      },
       {
         "type": "href",
-        "value": "/wiki/Talk:Tamil_Nadu"
+        "value": "/academics.html"
       },
       {
         "type": "css",
@@ -121,16 +30,16 @@
       },
       {
         "type": "text",
-        "value": "Talk"
+        "value": "Academics"
       },
       {
         "type": "role",
         "value": "link",
-        "name": "Talk"
+        "name": "Academics"
       },
       {
         "type": "xpath",
-        "value": "//div[1]/div/ul/li[2]/a"
+        "value": "//div/div[2]/ul/li[3]/a"
       }
     ],
     "extract_type": null,
@@ -140,11 +49,11 @@
   },
   {
     "action": "navigate",
-    "url": "https://en.wikipedia.org/wiki/Talk:Tamil_Nadu",
+    "url": "https://sastra.edu/academics.html",
     "name": null,
     "value": null,
     "key": null,
-    "ts": 1771074282.5708141,
+    "ts": 1785067280.884772,
     "locators": null,
     "extract_type": null,
     "attribute_name": null,
@@ -153,36 +62,32 @@
   },
   {
     "action": "click",
-    "url": "https://en.wikipedia.org/wiki/Talk:Tamil_Nadu",
-    "name": "Talk:Tamil Nadu/Archive 2",
+    "url": "https://sastra.edu/academics.html",
+    "name": "Schools",
     "value": null,
     "key": null,
-    "ts": 1771074282.5708141,
+    "ts": 1785067280.884772,
     "locators": [
       {
-        "type": "title",
-        "value": "Talk:Tamil Nadu/Archive 2"
-      },
-      {
         "type": "href",
-        "value": "/wiki/Talk:Tamil_Nadu/Archive_2"
+        "value": "/academics/schools.html"
       },
       {
         "type": "css",
-        "value": "a:nth-child(2)"
+        "value": "a:nth-child(1)"
       },
       {
         "type": "text",
-        "value": "2"
+        "value": "Schools"
       },
       {
         "type": "role",
         "value": "link",
-        "name": "2"
+        "name": "Schools"
       },
       {
         "type": "xpath",
-        "value": "//table[3]/tbody/tr[4]/td/a[2]"
+        "value": "//ul/li[3]/ul/li[2]/a"
       }
     ],
     "extract_type": null,

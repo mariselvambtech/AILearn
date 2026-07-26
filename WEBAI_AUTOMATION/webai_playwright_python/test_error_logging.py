@@ -40,10 +40,10 @@ def test_error_logging():
             print(f"  Has stacktrace: {'stacktrace' in last_log.get('metadata', {})}")
             
             if 'stacktrace' in last_log.get('metadata', {}):
-                print(f"\n✅ SUCCESS: Stacktrace captured!")
+                print(f"\n SUCCESS: Stacktrace captured!")
                 print(f"  Stacktrace preview: {last_log['metadata']['stacktrace'][:200]}...")
             else:
-                print(f"\n❌ FAIL: No stacktrace in metadata")
+                print(f"\n FAIL: No stacktrace in metadata")
         
     finally:
         # Restore original URL
