@@ -27,6 +27,12 @@ The project is **functional and feature-complete** for its current scope. All th
 
 ## Recent Work Completed
 
+### Graphify Knowledge Graph Integration ✅
+- Installed `graphifyy` tool and tree-sitter AST parsers.
+- Generated project Knowledge Graph (729 nodes, 1,298 edges, 46 communities) in `graphify-out/`.
+- Registered skills for Antigravity & Hermes AI agents.
+- Updated `.gitignore` to exclude `graphify-out/`.
+
 ### Hermes 3 Model Integration ✅
 - Switched default Ollama LLM brain from `llama3.1` to `hermes3` for superior tool-calling and action planning capabilities.
 - Added `OLLAMA_MODEL=hermes3` to `.env`.

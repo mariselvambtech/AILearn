@@ -369,6 +369,12 @@ def _extract_json_array(text: str) -> List[Dict[str, Any]]:
     """Strict parser: expects a JSON array; extracts first [...] if extra text exists."""
     text = (text or "").strip()
 
+    # Strip markdown code blocks if present (e.g. ```json ... ```)
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
+        text = re.sub(r"\s*```$", "", text)
+        text = text.strip()
+
     try:
         obj = json.loads(text)
         if isinstance(obj, list):
@@ -384,6 +390,76 @@ def _extract_json_array(text: str) -> List[Dict[str, Any]]:
             return obj
 
     raise RuntimeError(f"LLM returned non-JSON plan: {text[:300]}")
+
+
+def _prune_dom_snapshot(html: str) -> str:
+    """
+    Prunes a raw DOM/HTML snapshot to retain interactive elements and key semantic tags,
+    significantly reducing token context size for Hermes 3 inference.
+
+    Args:
+        html: Raw HTML/DOM snapshot string.
+
+    Returns:
+        Pruned string containing essential interactive DOM elements.
+    """
+    if not html:
+        return ""
+    # Strip script and style tags completely
+    cleaned = re.sub(r"<(script|style)[^>]*?>.*?</\1>", "", html, flags=re.IGNORECASE | re.DOTALL)
+    # Extract interactive tags: button, input, a, select, textarea, option, or elements with id/name/role
+    pattern = re.compile(
+        r"<(?:button|input|a|select|textarea|option|form)[^>]*?>.*?</(?:button|input|a|select|textarea|option|form)>|<(?:button|input|a|select|textarea)[^>]*?/?>",
+        re.IGNORECASE | re.DOTALL,
+    )
+    matches = pattern.findall(cleaned)
+    if matches:
+        pruned = "\n".join(matches[:120])
+        return pruned if len(pruned) > 30 else cleaned[:4000]
+    return cleaned[:4000]
+
+
+def _writeback_healed_step(automation_id: Optional[int], step_index: int, new_locators: List[Dict[str, Any]]) -> bool:
+    """
+    Sends an HTTP request to webai_api_server to persist a newly self-healed
+    step locator back to MSSQL database for future deterministic runs.
+
+    Args:
+        automation_id: The ID of the automation being executed (if available).
+        step_index: The index of the healed step in the automation.
+        new_locators: List of newly generated locator dictionaries.
+
+    Returns:
+        True if write-back succeeded, False otherwise.
+    """
+    if not automation_id or step_index < 0 or not new_locators:
+        return False
+    try:
+        api_url = os.getenv("API_SERVER_URL", "http://localhost:8000")
+        url = f"{api_url}/automations/{automation_id}"
+        req = urllib.request.Request(url, headers={"User-Agent": "WebAI-Local-Server/1.0"})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            if response.status != 200:
+                return False
+            data = json.loads(response.read().decode("utf-8"))
+            steps = data.get("steps", [])
+            if 0 <= step_index < len(steps):
+                steps[step_index]["locators"] = new_locators
+                payload = json.dumps({"steps": steps}).encode("utf-8")
+                put_req = urllib.request.Request(
+                    url,
+                    data=payload,
+                    headers={"Content-Type": "application/json", "User-Agent": "WebAI-Local-Server/1.0"},
+                    method="PUT",
+                )
+                with urllib.request.urlopen(put_req, timeout=5) as put_res:
+                    if put_res.status == 200:
+                        print(f"✅ Self-healed locator for step {step_index+1} persisted back to MSSQL!")
+                        return True
+    except Exception as err:
+        print(f"⚠️ Self-healing write-back skipped/failed: {err}")
+    return False
+
 
 
 # -----------------------------

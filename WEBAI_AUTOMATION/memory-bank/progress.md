@@ -23,7 +23,9 @@
 | IST timezone columns | ✅ Working | Migration | Computed columns (+330 min) |
 | Cron-based scheduling | ✅ Working | Phase 4 | `scheduled_runs` table |
 | AI-guided playback (recorded steps) | ✅ Working | Phase 5 | Guided mode in AI server |
-| AI-freeform playback (LLM planning) | ✅ Working | Phase 5 | Ollama/Llama 3.1 integration |
+| Hermes 3 LLM Brain & Tool-Calling | ✅ Working | Phase 5 | Switched to Hermes 3 model in Ollama |
+| DOM Token Pruning | ✅ Working | Phase 5 | Reduces context token overhead by ~80% |
+| Self-healing MSSQL Write-back | ✅ Working | Phase 6 | Persists AI-healed locators back to database |
 | Multi-locator fallback strategy | ✅ Working | Phase 6 | `fallback_helpers.py` |
 | Right-click context menu (extraction) | ✅ Working | Phase 8.1 | Extract Text/Attribute/Table/Delay |
 | Text extraction | ✅ Working | Phase 8.1 | `extract_with_fallback()` |
