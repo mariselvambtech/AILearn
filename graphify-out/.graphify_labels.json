@@ -6,5 +6,13 @@
   "4": "Current Session (2026-07-18)",
   "5": "AGENTS.md",
   "6": "rules/graphify.md",
-  "7": "workflows/graphify.md"
+  "7": "workflows/graphify.md",
+  "8": "test_cdp_fixes.py",
+  "9": "fallback_helpers.py",
+  "10": "How to Run the WebAI Automation Project",
+  "11": "test_quick.py",
+  "12": "test_error_logging.py",
+  "13": "import_to_database.py",
+  "14": "test_phase1_locators.py",
+  "15": "add_test_docs.py"
 }

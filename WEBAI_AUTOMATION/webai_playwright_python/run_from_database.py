@@ -56,12 +56,12 @@ def flush_logs(execution_id: int):
         if response.status_code == 201:
             count = len(logs_buffer)
             logs_buffer.clear()
-            log(f"📤 Sent {count} logs to database")
+            log(f"[LOGS] Sent {count} logs to database")
         else:
-            log(f"⚠️  Failed to send logs: {response.status_code}")
+            log(f"[WARN] Failed to send logs: {response.status_code}")
     except Exception as e:
         # Don't fail execution if logging fails
-        log(f"⚠️  Logging error: {e}")
+        log(f"[WARN] Logging error: {e}")
     finally:
         logs_buffer.clear()  # Clear buffer even on error
 
@@ -73,7 +73,7 @@ OUTPUT_FILE = "recorded_steps.json"  # Same file playback server uses
 
 def fetch_automation_steps(automation_id: int, api_key: str):
     """Fetch automation steps from API with variables substituted"""
-    log(f"📥 Fetching automation {automation_id} from API...")
+    log(f"[FETCH] Fetching automation {automation_id} from API...")
     buffer_log("INFO", f"Fetching automation {automation_id} from API", {"automation_id": automation_id})
     
     try:
@@ -87,7 +87,7 @@ def fetch_automation_steps(automation_id: int, api_key: str):
             steps = data['steps']
             base_url = data.get('base_url')
             
-            log(f"✅ Fetched {len(steps)} steps")
+            log(f"[OK] Fetched {len(steps)} steps")
             buffer_log("INFO", f"Successfully fetched {len(steps)} steps", {"step_count": len(steps), "base_url": base_url})
             
             if base_url:
@@ -95,13 +95,13 @@ def fetch_automation_steps(automation_id: int, api_key: str):
             
             return steps, base_url
         else:
-            log(f"❌ API Error: {response.status_code}")
+            log(f"[ERROR] API Error: {response.status_code}")
             buffer_log("ERROR", f"API error when fetching automation", {"status_code": response.status_code})
             print(response.json())
             return None, None
     
     except Exception as e:
-        log(f"❌ Error: {e}")
+        log(f"[ERROR] Error: {e}")
         buffer_log("ERROR", f"Exception while fetching automation: {str(e)}", {"error": str(e)})
         log(f"   Make sure API server is running at {API_URL}")
         return None, None
@@ -109,18 +109,18 @@ def fetch_automation_steps(automation_id: int, api_key: str):
 
 def save_steps_to_file(steps: list, filename: str = OUTPUT_FILE):
     """Save steps to JSON file"""
-    log(f"💾 Saving steps to {filename}...")
+    log(f"[SAVE] Saving steps to {filename}...")
     buffer_log("INFO", f"Saving {len(steps)} steps to file", {"filename": filename, "step_count": len(steps)})
     
     try:
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(steps, f, indent=2)
         
-        log(f"✅ Saved {len(steps)} steps to {filename}")
+        log(f"[OK] Saved {len(steps)} steps to {filename}")
         buffer_log("INFO", "Successfully saved steps to file", {"filename": filename})
         return True
     except Exception as e:
-        log(f"❌ Error saving file: {e}")
+        log(f"[ERROR] Error saving file: {e}")
         error_trace = traceback.format_exc()
         buffer_log("ERROR", f"Failed to save steps to file: {str(e)}", {
             "error": str(e),
@@ -132,7 +132,7 @@ def save_steps_to_file(steps: list, filename: str = OUTPUT_FILE):
 
 def create_execution_record(automation_id: int, api_key: str):
     """Create execution record in API"""
-    log(f"📊 Creating execution record...")
+    log(f"[RECORD] Creating execution record...")
     buffer_log("INFO", f"Attempting to create execution record", {"automation_id": automation_id})
     
     try:
@@ -144,16 +144,16 @@ def create_execution_record(automation_id: int, api_key: str):
         
         if response.status_code == 201:
             execution_id = response.json()['id']
-            log(f"✅ Execution record created (ID: {execution_id})")
+            log(f"[OK] Execution record created (ID: {execution_id})")
             buffer_log("INFO", f"Execution record created successfully", {"execution_id": execution_id})
             return execution_id
         else:
-            log(f"⚠️  Could not create execution record: {response.status_code}")
+            log(f"[WARN] Could not create execution record: {response.status_code}")
             buffer_log("ERROR", f"Failed to create execution record", {"status_code": response.status_code, "response": response.text[:200]})
             return None
     
     except Exception as e:
-        log(f"⚠️  Error creating execution record: {e}")
+        log(f"[WARN] Error creating execution record: {e}")
         error_trace = traceback.format_exc()
         buffer_log("ERROR", f"Exception creating execution record: {str(e)}", {
             "error": str(e),
@@ -167,10 +167,10 @@ def run_playback(execution_id: int = None):
     import sys
     import os
     
-    log("🚀 Starting playback...")
+    log("[START] Starting playback...")
     buffer_log("INFO", "Starting automation playback")
     print("="*60)
-    print("📺 Browser will open and execute the automation")
+    print(" Browser will open and execute the automation")
     print("="*60)
     print()
     
@@ -181,7 +181,7 @@ def run_playback(execution_id: int = None):
             env['WEBAI_EXECUTION_ID'] = str(execution_id)
             env['WEBAI_API_URL'] = API_URL
             env['WEBAI_API_KEY'] = API_KEY
-            log(f"📊 Passing execution ID {execution_id} to playback server")
+            log(f" Passing execution ID {execution_id} to playback server")
         
         # Run the existing playback script using the same Python interpreter
         subprocess.run(
@@ -192,7 +192,7 @@ def run_playback(execution_id: int = None):
         buffer_log("INFO", "Playback completed successfully")
         return True
     except subprocess.CalledProcessError as e:
-        log(f"❌ Playback failed: {e}")
+        log(f" Playback failed: {e}")
         error_trace = traceback.format_exc()
         buffer_log("ERROR", f"Playback process failed: {str(e)}", {
             "error": str(e),
@@ -201,20 +201,20 @@ def run_playback(execution_id: int = None):
         })
         return False
     except FileNotFoundError:
-        log("❌ Could not find run_from_task_txt_guided.py")
+        log(" Could not find run_from_task_txt_guided.py")
         buffer_log("ERROR", "Playback script not found", {"script": "run_from_task_txt_guided.py"})
         print("   Trying alternative method...")
         
         # Try alternative: just tell user to run it manually
-        print("\n📝 Steps saved to recorded_steps.json")
-        print("\n▶️  To execute, run:")
+        print("\n Steps saved to recorded_steps.json")
+        print("\n[Play] To execute, run:")
         print("   python run_from_task_txt_guided.py")
         return False
 
 
 def main():
     print("="*60)
-    print("🎮 WebAI Automation Runner (API → JSON → Playback)")
+    print(" WebAI Automation Runner (API -> JSON -> Playback)")
     print("="*60)
     
     # Get automation ID from user
@@ -228,11 +228,11 @@ def main():
     steps, base_url = fetch_automation_steps(automation_id, API_KEY)
     
     if not steps:
-        print("\n❌ Could not fetch automation. Exiting.")
+        print("\n[ERROR] Could not fetch automation. Exiting.")
         return
     
     # Show steps preview
-    print("\n📋 Steps to execute:")
+    print("\n[STEPS] Steps to execute:")
     for i, step in enumerate(steps[:5], 1):  # Show first 5
         action = step.get('action', 'unknown')
         value = step.get('value', '')
@@ -252,9 +252,9 @@ def main():
     
     # Confirm execution
     print("\n" + "="*60)
-    confirm = input("▶️  Execute this automation now? (y/n): ").strip().lower()
+    confirm = input("[?] Execute this automation now? (y/n): ").strip().lower()
     if confirm != 'y':
-        print("❌ Cancelled.")
+        print("[CANCEL] Cancelled.")
         print(f"   Steps are saved in {OUTPUT_FILE}")
         print("   You can run later with: python run_from_task_txt_guided.py")
         return
@@ -265,35 +265,35 @@ def main():
     # Final status
     if success:
         print("\n" + "="*60)
-        print("🎉 SUCCESS!")
+        print(" SUCCESS!")
         print("="*60)
-        print("\n✅ Automation executed from database!")
+        print("\n[OK] Automation executed from database!")
         
         # Send all logs to database
         if execution_id:
             flush_logs(execution_id)
     else:
         print("\n" + "="*60)
-        print("📝 READY TO EXECUTE")
+        print(" READY TO EXECUTE")
         print("="*60)
         print(f"\nSteps saved to {OUTPUT_FILE}")
-        print("\n▶️  Run playback with:")
+        print("\n[RUN] Run playback with:")
         print("   python run_from_task_txt_guided.py")
         
         # Send logs even on failure
         if execution_id:
             flush_logs(execution_id)
     
-    print("\n💡 Tip: View execution history in API:")
+    print("\nTip: View execution history in API:")
     print(f"   GET {API_URL}/executions")
     
     # Show logs if we have an execution ID
     if execution_id:
-        print(f"\n💡 View execution logs:")
+        print(f"\nView execution logs:")
         print(f"   GET {API_URL}/executions/{execution_id}/logs")
         print(f"   {API_URL}/docs#/default/get_execution_logs")
     
-    print("\n💡 Or browse all executions:")
+    print("\nOr browse all executions:")
     print(f"   {API_URL}/docs#/default/list_executions_executions_get")
 
 

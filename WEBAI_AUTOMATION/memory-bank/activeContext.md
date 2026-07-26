@@ -27,6 +27,16 @@ The project is **functional and feature-complete** for its current scope. All th
 
 ## Recent Work Completed
 
+### Auto SQL Upload in `record_then_run.py` ✅
+- Added automatic prompt: `Save this recording to SQL database? (y/n)` at the end of recording in [`record_then_run.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/record_then_run.py).
+- Directly invokes `import_to_database.main()` so newly recorded automations are immediately uploaded to MSSQL and given an Automation ID for later execution via `run_from_database.py`.
+
+### Playwright Strict Mode Resilience & E2E Verification ✅
+- Enhanced `click_with_fallback` and `type_with_fallback` in `fallback_helpers.py` to handle strict mode violations gracefully using `.first` element targeting.
+- Sanitized console log output across all Python files to prevent Windows `cp1252` encoding crashes.
+- Successfully verified E2E automation playback (Execution ID: 1020) with 100% success rate and zero errors!
+- Updated Graphify Knowledge Graph (`730 nodes`, `1,240 edges`, `48 communities`).
+
 ### Graphify Knowledge Graph Integration ✅
 - Installed `graphifyy` tool and tree-sitter AST parsers.
 - Generated project Knowledge Graph (729 nodes, 1,298 edges, 46 communities) in `graphify-out/`.

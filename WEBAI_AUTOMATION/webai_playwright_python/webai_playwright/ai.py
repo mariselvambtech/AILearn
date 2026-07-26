@@ -316,7 +316,7 @@ async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
         attribute_name = args.get("attributeName")
         
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f"\n[{timestamp}] 🔍 EXTRACTING DATA:")
+        print(f"\n[{timestamp}]  EXTRACTING DATA:")
         print(f"   Variable: '{key}'")
         print(f"   Type: {extract_type}")
         if attribute_name:
@@ -332,7 +332,7 @@ async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
             page.__extracted_data__ = {}
         page.__extracted_data__[key] = value
         
-        print(f"\n[{timestamp}] ✅ EXTRACTED: {key} = '{value[:100] if len(value) > 100 else value}'")
+        print(f"\n[{timestamp}]  EXTRACTED: {key} = '{value[:100] if len(value) > 100 else value}'")
         print(f"   Stored in page.__extracted_data__['{key}']\n")
         
         return True
@@ -351,7 +351,7 @@ async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
         retry_attempts = args.get("retryAttempts", 3)
         
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f"\n[{timestamp}] 📊 EXTRACTING TABLE:")
+        print(f"\n[{timestamp}]  EXTRACTING TABLE:")
         print(f"   Selector: '{table_selector}'")
         print(f"   Columns: {columns}")
         print(f"   Max Pages: {max_pages}")
@@ -362,7 +362,7 @@ async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
             wait_per_page, page_timeout, retry_attempts
         )
         
-        print(f"\n[{timestamp}] ✅ TABLE EXTRACTED: {result.get('row_count', 0)} rows")
+        print(f"\n[{timestamp}]  TABLE EXTRACTED: {result.get('row_count', 0)} rows")
         
         return result
 

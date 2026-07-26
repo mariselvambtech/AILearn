@@ -670,7 +670,7 @@ RECORDER_INIT_SCRIPT = r"""
     // NEW: Collect multiple locator strategies for the input element
     const locators = getLocatorCandidates(el);
 
-    console.log(`  ✅ Recording type: "${value}" into "${label}"`);
+    console.log(`   Recording type: "${value}" into "${label}"`);
     send("type_final", { 
       url: location.href, 
       value, 
@@ -902,7 +902,7 @@ RECORDER_INIT_SCRIPT = r"""
     const headers = getTableHeaders(table);
     
     if (headers.length === 0) {
-      alert('⚠️ No table headers found!');
+      alert(' No table headers found!');
       callback(null);
       return;
     }
@@ -925,7 +925,7 @@ RECORDER_INIT_SCRIPT = r"""
     
     dialog.innerHTML = `
       <div style="font-weight: bold; margin-bottom: 15px; font-size: 16px;">
-        📊 Select Columns to Extract
+         Select Columns to Extract
       </div>
       <div style="margin-bottom: 10px;">
         <button id="__select_all__" style="margin-right: 8px; padding: 4px 8px; cursor: pointer;">Select All</button>
@@ -1017,7 +1017,7 @@ RECORDER_INIT_SCRIPT = r"""
       });
       
       if (selectedColumns.length === 0) {
-        alert('⚠️ Please select at least one column!');
+        alert(' Please select at least one column!');
         return;
       }
       
@@ -1078,37 +1078,37 @@ RECORDER_INIT_SCRIPT = r"""
     // Create buttons with event listeners instead of inline onclick
     const title = document.createElement('div');
     title.style.cssText = 'font-weight: bold; margin-bottom: 10px; color: #333; font-size: 15px;';
-    title.textContent = '🔍 Extract Data';
+    title.textContent = ' Extract Data';
     
-    const btnText = createMenuButton('📝 Extract Text', '#4CAF50');
+    const btnText = createMenuButton(' Extract Text', '#4CAF50');
     btnText.addEventListener('click', (e) => {
       e.stopPropagation();
       console.log('Extract Text clicked');
       window.__extractText();
     });
     
-    const btnAttr = createMenuButton('🔗 Extract Attribute', '#2196F3');
+    const btnAttr = createMenuButton(' Extract Attribute', '#2196F3');
     btnAttr.addEventListener('click', (e) => {
       e.stopPropagation();
       console.log('Extract Attribute clicked');
       window.__extractAttribute();
     });
     
-    const btnTable = createMenuButton('📊 Extract Table', '#FF9800');
+    const btnTable = createMenuButton(' Extract Table', '#FF9800');
     btnTable.addEventListener('click', (e) => {
       e.stopPropagation();
       console.log('Extract Table clicked');
       window.__extractTable();
     });
     
-    const btnDelay = createMenuButton ('⏱️ Add Delay', '#9C27B0');
+    const btnDelay = createMenuButton (' Add Delay', '#9C27B0');
     btnDelay.addEventListener('click', (e) => {
       e.stopPropagation();
       console.log('Add Delay clicked');
       window.__addDelay();
     });
     
-    const btnCancel = createMenuButton('❌ Cancel', '#f44336');
+    const btnCancel = createMenuButton(' Cancel', '#f44336');
     btnCancel.addEventListener('click', (e) => {
       e.stopPropagation();
       console.log('Cancel clicked');
@@ -1154,7 +1154,7 @@ RECORDER_INIT_SCRIPT = r"""
     removeExtractionMenu();
     
     // Show custom input dialog instead of prompt()
-    showInputDialog("💾 Variable Name", "extracted_value", (varName) => {
+    showInputDialog(" Variable Name", "extracted_value", (varName) => {
       if (varName && varName.trim()) {
         const locators = getLocatorCandidates(element);
         
@@ -1179,7 +1179,7 @@ RECORDER_INIT_SCRIPT = r"""
             save_options: saveConfig  // NEW: Include save configuration
           });
           
-          highlightExtracted(element, `✅ Extracting: "${text.substring(0, 30)}..."`);
+          highlightExtracted(element, ` Extracting: "${text.substring(0, 30)}..."`);
         });
       } else {
         console.log('User cancelled or entered empty name');
@@ -1200,10 +1200,10 @@ RECORDER_INIT_SCRIPT = r"""
     removeExtractionMenu();
     
     // First ask for attribute name
-    showInputDialog("🔍 Attribute Name", "href", (attr) => {
+    showInputDialog(" Attribute Name", "href", (attr) => {
       if (attr && attr.trim()) {
         // Then ask for variable name
-        showInputDialog("💾 Variable Name", attr.trim() + "_value", (varName) => {
+        showInputDialog(" Variable Name", attr.trim() + "_value", (varName) => {
           if (varName && varName.trim()) {
             const locators = getLocatorCandidates(element);
             const value = element.getAttribute(attr.trim()) || '';
@@ -1222,7 +1222,7 @@ RECORDER_INIT_SCRIPT = r"""
                 save_options: saveConfig  // NEW: Include save configuration
               });
               
-              highlightExtracted(element, `✅ Extracting ${attr}: "${value.substring(0, 30)}..."`);
+              highlightExtracted(element, ` Extracting ${attr}: "${value.substring(0, 30)}..."`);
             });
           }
         });
@@ -1232,37 +1232,37 @@ RECORDER_INIT_SCRIPT = r"""
 
   // Extract table data - Phase 8.3
   window.__extractTable = function() {
-    console.log('🔍 __extractTable called');
+    console.log(' __extractTable called');
     const element = __CONTEXT_TARGET__;
-    console.log('🔍 Target element:', element);
+    console.log(' Target element:', element);
     
     if (!element) {
-      console.error('❌ No element selected!');
-      alert('❌ No element selected! Please right-click on a table.');
+      console.error(' No element selected!');
+      alert(' No element selected! Please right-click on a table.');
       return;
     }
     
     removeExtractionMenu();
-    console.log('🔍 Menu removed, detecting table...');
+    console.log(' Menu removed, detecting table...');
     
     // Detect table element
     const table = detectTableElement(element);
-    console.log('🔍 Table detected:', table);
+    console.log(' Table detected:', table);
     
     if (!table) {
-      alert('⚠️ No table found! Please right-click on or near a table element.');
-      console.error('❌ No table found near element:', element);
+      alert(' No table found! Please right-click on or near a table element.');
+      console.error(' No table found near element:', element);
       return;
     }
     
-    console.log('✅ Table found, getting headers...');
+    console.log(' Table found, getting headers...');
     const headers = getTableHeaders(table);
-    console.log('📊 Headers:', headers);
+    console.log(' Headers:', headers);
     
     // Show column selection dialog
-    console.log('🔍 Calling showColumnSelectionDialog...');
+    console.log(' Calling showColumnSelectionDialog...');
     showColumnSelectionDialog(table, (config) => {
-      console.log('📋 Dialog callback called with config:', config);
+      console.log(' Dialog callback called with config:', config);
       
       if (!config) {
         console.log('User cancelled table extraction');
@@ -1272,16 +1272,16 @@ RECORDER_INIT_SCRIPT = r"""
       console.log('Table extraction config:', config);
       
       // Ask for variable name
-      showInputDialog("💾 Variable Name", "table_data", (varName) => {
+      showInputDialog(" Variable Name", "table_data", (varName) => {
         if (varName && varName.trim()) {
-          console.log('✅ Variable name entered:', varName);
+          console.log(' Variable name entered:', varName);
           
           // Generate CSS selector for the table
           const tableSelector = generateStableCSS(table);
-          console.log('✅ Table selector generated:', tableSelector);
+          console.log(' Table selector generated:', tableSelector);
           
           const locators = getLocatorCandidates(table);
-          console.log('✅ Locators generated:', locators);
+          console.log(' Locators generated:', locators);
           
           const table_config = {
             table_selector: tableSelector,
@@ -1290,12 +1290,12 @@ RECORDER_INIT_SCRIPT = r"""
             pagination: config.pagination
           };
           
-          console.log('✅ Table config created:', table_config);
+          console.log(' Table config created:', table_config);
           
           // Show save options dialog
           showSaveOptionsDialog((saveConfig) => {
-            console.log('💾 Save config:', saveConfig);
-            console.log('📤 Sending extract_table action...');
+            console.log(' Save config:', saveConfig);
+            console.log(' Sending extract_table action...');
             
             send('extract_table', {
               url: location.href,
@@ -1305,7 +1305,7 @@ RECORDER_INIT_SCRIPT = r"""
               save_options: saveConfig
             });
             
-            highlightExtracted(table, `✅ Extracting table: ${config.columns.length} columns`);
+            highlightExtracted(table, ` Extracting table: ${config.columns.length} columns`);
           });
         } else {
           console.log('User cancelled or entered empty name');
@@ -1392,13 +1392,13 @@ RECORDER_INIT_SCRIPT = r"""
   window.__addDelay = function() {
     removeExtractionMenu();
     
-    showInputDialog('⏱️ Add Delay (seconds)', '5', (value) => {
+    showInputDialog(' Add Delay (seconds)', '5', (value) => {
       if (!value) return;  // User cancelled
       
       // Validate: Must be number between 1-60
       const seconds = parseFloat(value);
       if (isNaN(seconds) || seconds < 1 || seconds > 60) {
-        showMessage(`❌ Invalid delay: Must be 1-60 seconds`);
+        showMessage(` Invalid delay: Must be 1-60 seconds`);
         return;
       }
       
@@ -1413,7 +1413,7 @@ RECORDER_INIT_SCRIPT = r"""
       });
       
       // Show confirmation
-      showMessage(`⏱️ Added ${roundedSeconds}s delay`);
+      showMessage(` Added ${roundedSeconds}s delay`);
     });
   };
 
@@ -1440,7 +1440,7 @@ RECORDER_INIT_SCRIPT = r"""
     `;
     
     dialog.innerHTML = `
-      <div style="font-weight: bold; margin-bottom: 15px; font-size: 16px;">💾 Save Extracted Data?</div>
+      <div style="font-weight: bold; margin-bottom: 15px; font-size: 16px;"> Save Extracted Data?</div>
       <div style="margin-bottom: 15px;">
         <label style="display: block; margin: 8px 0; cursor: pointer;">
           <input type="checkbox" id="save_excel" style="margin-right: 8px;">
@@ -1488,7 +1488,7 @@ RECORDER_INIT_SCRIPT = r"""
       };
       
       // DEBUG: Log checkbox states
-      console.log('📋 Checkbox values:', formats);
+      console.log(' Checkbox values:', formats);
       console.log('  Excel checkbox:', document.getElementById('save_excel'), 'checked:', document.getElementById('save_excel')?.checked);
       console.log('  Word checkbox:', document.getElementById('save_word'), 'checked:', document.getElementById('save_word')?.checked);
       console.log('  Txt checkbox:', document.getElementById('save_txt'), 'checked:', document.getElementById('save_txt')?.checked);
@@ -1690,7 +1690,7 @@ class WebRecorder:
                 )
                 
                 self.steps.append(step)
-                print(f"✅ Recorded extraction: {key} = '{sample_value[:50] if sample_value else 'N/A'}'")
+                print(f" Recorded extraction: {key} = '{sample_value[:50] if sample_value else 'N/A'}'")
                 
                 # NEW: Phase 8.2 - Handle immediate save if configured
                 if save_options:
@@ -1716,7 +1716,7 @@ class WebRecorder:
                 
                 self.steps.append(step)
                 cols_count = len(table_config.get('columns', [])) if table_config else 0
-                print(f"✅ Recorded table extraction: {key} ({cols_count} columns)")
+                print(f" Recorded table extraction: {key} ({cols_count} columns)")
             
             elif kind == "wait":
                 # NEW: Handle explicit wait/delay
@@ -1726,7 +1726,7 @@ class WebRecorder:
                 try:
                     wait_time = float(seconds)
                     if wait_time < 1 or wait_time > 60:
-                        print(f"⚠️ Invalid wait time: {wait_time}s (must be 1-60)")
+                        print(f" Invalid wait time: {wait_time}s (must be 1-60)")
                         return
                     
                     step = Step(
@@ -1738,9 +1738,9 @@ class WebRecorder:
                     )
                     
                     self.steps.append(step)
-                    print(f"⏱️ Recorded delay: {wait_time}s")
+                    print(f" Recorded delay: {wait_time}s")
                 except (ValueError, TypeError):
-                    print(f"⚠️ Invalid wait value: {seconds}")
+                    print(f" Invalid wait value: {seconds}")
 
         async def stop(source, payload=None) -> None:
             self._stop_event.set()
@@ -1848,9 +1848,9 @@ class WebRecorder:
         if not os.path.exists(folder):
             try:
                 os.makedirs(folder, exist_ok=True)
-                print(f"✅ Created folder: {folder}")
+                print(f" Created folder: {folder}")
             except Exception as e:
-                print(f"⚠️ Cannot create folder ({e}), using current directory")
+                print(f" Cannot create folder ({e}), using current directory")
                 folder = '.'
         
         saved_files = []
@@ -1861,7 +1861,7 @@ class WebRecorder:
                 self._save_to_excel_immediate(step, filepath, mode)
                 saved_files.append(os.path.basename(filepath))
         except Exception as e:
-            print(f"⚠️ Excel save failed: {e}")
+            print(f" Excel save failed: {e}")
         
         try:
             if formats.get('word'):
@@ -1869,7 +1869,7 @@ class WebRecorder:
                 self._save_to_word_immediate(step, filepath, mode)
                 saved_files.append(os.path.basename(filepath))
         except Exception as e:
-            print(f"⚠️ Word save failed: {e}")
+            print(f" Word save failed: {e}")
         
         try:
             if formats.get('txt'):
@@ -1877,10 +1877,10 @@ class WebRecorder:
                 self._save_to_txt_immediate(step, filepath, mode)
                 saved_files.append(os.path.basename(filepath))
         except Exception as e:
-            print(f"⚠️ Text save failed: {e}")
+            print(f" Text save failed: {e}")
         
         if saved_files:
-            print(f"💾 Saved to: {', '.join(saved_files)}")
+            print(f" Saved to: {', '.join(saved_files)}")
     
     def _save_to_excel_immediate(self, step: Step, filepath: str, mode: str) -> None:
         """Save extraction to Excel file"""
@@ -1888,7 +1888,7 @@ class WebRecorder:
             import openpyxl
             from openpyxl.styles import Font
         except ImportError:
-            print("⚠️ openpyxl not installed. Run: pip install openpyxl")
+            print(" openpyxl not installed. Run: pip install openpyxl")
             return
         
         import os
@@ -1943,7 +1943,7 @@ class WebRecorder:
             from docx import Document
             from docx.shared import Pt
         except ImportError:
-            print("⚠️ python-docx not installed. Run: pip install python-docx")
+            print(" python-docx not installed. Run: pip install python-docx")
             return
         
         import os

@@ -17,18 +17,18 @@ RECORDING_FILE = "recorded_steps.json"
 
 def main():
     print("="*60)
-    print("📤 WebAI Recording Importer")
+    print(" WebAI Recording Importer")
     print("="*60)
     
     # Load recording
     if not Path(RECORDING_FILE).exists():
-        print(f"❌ Error: {RECORDING_FILE} not found!")
+        print(f" Error: {RECORDING_FILE} not found!")
         return
     
     with open(RECORDING_FILE, 'r', encoding='utf-8') as f:
         steps = json.load(f)
     
-    print(f"\n✅ Loaded {len(steps)} steps from {RECORDING_FILE}")
+    print(f"\n Loaded {len(steps)} steps from {RECORDING_FILE}")
     
     # Check if user already registered
     print("\n" + "="*60)
@@ -39,7 +39,7 @@ def main():
     
     if choice != 'y':
         # Register new user
-        print("\n📝 Creating new account...")
+        print("\n Creating new account...")
         username = input("Enter username: ").strip()
         email = input("Enter email: ").strip()
         password = input("Enter password: ").strip()
@@ -55,12 +55,12 @@ def main():
             )
             
             if response.status_code == 201:
-                print(f"✅ User '{username}' created successfully!")
+                print(f" User '{username}' created successfully!")
             else:
-                print(f"❌ Registration failed: {response.json()}")
+                print(f" Registration failed: {response.json()}")
                 return
         except Exception as e:
-            print(f"❌ Error connecting to API: {e}")
+            print(f" Error connecting to API: {e}")
             print(f"   Make sure the API server is running at {API_URL}")
             return
     else:
@@ -81,14 +81,14 @@ def main():
         if response.status_code == 200:
             data = response.json()
             api_key = data['api_key']
-            print(f"✅ Login successful!")
-            print(f"📋 Your API Key: {api_key}")
+            print(f" Login successful!")
+            print(f" Your API Key: {api_key}")
             print(f"   (Save this for future API calls)")
         else:
-            print(f"❌ Login failed: {response.json()}")
+            print(f" Login failed: {response.json()}")
             return
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f" Error: {e}")
         return
     
     # Import recording
@@ -102,7 +102,7 @@ def main():
     
     description = input("Enter description (optional): ").strip()
     
-    print(f"\n📤 Importing to database...")
+    print(f"\n Importing to database...")
     try:
         response = requests.post(
             f"{API_URL}/migrate/import-recording",
@@ -117,7 +117,7 @@ def main():
         if response.status_code == 200:
             data = response.json()
             automation_id = data['automation_id']
-            print(f"\n✅ SUCCESS!")
+            print(f"\n SUCCESS!")
             print(f"   Automation ID: {automation_id}")
             print(f"   Name: {name}")
             print(f"   Steps: {data['message']}")
@@ -137,9 +137,9 @@ def main():
             print(f"   (automation_id: {automation_id})")
             
         else:
-            print(f"❌ Import failed: {response.json()}")
+            print(f" Import failed: {response.json()}")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f" Error: {e}")
     
     print("\n" + "="*60)
 

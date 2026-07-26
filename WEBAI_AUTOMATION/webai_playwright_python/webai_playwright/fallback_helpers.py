@@ -42,7 +42,7 @@ async def click_with_fallback(page, locators: List[Dict]) -> bool:
     sorted_locators = sorted(locators, key=lambda x: LOCATOR_PRIORITY.get(x.get("type"), 99))
     
     errors = []
-    print(f"🔍 Attempting click with {len(sorted_locators)} locators...")
+    print(f"[SEARCH] Attempting click with {len(sorted_locators)} locators...")
     
     for i, loc in enumerate(sorted_locators):
         loc_type = loc.get("type")
@@ -77,25 +77,32 @@ async def click_with_fallback(page, locators: List[Dict]) -> bool:
             else:
                 errors.append(f"{loc_type}: Unknown locator type")
                 continue
-            
-            # Try clicking with timeout
-            await loc_obj.click(timeout=5000)
-            print(f"  ✅ Click successful with {loc_type}")
+                       # Try clicking with timeout; handle strict mode violation if multiple elements match
+            try:
+                await loc_obj.click(timeout=5000)
+            except Exception as click_err:
+                if "strict mode" in str(click_err).lower():
+                    print(f"  [WARN] Strict mode resolution ({loc_type}); targeting first matching visible element...")
+                    await loc_obj.first.click(timeout=5000)
+                else:
+                    raise click_err
+
+            print(f"  [OK] Click successful with {loc_type}")
             return True
             
         except PlaywrightTimeoutError:
             error_msg = f"Element not found/clickable (timeout)"
             errors.append(f"{loc_type}: {error_msg}")
-            print(f"  ❌ {error_msg}")
+            print(f"  [ERROR] {error_msg}")
         except Exception as e:
             error_msg = str(e)[:100]
             errors.append(f"{loc_type}: {error_msg}")
-            print(f"  ❌ {error_msg}")
+            print(f"  [ERROR] {error_msg}")
     
     # All locators failed
-    error_report = f"❌ All {len(sorted_locators)} locators failed for click:\\n"
+    error_report = f"[ERROR] All {len(sorted_locators)} locators failed for click:\n"
     for err in errors:
-        error_report += f"  • {err}\\n"
+        error_report += f"  - {err}\n"
     raise Exception(error_report)
 
 
@@ -119,7 +126,7 @@ async def type_with_fallback(page, locators: List[Dict], text: str) -> bool:
     sorted_locators = sorted(locators, key=lambda x: LOCATOR_PRIORITY.get(x.get("type"), 99))
     
     errors = []
-    print(f"🔍 Attempting type with {len(sorted_locators)} locators...")
+    print(f"[SEARCH] Attempting type with {len(sorted_locators)} locators...")
     
     for i, loc in enumerate(sorted_locators):
         loc_type = loc.get("type")
@@ -153,25 +160,34 @@ async def type_with_fallback(page, locators: List[Dict], text: str) -> bool:
                 errors.append(f"{loc_type}: Unknown locator type")
                 continue
             
-            # Try typing
-            await loc_obj.clear()
-            await loc_obj.fill(text)
-            print(f"  ✅ Type successful with {loc_type}")
+            # Try typing; handle strict mode violation if multiple elements match
+            try:
+                await loc_obj.clear()
+                await loc_obj.fill(text, timeout=5000)
+            except Exception as type_err:
+                if "strict mode" in str(type_err).lower():
+                    print(f"  [WARN] Strict mode resolution ({loc_type}); targeting first matching visible element...")
+                    await loc_obj.first.clear()
+                    await loc_obj.first.fill(text, timeout=5000)
+                else:
+                    raise type_err
+
+            print(f"  [OK] Type successful with {loc_type}")
             return True
             
         except PlaywrightTimeoutError:
             error_msg = f"Element not found/typeable (timeout)"
             errors.append(f"{loc_type}: {error_msg}")
-            print(f"  ❌ {error_msg}")
+            print(f"  [ERROR] {error_msg}")
         except Exception as e:
             error_msg = str(e)[:100]
             errors.append(f"{loc_type}: {error_msg}")
-            print(f"  ❌ {error_msg}")
+            print(f"  [ERROR] {error_msg}")
     
     # All locators failed
-    error_report = f"❌ All {len(sorted_locators)} locators failed for type:\\n"
+    error_report = f"[ERROR] All {len(sorted_locators)} locators failed for type:\\n"
     for err in errors:
-        error_report += f"  • {err}\\n"
+        error_report += f"  - {err}\\n"
     raise Exception(error_report)
 
 
@@ -195,7 +211,7 @@ async def select_with_fallback(page, locators: List[Dict], value: str) -> bool:
     sorted_locators = sorted(locators, key=lambda x: LOCATOR_PRIORITY.get(x.get("type"), 99))
     
     errors = []
-    print(f"🔍 Attempting select with {len(sorted_locators)} locators...")
+    print(f"[SEARCH] Attempting select with {len(sorted_locators)} locators...")
     
     for i, loc in enumerate(sorted_locators):
         loc_type = loc.get("type")
@@ -219,22 +235,22 @@ async def select_with_fallback(page, locators: List[Dict], value: str) -> bool:
             
             # Try selecting
             await loc_obj.select_option(value)
-            print(f"  ✅ Select successful with {loc_type}")
+            print(f"  [OK] Select successful with {loc_type}")
             return True
             
         except PlaywrightTimeoutError:
             error_msg = f"Element not found (timeout)"
             errors.append(f"{loc_type}: {error_msg}")
-            print(f"  ❌ {error_msg}")
+            print(f"  [ERROR] {error_msg}")
         except Exception as e:
             error_msg = str(e)[:100]
             errors.append(f"{loc_type}: {error_msg}")
-            print(f"  ❌ {error_msg}")
+            print(f"  [ERROR] {error_msg}")
     
     # All locators failed
-    error_report = f"❌ All {len(sorted_locators)} locators failed for select:\\n"
+    error_report = f"[ERROR] All {len(sorted_locators)} locators failed for select:\\n"
     for err in errors:
-        error_report += f"  • {err}\\n"
+        error_report += f"  - {err}\\n"
     raise Exception(error_report)
 
 
@@ -260,7 +276,7 @@ async def extract_with_fallback(page, locators: List[Dict], extract_type: str,
     sorted_locators = sorted(locators, key=lambda x: LOCATOR_PRIORITY.get(x.get("type"), 99))
     
     errors = []
-    print(f"🔍 Extracting using {len(sorted_locators)} locators...")
+    print(f"[SEARCH] Extracting using {len(sorted_locators)} locators...")
     
     for i, loc in enumerate(sorted_locators):
         loc_type = loc.get("type")
@@ -304,22 +320,22 @@ async def extract_with_fallback(page, locators: List[Dict], extract_type: str,
                 if value is None:
                     value = ""
             
-            print(f"  ✅ Extraction successful: '{value[:100]}'")
+            print(f"  [OK] Extraction successful: '{value[:100]}'")
             return value
             
         except PlaywrightTimeoutError:
             error_msg = f"Element not found (timeout)"
             errors.append(f"{loc_type}: {error_msg}")
-            print(f"  ❌ {error_msg}")
+            print(f"  [ERROR] {error_msg}")
         except Exception as e:
             error_msg = str(e)[:100]
             errors.append(f"{loc_type}: {error_msg}")
-            print(f"  ❌ {error_msg}")
+            print(f"  [ERROR] {error_msg}")
     
     # All locators failed
-    error_report = f"❌ All {len(sorted_locators)} locators failed for extraction:\\n"
+    error_report = f"[ERROR] All {len(sorted_locators)} locators failed for extraction:\\n"
     for err in errors:
-        error_report += f"  • {err}\\n"
+        error_report += f"  - {err}\\n"
     raise Exception(error_report)
 
 
@@ -343,7 +359,7 @@ async def extract_table_data(page, table_selector: str, column_indices: List[int
     Returns:
         Dict with success, data (list of row dicts), and row_count
     """
-    print(f"📊 Extracting table: {table_selector}")
+    print(f"[DATA] Extracting table: {table_selector}")
     print(f"   Columns: {columns}")
     print(f"   Max pages: {max_pages}, Wait: {wait_per_page}s, Timeout: {page_timeout}s, Retries: {retry_attempts}")
     
@@ -393,18 +409,18 @@ async def extract_table_data(page, table_selector: str, column_indices: List[int
                 // Main extraction logic
                 const table = document.querySelector(tableSelector);
                 if (!table) {
-                    console.error('❌ Table not found:', tableSelector);
+                    console.error('[ERROR] Table not found:', tableSelector);
                     return { success: false, data: [], row_count: 0, error: 'Table not found' };
                 }
                 
-                console.log('📊 Table found:', table);
+                console.log('[DATA] Table found:', table);
                 
                 let allData = [];
                 let currentPage = 1;
                 const extractedHashes = new Set();
                 
                 while (currentPage <= maxPages) {
-                    console.log(`📄 Page ${currentPage}/${maxPages}...`);
+                    console.log(`[PAGE] Page ${currentPage}/${maxPages}...`);
                     
                     // STEP 1: Extract current page data
                     let pageData = extractPageRows(table, columnIndices, columns);
@@ -415,7 +431,7 @@ async def extract_table_data(page, table_selector: str, column_indices: List[int
                     // STEP 2: Retry if duplicate detected
                     let retryCount = 0;
                     while (extractedHashes.has(pageHash) && retryCount < retryAttempts) {
-                        console.log(`  ⚠️ Duplicate data detected, retry ${retryCount + 1}/${retryAttempts}...`);
+                        console.log(`  [WARN] Duplicate data detected, retry ${retryCount + 1}/${retryAttempts}...`);
                         await new Promise(resolve => setTimeout(resolve, waitPerPage * 1000));
                         pageData = extractPageRows(table, columnIndices, columns);
                         pageHash = hashRows(pageData);
@@ -423,21 +439,21 @@ async def extract_table_data(page, table_selector: str, column_indices: List[int
                     }
                     
                     if (extractedHashes.has(pageHash)) {
-                        console.log(`  ❌ Still duplicate after ${retryAttempts} retries, stopping pagination`);
+                        console.log(`  [ERROR] Still duplicate after ${retryAttempts} retries, stopping pagination`);
                         break;
                     }
                     
                     // STEP 3: Store unique data
                     extractedHashes.add(pageHash);
                     allData.push(...pageData);
-                    console.log(`  ✅ Added ${pageData.length} unique rows (total: ${allData.length})`);
+                    console.log(`  [OK] Added ${pageData.length} unique rows (total: ${allData.length})`);
                     
                     if (currentPage >= maxPages) break;
                     
                     // STEP 4: Find Next button
                     const nextBtn = findNextButton();
                     if (!nextBtn || nextBtn.disabled) {
-                        console.log('  ℹ️ No more pages (Next button not found or disabled)');
+                        console.log('  [INFO] No more pages (Next button not found or disabled)');
                         break;
                     }
                     
@@ -445,7 +461,7 @@ async def extract_table_data(page, table_selector: str, column_indices: List[int
                     const oldHash = pageHash;
                     
                     // STEP 6: Click Next
-                    console.log('  🔄 Navigating to next page...');
+                    console.log('  [NAV] Navigating to next page...');
                     nextBtn.click();
                     
                     // STEP 7: Wait for table to change (with timeout)
@@ -460,14 +476,14 @@ async def extract_table_data(page, table_selector: str, column_indices: List[int
                         
                         if (currentHash !== oldHash) {
                             const elapsedMs = Date.now() - startTime;
-                            console.log(`  ✅ Table updated after ${elapsedMs}ms`);
+                            console.log(`  [OK] Table updated after ${elapsedMs}ms`);
                             changed = true;
                             break;
                         }
                     }
                     
                     if (!changed) {
-                        console.log(`  ⚠️ Timeout: Table didn't change after ${pageTimeout}s, stopping pagination`);
+                        console.log(`  [WARN] Timeout: Table didn't change after ${pageTimeout}s, stopping pagination`);
                         break;
                     }
                     
@@ -476,7 +492,7 @@ async def extract_table_data(page, table_selector: str, column_indices: List[int
                     currentPage++;
                 }
                 
-                console.log(`✅ Extraction complete: ${allData.length} total rows from ${currentPage} pages`);
+                console.log(`[OK] Extraction complete: ${allData.length} total rows from ${currentPage} pages`);
                 return { success: true, data: allData, row_count: allData.length };
             }
         """, {
@@ -489,11 +505,11 @@ async def extract_table_data(page, table_selector: str, column_indices: List[int
             "retryAttempts": retry_attempts
         })
         
-        print(f"✅ Table extraction complete: {result.get('row_count', 0)} rows")
+        print(f"[OK] Table extraction complete: {result.get('row_count', 0)} rows")
         return result
         
     except Exception as e:
-        print(f"❌ Table extraction failed: {e}")
+        print(f"[ERROR] Table extraction failed: {e}")
         return {"success": False, "data": [], "row_count": 0, "error": str(e)}
 
 
@@ -517,7 +533,7 @@ async def validate_page(page, expected_url: str, timeout_ms: int = 10000):
     while True:
         current_url = page.url
         if expected_url in current_url:
-            print(f"✅ Page URL validated: {current_url}")
+            print(f"[OK] Page URL validated: {current_url}")
             return True
         
         elapsed = asyncio.get_event_loop().time() - start_time
