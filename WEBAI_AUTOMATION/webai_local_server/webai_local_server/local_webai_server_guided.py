@@ -11,6 +11,20 @@ from datetime import datetime
 
 import websockets
 
+try:
+    from dotenv import load_dotenv
+    # Load .env from local directory or root workspace
+    local_env = Path(__file__).resolve().parent.parent / ".env"
+    root_env = Path(__file__).resolve().parent.parent.parent / ".env"
+    if local_env.exists():
+        load_dotenv(local_env, override=True)
+    if root_env.exists():
+        load_dotenv(root_env, override=True)
+    load_dotenv(override=True)
+except ImportError:
+    pass
+
+
 
 # ============================================================================
 # PHASE 8.2: SAVE EXTRACTED DATA - Helpers
@@ -278,7 +292,7 @@ async def ollama_chat(system: str, user: str) -> str:
     Returns assistant message content.
     """
     url = _env("OLLAMA_URL", "http://localhost:11434/api/chat")
-    model = _env("OLLAMA_MODEL", "llama3.1")
+    model = _env("OLLAMA_MODEL", "hermes3")
 
     payload = {
         "model": model,
@@ -1679,7 +1693,8 @@ async def main():
     path = _env("WS_PATH", "/api")
 
     print("✅ Local AI WebSocket server (LLM): ws://localhost:8765/api")
-    print(f"   Using Ollama: {_env('OLLAMA_URL', 'http://localhost:11434')}/api/chat | model: {_env('OLLAMA_MODEL', 'llama3.1')}")
+    ollama_url = _env('OLLAMA_URL', 'http://localhost:11434/api/chat')
+    print(f"   Using Ollama: {ollama_url} | model: {_env('OLLAMA_MODEL', 'hermes3')}")
     print(f"   Replay: {_env('REPLAY_ENABLED', '1')} Record: {_env('RECORD_ENABLED', '1')} Cache: plan_cache.json")
     print("   🔄 FALLBACK STRATEGY ENABLED (v2.0)  ← CODE UPDATED!")  # NEW: Verify code loaded
 
