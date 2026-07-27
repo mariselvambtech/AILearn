@@ -30,6 +30,9 @@ class Step:
     attribute_name: Optional[str] = None  # NEW: For extract action with type='attribute'
     save_options: Optional[Dict[str, Any]] = None  # NEW: Phase 8.2 - Save configuration for extract action
     table_config: Optional[Dict[str, Any]] = None  # NEW: Phase 8.3 - Table extraction configuration
+    page_summary: Optional[str] = None  # Crawl4AI LLM page summary
+    element_intent: Optional[str] = None  # Semantic action intent
+    fingerprint: Optional[Dict[str, Any]] = None  # Structural DOM fingerprint
 
 
 RECORDER_INIT_SCRIPT = r"""
@@ -80,9 +83,9 @@ RECORDER_INIT_SCRIPT = r"""
   // Prefer "stable" click targets only
   function getClickableTarget(el) {
     if (!el) return null;
-    // true interactives
-    const target = el.closest?.("a,button,[role='button'],input[type='submit'],input[type='button']");
-    return target || null;
+    // true interactives + custom card buttons, icons, modals, and onclick elements
+    const target = el.closest?.("a,button,[role='button'],input[type='submit'],input[type='button'],[onclick],[class*='btn'],[class*='close'],[class*='modal'],[class*='card']");
+    return target || el;
   }
 
   function bestStableName(el, maxLen) {
@@ -106,8 +109,17 @@ RECORDER_INIT_SCRIPT = r"""
     if (ph && cleanText(ph)) return truncate(ph, maxLen);
 
     // for buttons/links: use their visible text (trimmed)
-    const txt = cleanText(el.innerText || "");
-    if (txt) return truncate(txt, maxLen);
+    const txt = cleanText(el.innerText || el.textContent || "");
+    if (txt) {
+      if (txt === "×" || txt === "x" || txt === "X") return "Close";
+      return truncate(txt, maxLen);
+    }
+
+    // Check for close class or icon
+    const cls = (el.className && typeof el.className === "string") ? el.className.toLowerCase() : "";
+    if (cls.includes("close") || cls.includes("modal-close") || cls.includes("btn-close")) {
+      return "Close";
+    }
 
     const nm = el.getAttribute && el.getAttribute("name");
     if (nm && cleanText(nm)) return truncate(nm, maxLen);
@@ -305,8 +317,9 @@ RECORDER_INIT_SCRIPT = r"""
       candidates.push({type: 'test-id', value: testId});
     }
     
-    // 2. ID (very stable if present)
-    if (el.id && !/^[0-9]/.test(el.id)) {  // Exclude numeric IDs (often auto-generated)
+    // 2. ID (very stable if present, excluding dynamic auto-generated hash IDs)
+    const isDynamicId = /^[0-9]/.test(el.id) || /^modal-[A-Za-z0-9]{4,}$/.test(el.id) || /^:[a-zA-Z0-9_-]+:$/.test(el.id) || /ember\d+/i.test(el.id) || /^id-\d+/i.test(el.id);
+    if (el.id && !isDynamicId) {
       candidates.push({type: 'id', value: el.id});
     }
     
@@ -1636,6 +1649,32 @@ class WebRecorder:
         self._stop_event = asyncio.Event()
         self._last_url: Optional[str] = None
         self._opened_once = False
+        self._attached_pages = set()
+
+    async def attach_context(self, context) -> None:
+        """
+        Attaches the recorder to the BrowserContext and all current / newly opened tabs automatically.
+        """
+        try:
+            await context.add_init_script(RECORDER_INIT_SCRIPT)
+        except Exception:
+            pass
+
+        for p in context.pages:
+            if p not in self._attached_pages:
+                self._attached_pages.add(p)
+                await self.attach(p)
+
+        async def _on_new_page(new_page: Page):
+            if new_page not in self._attached_pages:
+                self._attached_pages.add(new_page)
+                try:
+                    await new_page.wait_for_load_state("domcontentloaded", timeout=3000)
+                except Exception:
+                    pass
+                await self.attach(new_page)
+
+        context.on("page", lambda p: asyncio.create_task(_on_new_page(p)))
 
     async def attach(self, page: Page) -> None:
         async def on_event(source, payload: Dict[str, Any]) -> None:
@@ -1751,12 +1790,23 @@ class WebRecorder:
         async def verify_visible(source, payload: Dict[str, Any]) -> None:
             self.steps.append(Step(action="verify_visible", url=payload.get("url"), value=payload.get("text"), ts=time.time()))
 
-        await page.expose_binding("__recordEvent", on_event)
-        await page.expose_binding("__stopRecording", stop)
-        await page.expose_binding("__recordVerifyText", verify_text)
-        await page.expose_binding("__recordVerifyVisible", verify_visible)
+        try:
+            await page.expose_binding("__recordEvent", on_event)
+            await page.expose_binding("__stopRecording", stop)
+            await page.expose_binding("__recordVerifyText", verify_text)
+            await page.expose_binding("__recordVerifyVisible", verify_visible)
+        except Exception:
+            pass
 
-        await page.add_init_script(RECORDER_INIT_SCRIPT)
+        try:
+            await page.add_init_script(RECORDER_INIT_SCRIPT)
+        except Exception:
+            pass
+
+        try:
+            await page.evaluate(RECORDER_INIT_SCRIPT)
+        except Exception:
+            pass
 
     async def wait_for_stop(self) -> None:
         await self._stop_event.wait()

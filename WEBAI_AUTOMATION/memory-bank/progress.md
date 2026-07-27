@@ -38,6 +38,7 @@
 | Client-side logging (buffer + flush) | ✅ Working | Phase 3 | `run_from_database.py` |
 | Server-side logging (batch) | ✅ Working | Phase 3 | `server_logger.py` |
 | Import recording to database | ✅ Working | Phase 2 | `import_to_database.py` |
+| Mermaid.js Visual Representation & Graphify Export | ✅ Working | Docs & Graph | `systemPatterns.md`, `scripts/graphify_to_mermaid.py`, `MERMAID_GRAPH.md` |
 | Run from database | ✅ Working | Phase 2 | `run_from_database.py` |
 | Run from task text (freeform) | ✅ Working | Phase 5 | `run_from_task_txt_guided.py` |
 | Conditional branching | ❌ Not built | Future | If/else based on extracted values |

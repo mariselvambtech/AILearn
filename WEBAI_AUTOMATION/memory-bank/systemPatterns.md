@@ -2,46 +2,35 @@
 
 ## High-Level Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    USER (Developer)                          │
-│                                                             │
-│  record_then_run.py    import_to_database.py                │
-│  run_from_database.py  run_from_task_txt_guided.py          │
-└──────────┬──────────────────────┬───────────────────────────┘
-           │                      │
-           ▼                      ▼
-┌─────────────────────┐  ┌──────────────────────┐
-│  webai_playwright    │  │  webai_api_server    │
-│  _python (Browser)   │  │  (FastAPI + MSSQL)   │
-│  Port: N/A (client)  │  │  Port: 8000          │
-│                      │  │                      │
-│  • Recorder (JS)     │  │  • REST API          │
-│  • Playback (PW)     │  │  • Database CRUD     │
-│  • Fallback helpers  │  │  • Auth + Encryption │
-│  • CDP integration   │  │  • Logging           │
-└──────────┬───────────┘  └──────────┬───────────┘
-           │ WebSocket               │ HTTP REST
-           │ ws://localhost:8765     │
-           ▼                         │
-┌─────────────────────┐              │
-│  webai_local_server  │              │
-│  (AI Brain)          │──────────────┘
-│  Port: 8765          │  (sends logs via HTTP)
-│                      │
-│  • WebSocket server  │
-│  • Ollama LLM calls  │
-│  • Task normalization│
-│  • Action planning   │
-│  • Guided execution  │
-└──────────┬───────────┘
-           │ HTTP
-           ▼
-┌─────────────────────┐
-│  Ollama (Local LLM)  │
-│  Port: 11434         │
-│  Model: llama3.1     │
-└─────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Client ["🤖 Hands: Browser Robot (webai_playwright_python)"]
+        REC["Recorder (recorder.py)"]
+        PLAY["Playback Engine (playwright_actions.py)"]
+        FALL["Fallback Engine (fallback_helpers.py)"]
+    end
+
+    subgraph Server ["🧠 Brain: AI Server (webai_local_server)"]
+        WS["WebSocket Server (port 8765)"]
+        NORM["Task & Action Normalizer"]
+        LOG["Server Logger (server_logger.py)"]
+    end
+
+    subgraph Backend ["📦 Warehouse: API Backend (webai_api_server)"]
+        API["FastAPI App (port 8000)"]
+        AUTH["Auth & Encryption (Fernet)"]
+        DB[(MSSQL Database)]
+    end
+
+    subgraph LLM ["Ollama Service"]
+        LLM_ENG["Llama 3.1 Model (port 11434)"]
+    end
+
+    Client <-->|WebSocket ws://localhost:8765| Server
+    Client <-->|HTTP REST /execute, /logs| API
+    Server -->|HTTP POST /logs/batch| API
+    Server <-->|HTTP POST /api/chat| LLM
+    API <-->|SQLAlchemy ORM| DB
 ```
 
 ## Component Relationships
@@ -302,26 +291,47 @@ Playback:
 
 ## Database Schema
 
-```
-users (id, username, email, password_hash, api_key, created_at, is_active)
-  │
-  ├── automations (id, user_id, name, description, base_url, steps_json, 
-  │                is_template, template_category, created_at, updated_at)
-  │     │
-  │     ├── automation_configs (id, automation_id, user_id, variables, 
-  │     │                       encrypted_secrets, log_retention_days, is_active)
-  │     │
-  │     ├── execution_history (id, automation_id, user_id, started_at, 
-  │     │                       started_at_ist, completed_at, completed_at_ist,
-  │     │                       status, error_message, extracted_data,
-  │     │                       duration_seconds, steps_completed, steps_failed)
-  │     │     │
-  │     │     └── execution_logs (id, execution_id, automation_id, timestamp,
-  │     │                            timestamp_ist, level, source, message,
-  │     │                            log_metadata, created_at)
-  │     │
-  │     └── scheduled_runs (id, automation_id, user_id, cron_expression,
-  │                          is_active, next_run_at, last_run_at, last_status)
+```mermaid
+erDiagram
+    USERS ||--o{ AUTOMATIONS : owns
+    USERS ||--o{ AUTOMATION_CONFIGS : defines
+    USERS ||--o{ EXECUTION_HISTORY : executes
+    AUTOMATIONS ||--o{ AUTOMATION_CONFIGS : configures
+    AUTOMATIONS ||--o{ EXECUTION_HISTORY : tracked_in
+    EXECUTION_HISTORY ||--o{ EXECUTION_LOGS : records
+    AUTOMATIONS ||--o{ SCHEDULED_RUNS : schedules
+
+    USERS {
+        int id PK
+        string username
+        string password_hash
+        string api_key
+    }
+    AUTOMATIONS {
+        int id PK
+        int user_id FK
+        string name
+        json steps_json
+        boolean is_template
+    }
+    AUTOMATION_CONFIGS {
+        int id PK
+        int automation_id FK
+        json variables
+        string encrypted_secrets
+    }
+    EXECUTION_HISTORY {
+        int id PK
+        int automation_id FK
+        string status
+        int steps_completed
+    }
+    EXECUTION_LOGS {
+        int id PK
+        int execution_id FK
+        string level
+        string message
+    }
 ```
 
 ## Key File Locations

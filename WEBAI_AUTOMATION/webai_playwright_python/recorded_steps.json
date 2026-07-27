@@ -5,68 +5,23 @@
     "name": null,
     "value": null,
     "key": null,
-    "ts": 1785067274.6274512,
+    "ts": 1785072879.0054085,
     "locators": null,
     "extract_type": null,
     "attribute_name": null,
     "save_options": null,
-    "table_config": null
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
   },
   {
     "action": "click",
     "url": "https://sastra.edu/",
-    "name": "Academics",
-    "value": null,
-    "key": null,
-    "ts": 1785067274.6274512,
-    "locators": [
-      {
-        "type": "href",
-        "value": "/academics.html"
-      },
-      {
-        "type": "css",
-        "value": "a:nth-child(1)"
-      },
-      {
-        "type": "text",
-        "value": "Academics"
-      },
-      {
-        "type": "role",
-        "value": "link",
-        "name": "Academics"
-      },
-      {
-        "type": "xpath",
-        "value": "//div/div[2]/ul/li[3]/a"
-      }
-    ],
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null
-  },
-  {
-    "action": "navigate",
-    "url": "https://sastra.edu/academics.html",
-    "name": null,
-    "value": null,
-    "key": null,
-    "ts": 1785067280.884772,
-    "locators": null,
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null
-  },
-  {
-    "action": "click",
-    "url": "https://sastra.edu/academics.html",
     "name": "Schools",
     "value": null,
     "key": null,
-    "ts": 1785067280.884772,
+    "ts": 1785072879.0054085,
     "locators": [
       {
         "type": "href",
@@ -93,6 +48,279 @@
     "extract_type": null,
     "attribute_name": null,
     "save_options": null,
-    "table_config": null
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
+  },
+  {
+    "action": "navigate",
+    "url": "https://sastra.edu/academics/schools.html",
+    "name": null,
+    "value": null,
+    "key": null,
+    "ts": 1785072885.115275,
+    "locators": null,
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
+  },
+  {
+    "action": "click",
+    "url": "https://sastra.edu/academics/schools.html",
+    "name": "School of Chemical & Biotechnology",
+    "value": null,
+    "key": null,
+    "ts": 1785072885.115275,
+    "locators": [
+      {
+        "type": "href",
+        "value": "https://scbt.sastra.edu/"
+      },
+      {
+        "type": "css",
+        "value": "a:nth-child(1)"
+      },
+      {
+        "type": "text",
+        "value": "School of Chemical & Biotechnology"
+      },
+      {
+        "type": "role",
+        "value": "link",
+        "name": "School of Chemical & Biotechnology"
+      },
+      {
+        "type": "xpath",
+        "value": "//div/div/ul/li[1]/a"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
+  },
+  {
+    "action": "navigate",
+    "url": "https://scbt.sastra.edu/",
+    "name": null,
+    "value": null,
+    "key": null,
+    "ts": 1785072900.2246082,
+    "locators": null,
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
+  },
+  {
+    "action": "click",
+    "url": "https://scbt.sastra.edu/",
+    "name": "PEOPLE",
+    "value": null,
+    "key": null,
+    "ts": 1785072900.2246082,
+    "locators": [
+      {
+        "type": "href",
+        "value": "/faculty.html"
+      },
+      {
+        "type": "css",
+        "value": "a:nth-child(1)"
+      },
+      {
+        "type": "text",
+        "value": "PEOPLE"
+      },
+      {
+        "type": "role",
+        "value": "link",
+        "name": "PEOPLE"
+      },
+      {
+        "type": "xpath",
+        "value": "//div/div[2]/ul/li[2]/a"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
+  },
+  {
+    "action": "navigate",
+    "url": "https://scbt.sastra.edu/faculty.html",
+    "name": null,
+    "value": null,
+    "key": null,
+    "ts": 1785072905.0949523,
+    "locators": null,
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
+  },
+  {
+    "action": "click",
+    "url": "https://scbt.sastra.edu/faculty.html",
+    "name": "Faculty List",
+    "value": null,
+    "key": null,
+    "ts": 1785072905.0949523,
+    "locators": [
+      {
+        "type": "href",
+        "value": "https://www.sastra.edu/staffprofiles/schools/scbt.php"
+      },
+      {
+        "type": "css",
+        "value": "a.button"
+      },
+      {
+        "type": "text",
+        "value": "Faculty List"
+      },
+      {
+        "type": "role",
+        "value": "link",
+        "name": "Faculty List"
+      },
+      {
+        "type": "xpath",
+        "value": "//div[2]/div[1]/div[2]/center/a"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
+  },
+  {
+    "action": "navigate",
+    "url": "https://www.sastra.edu/staffprofiles/schools/scbt.php",
+    "name": null,
+    "value": null,
+    "key": null,
+    "ts": 1785072911.607882,
+    "locators": null,
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
+  },
+  {
+    "action": "click",
+    "url": "https://www.sastra.edu/staffprofiles/schools/scbt.php",
+    "name": "View",
+    "value": null,
+    "key": null,
+    "ts": 1785072911.607882,
+    "locators": [
+      {
+        "type": "css",
+        "value": "label.btn-view:nth-child(1)"
+      },
+      {
+        "type": "text",
+        "value": "View"
+      },
+      {
+        "type": "xpath",
+        "value": "//div/div[1]/div[3]/div[5]/label"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
+  },
+  {
+    "action": "click",
+    "url": "https://www.sastra.edu/staffprofiles/schools/scbt.php",
+    "name": "Close",
+    "value": null,
+    "key": null,
+    "ts": 1785072915.6460803,
+    "locators": [
+      {
+        "type": "css",
+        "value": "label.modal__close:nth-child(1)"
+      },
+      {
+        "type": "xpath",
+        "value": "//div/div/div[2]/div/label"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
+  },
+  {
+    "action": "click",
+    "url": "https://www.sastra.edu/staffprofiles/schools/scbt.php",
+    "name": "View",
+    "value": null,
+    "key": null,
+    "ts": 1785072915.6480813,
+    "locators": [
+      {
+        "type": "id",
+        "value": "modal-C406"
+      },
+      {
+        "type": "label",
+        "value": "View"
+      },
+      {
+        "type": "css",
+        "value": "#modal-C406"
+      },
+      {
+        "type": "role",
+        "value": "textbox",
+        "name": null
+      },
+      {
+        "type": "xpath",
+        "value": "//*[@id=\"modal-C406\"]"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
   }
 ]
