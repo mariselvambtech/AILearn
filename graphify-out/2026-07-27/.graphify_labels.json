@@ -14,11 +14,5 @@
   "12": "test_error_logging.py",
   "13": "import_to_database.py",
   "14": "test_phase1_locators.py",
-  "15": "add_test_docs.py",
-  "16": "Project Milestones",
-  "17": "Design Patterns",
-  "18": "graphify_to_mermaid.py",
-  "19": "crawl_helper.py",
-  "20": "AI Assistant Core Rules",
-  "21": "Page"
+  "15": "add_test_docs.py"
 }

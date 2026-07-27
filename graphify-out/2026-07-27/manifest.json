@@ -215,8 +215,8 @@
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_local_server/webai_local_server/local_webai_server_guided.py": {
-    "mtime": 1785069313.8041449,
-    "ast_hash": "7268b3f7df988455351184b533c972be",
+    "mtime": 1785061051.235935,
+    "ast_hash": "7863ca44b0aba66f83a6e6343acdff74",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_local_server/webai_local_server/local_webai_server_not needed.py": {
@@ -245,13 +245,13 @@
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_playwright_python/record_then_run.py": {
-    "mtime": 1785070341.412635,
-    "ast_hash": "f15935c63979b35972d6b48ca492a05e",
+    "mtime": 1785067129.3918111,
+    "ast_hash": "deb9cfb0733a40ffbcc0fe45bfb04429",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_playwright_python/recorded_steps.json": {
-    "mtime": 1785124264.8546135,
-    "ast_hash": "a1e6b0eb1543c7e0eb87e8507d8cdd1a",
+    "mtime": 1785067442.4451666,
+    "ast_hash": "14f1a75ab152926bd3685aee70cf28b6",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_playwright_python/run_from_database.py": {
@@ -350,8 +350,8 @@
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/fallback_helpers.py": {
-    "mtime": 1785076657.9721613,
-    "ast_hash": "ac3c727a3c6ad25802a546a78740d0bb",
+    "mtime": 1785065476.4710326,
+    "ast_hash": "b94295eeba9a705482ca100d3074c9fa",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/meta.py": {
@@ -365,8 +365,8 @@
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/recorder.py": {
-    "mtime": 1785076591.9196277,
-    "ast_hash": "c87a10c2b34510ff1dfdccf1511c5be9",
+    "mtime": 1785065515.8835816,
+    "ast_hash": "2f5a689bb7abcda1494f66758615e59d",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/websocket_client.py": {
@@ -970,8 +970,8 @@
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/.agents/AGENTS.md": {
-    "mtime": 1785123757.1948457,
-    "ast_hash": "66dd9908e66adb9d8dfea90664747dc9",
+    "mtime": 1785064077.6144648,
+    "ast_hash": "40dcdd2fb92424ccd648bbdd2a9c6718",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/.agents/rules/graphify.md": {
@@ -985,13 +985,13 @@
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/memory-bank/AI_RULES.md": {
-    "mtime": 1785123753.5080822,
-    "ast_hash": "01eea6e47b75c73febe332a017abab50",
+    "mtime": 1784698532.5011134,
+    "ast_hash": "fe8f892b353ecc3e59fd3b0504c60de0",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/memory-bank/activeContext.md": {
-    "mtime": 1785123518.4470413,
-    "ast_hash": "23bef4d9d6fb68c9441e60d336aba9a2",
+    "mtime": 1785067169.4246962,
+    "ast_hash": "a5ffdbb94f9c404c1dc5a1714bfcddb6",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/memory-bank/decisionLog.md": {
@@ -1010,8 +1010,8 @@
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/memory-bank/progress.md": {
-    "mtime": 1785123524.297135,
-    "ast_hash": "ef21a8a604455d33634678e73232cc79",
+    "mtime": 1785061212.363016,
+    "ast_hash": "456be52e61046e95e8dfdd0712ccecc9",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/memory-bank/projectbrief.md": {
@@ -1020,8 +1020,8 @@
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/memory-bank/systemPatterns.md": {
-    "mtime": 1785123485.436474,
-    "ast_hash": "5b83c0ac8b5fb0ee508d710fd90ebccc",
+    "mtime": 1784382495.177418,
+    "ast_hash": "8c528ebfcb9b99da5aaa8ebc671c3e45",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/memory-bank/techContext.md": {
@@ -1065,8 +1065,8 @@
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_playwright_python/generated_task.txt": {
-    "mtime": 1785072917.958361,
-    "ast_hash": "68b63f172ba4cf22173a23aa46c218eb",
+    "mtime": 1785067287.4222095,
+    "ast_hash": "d4455763f0cfadc1a715be564780189f",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_playwright_python/requirements.txt": {
@@ -1257,16 +1257,6 @@
   "mychatproject/staticfiles/admin/img/tooltag-arrowright.svg": {
     "mtime": 1749980100.0,
     "ast_hash": "bbfb788a849ee115c109b1224a67832b",
-    "semantic_hash": ""
-  },
-  "WEBAI_AUTOMATION/scripts/graphify_to_mermaid.py": {
-    "mtime": 1785123910.1148136,
-    "ast_hash": "d9128139e1706ca767049b8eccb0ad30",
-    "semantic_hash": ""
-  },
-  "WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/crawl_helper.py": {
-    "mtime": 1785069254.4766428,
-    "ast_hash": "8c0622b2e4a6dffb15597fe13e216a5b",
     "semantic_hash": ""
   }
 }
