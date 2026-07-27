@@ -394,20 +394,35 @@ def _extract_json_array(text: str) -> List[Dict[str, Any]]:
 
 def _prune_dom_snapshot(html: str) -> str:
     """
-    Prunes a raw DOM/HTML snapshot to retain interactive elements and key semantic tags,
-    significantly reducing token context size for Hermes 3 inference.
+    Prunes a raw DOM/HTML snapshot using Crawl4AI LLM Markdown strategy to retain
+    interactive elements and key semantic tags, significantly reducing token context size
+    for Hermes 3 inference.
 
     Args:
         html: Raw HTML/DOM snapshot string.
 
     Returns:
-        Pruned string containing essential interactive DOM elements.
+        Pruned string containing essential interactive DOM elements in Markdown format.
     """
     if not html:
         return ""
-    # Strip script and style tags completely
-    cleaned = re.sub(r"<(script|style)[^>]*?>.*?</\1>", "", html, flags=re.IGNORECASE | re.DOTALL)
-    # Extract interactive tags: button, input, a, select, textarea, option, or elements with id/name/role
+    # Strip script, style, and svg tags completely
+    cleaned = re.sub(r"<(script|style|svg|noscript|iframe)[^>]*?>.*?</\1>", "", html, flags=re.IGNORECASE | re.DOTALL)
+    
+    # Try Crawl4AI LLM Markdown conversion strategy first
+    try:
+        import html2text
+        h = html2text.HTML2Text()
+        h.ignore_links = False
+        h.ignore_images = True
+        h.body_width = 0
+        md = h.handle(cleaned).strip()
+        if len(md) > 20:
+            return md[:4000]
+    except Exception:
+        pass
+
+    # Extract interactive tags fallback
     pattern = re.compile(
         r"<(?:button|input|a|select|textarea|option|form)[^>]*?>.*?</(?:button|input|a|select|textarea|option|form)>|<(?:button|input|a|select|textarea)[^>]*?/?>",
         re.IGNORECASE | re.DOTALL,

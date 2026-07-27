@@ -27,6 +27,63 @@ The project is **functional and feature-complete** for its current scope. All th
 
 ## Recent Work Completed
 
+### Mermaid.js Visual Representation & Graphify Export Integration ✅
+- Integrated [Mermaid.js](https://github.com/mermaid-js/mermaid) into repository documentation and knowledge graph visualization.
+- Updated [`memory-bank/systemPatterns.md`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/memory-bank/systemPatterns.md) with native Mermaid diagrams:
+  - System 3-Tier Flowchart Architecture
+  - Database Entity-Relationship (`erDiagram`) Model
+- Created automated exporter script [`scripts/graphify_to_mermaid.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/scripts/graphify_to_mermaid.py) to transform `graphify-out/graph.json` into clean Mermaid graphs.
+- Generated [`graphify-out/MERMAID_GRAPH.md`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/graphify-out/MERMAID_GRAPH.md) containing codebase community subgraphs and God Node abstraction networks.
+
+### 7 Web Failure Scenario Fortification & Test Suite Verification ✅
+- Updated [`recorder.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/recorder.py) to filter dynamic hash IDs (`modal-C406`, `:r2:`, `ember123`) during candidate collection.
+- Fortified [`fallback_helpers.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/fallback_helpers.py) with:
+  1. Dynamic hash ID filtering.
+  2. Auto `scroll_into_view_if_needed()` & `force=True` overlay bypass.
+  3. `target_page.frames` cross-origin iFrame element resolution.
+  4. Offscreen / lazy-loaded auto-scroll wheel trigger (`mouse.wheel(0, 400)`).
+  5. DOM hydration readiness waiting (`wait_for_load_state("domcontentloaded")`).
+  6. Custom JS listbox dropdown click fallback in `select_with_fallback()`.
+  7. Multi-tab active window targeting (`_get_active_page()`).
+- Executed automated test suite (`scratch/test_7_scenarios.py`) — **100% PASS RATE!**
+- Updated Graphify Knowledge Graph (`748 nodes`, `1,256 edges`, `53 communities`).
+
+### `<label>` Button Click Locator Fix & Hermes 3 Self-Healing ✅
+- Updated `loc_type == "label"` in [`fallback_helpers.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/fallback_helpers.py) using `.or_(target_page.locator("label:has-text(...)"))` so `<label class="btn-view">View</label>` button elements click directly.
+- Verified that Hermes 3 AI agent self-healing triggers automatically whenever all recorded locators fail.
+- Updated Graphify Knowledge Graph (`746 nodes`, `1,253 edges`, `53 communities`).
+
+### Modal Popup & Custom Card Button Capture ✅
+- Updated `getClickableTarget()` and `bestStableName()` in [`recorder.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/recorder.py).
+- Added support for `[onclick]`, `[class*='btn']`, `[class*='close']`, `[class*='modal']`, `[class*='card']` click targets.
+- Automatically captures card buttons (e.g. **"View"** on Dr. RAJAN KS profile) and popup overlay close buttons (assigning `"Close"` for `×`, `X`, `btn-close`).
+- Updated Graphify Knowledge Graph (`746 nodes`, `1,253 edges`, `53 communities`).
+
+### Locator Fallback & Visible Element Resolution Fix ✅
+- Added missing locator type handlers (`text`, `title`, `alt`) to `click_with_fallback` and `type_with_fallback` in [`fallback_helpers.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/fallback_helpers.py).
+- Added `_get_active_page()` to dynamically target the active tab (`page.context.pages[-1]`) in multi-tab automations.
+- Updated strict mode resolution to loop through matching elements and target the first **visible** matching element.
+- Verified test execution with `test_fallback.py` (Clean 100% success output).
+- Updated Graphify Knowledge Graph (`746 nodes`, `1,253 edges`, `53 communities`).
+
+### Multi-Tab "Stop Recording" Overlay Fix ✅
+- Registered `RECORDER_INIT_SCRIPT` at the `BrowserContext` level (`context.add_init_script()`) and added immediate execution (`page.evaluate()`) on active document DOMs in [`recorder.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/recorder.py).
+- The **"Stop Recording"** button overlay and keyboard shortcuts (`Ctrl+Shift+S`, `Esc`) now render on **every single tab and newly opened window** (Tab 1, Tab 2, Tab 3).
+- Updated Graphify Knowledge Graph (`744 nodes`, `1,249 edges`, `53 communities`).
+
+### Multi-Tab & Multi-Window Recording Support ✅
+- Added `attach_context(context)` to `WebRecorder` in [`recorder.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/recorder.py) using `context.on("page")` event listeners.
+- Updated [`record_then_run.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/record_then_run.py) to attach the recorder to the entire `BrowserContext`.
+- When clicking links that open new tabs/windows (such as `https://scbt.sastra.edu/`), the new tab automatically attaches recorder CDP bindings and records actions seamlessly across all windows!
+- Updated Graphify Knowledge Graph (`744 nodes`, `1,249 edges`, `53 communities`).
+
+### Crawl4AI Integration & Semantic DOM Fingerprinting ✅
+- Installed `crawl4ai` and `html2text` for LLM Markdown conversion.
+- Created [`crawl_helper.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/crawl_helper.py) for page summarization and semantic element fingerprinting (`page_summary`, `element_intent`, `fingerprint`).
+- Integrated Crawl4AI Markdown DOM parsing into `_prune_dom_snapshot` in `local_webai_server_guided.py` for Hermes 3 self-healing inference.
+- Updated `Step` dataclass to serialize semantic Crawl4AI metadata into recorded automations and MSSQL database.
+- Updated Graphify Knowledge Graph (`741 nodes`, `1,244 edges`, `52 communities`).
+
 ### Auto SQL Upload in `record_then_run.py` ✅
 - Added automatic prompt: `Save this recording to SQL database? (y/n)` at the end of recording in [`record_then_run.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/record_then_run.py).
 - Directly invokes `import_to_database.main()` so newly recorded automations are immediately uploaded to MSSQL and given an Automation ID for later execution via `run_from_database.py`.

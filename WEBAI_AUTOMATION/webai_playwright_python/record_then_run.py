@@ -54,7 +54,7 @@ async def main():
         context = await browser.new_context()
         page = await context.new_page()
 
-        await recorder.attach(page)
+        await recorder.attach_context(context)
         await page.goto(START_URL)
 
         print("\n=== Web Recorder Started ===")

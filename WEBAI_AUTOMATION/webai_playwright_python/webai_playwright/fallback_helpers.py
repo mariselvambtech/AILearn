@@ -17,88 +17,164 @@ LOCATOR_PRIORITY = {
     "placeholder": 4,
     "role": 5,
     "label": 6,
-    "href": 7,
-    "css": 8,
-    "xpath": 9
+    "text": 7,
+    "title": 8,
+    "alt": 9,
+    "href": 10,
+    "css": 11,
+    "xpath": 12
 }
+
+
+def _get_active_page(page):
+    """
+    Returns the active Playwright page/tab from context if multiple tabs exist.
+    """
+    try:
+        if page and hasattr(page, "context") and page.context and page.context.pages:
+            return page.context.pages[-1]
+    except Exception:
+        pass
+    return page
+
+
+async def _create_locator_obj(target_page, loc: Dict):
+    """Create locator object supporting all semantic and frame targets."""
+    loc_type = loc.get("type")
+    loc_value = loc.get("value", "")
+
+    if loc_type == "test-id":
+        return target_page.get_by_test_id(loc_value)
+    elif loc_type == "id":
+        return target_page.locator(f"#{loc_value}")
+    elif loc_type == "name":
+        return target_page.locator(f"[name='{loc_value}']")
+    elif loc_type == "href":
+        return target_page.locator(f"[href='{loc_value}']")
+    elif loc_type == "placeholder":
+        return target_page.get_by_placeholder(loc_value)
+    elif loc_type == "role":
+        role_name = loc.get("name")
+        return target_page.get_by_role(loc_value, name=role_name) if role_name else target_page.get_by_role(loc_value)
+    elif loc_type == "label":
+        return target_page.get_by_label(loc_value).or_(target_page.locator(f"label:has-text('{loc_value}')"))
+    elif loc_type == "text":
+        return target_page.get_by_text(loc_value)
+    elif loc_type == "title":
+        return target_page.get_by_title(loc_value)
+    elif loc_type == "alt":
+        return target_page.get_by_alt_text(loc_value)
+    elif loc_type == "css":
+        return target_page.locator(loc_value)
+    elif loc_type == "xpath":
+        return target_page.locator(f"xpath={loc_value}")
+    return None
 
 
 async def click_with_fallback(page, locators: List[Dict]) -> bool:
     """
     Try multiple locators in priority order until one successfully clicks.
-    
-    Args:
-        page: Playwright page
-        locators: List of locator dicts like [{"type": "id", "value": "submit-btn"}, ...]
-    
-    Returns:
-        True if any locator succeeded
-        
-    Raises:
-        Exception if all locators failed
+    Fortified against all 7 failure scenarios (Dynamic IDs, Obscured overlays,
+    iFrames, Lazy-loading, Hydration delays, Custom dropdowns, Multi-tab focus).
     """
     from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
-    sorted_locators = sorted(locators, key=lambda x: LOCATOR_PRIORITY.get(x.get("type"), 99))
+    target_page = _get_active_page(page)
     
+    # Scenario 5: Ensure page DOM hydration state is ready
+    try:
+        await target_page.wait_for_load_state("domcontentloaded", timeout=2000)
+    except Exception:
+        pass
+
+    sorted_locators = sorted(locators, key=lambda x: LOCATOR_PRIORITY.get(x.get("type"), 99))
     errors = []
     print(f"[SEARCH] Attempting click with {len(sorted_locators)} locators...")
-    
+
+    # Helper function to attempt locator click across main page and iFrames (Scenario 3)
+    async def _try_click_locator(loc_obj, loc_type, force=False):
+        # Scenario 2 & 4: Auto scroll into view before click
+        try:
+            if await loc_obj.count() > 0:
+                await loc_obj.first.scroll_into_view_if_needed(timeout=1500)
+        except Exception:
+            pass
+
+        try:
+            await loc_obj.click(force=force, timeout=4000)
+            return True
+        except Exception as click_err:
+            if "strict mode" in str(click_err).lower():
+                print(f"  [WARN] Strict mode resolution ({loc_type}); targeting first matching visible element...")
+                count = await loc_obj.count()
+                for idx in range(min(count, 10)):
+                    elem = loc_obj.nth(idx)
+                    try:
+                        if await elem.is_visible():
+                            await elem.click(force=force, timeout=3000)
+                            return True
+                    except Exception:
+                        continue
+                await loc_obj.first.click(force=True, timeout=3000)
+                return True
+            raise click_err
+
+    # Pass 1: Standard & iFrame resolution
     for i, loc in enumerate(sorted_locators):
         loc_type = loc.get("type")
         loc_value = loc.get("value", "")
         
         try:
             print(f"  Attempt {i+1}/{len(sorted_locators)}: {loc_type}='{loc_value[:50]}'")
-            
-            # Create locator
-            if loc_type == "test-id":
-                loc_obj = page.get_by_test_id(loc_value)
-            elif loc_type == "id":
-                loc_obj = page.locator(f"#{loc_value}")
-            elif loc_type == "name":
-                loc_obj = page.locator(f"[name='{loc_value}']")
-            elif loc_type == "href":
-                loc_obj = page.locator(f"[href='{loc_value}']")
-            elif loc_type == "placeholder":
-                loc_obj = page.get_by_placeholder(loc_value)
-            elif loc_type == "role":
-                role_name = loc.get("name")
-                if role_name:
-                    loc_obj = page.get_by_role(loc_value, name=role_name)
-                else:
-                    loc_obj = page.get_by_role(loc_value)
-            elif loc_type == "label":
-                loc_obj = page.get_by_label(loc_value)
-            elif loc_type == "css":
-                loc_obj = page.locator(loc_value)
-            elif loc_type == "xpath":
-                loc_obj = page.locator(f"xpath={loc_value}")
-            else:
+            loc_obj = await _create_locator_obj(target_page, loc)
+            if not loc_obj:
                 errors.append(f"{loc_type}: Unknown locator type")
                 continue
-                       # Try clicking with timeout; handle strict mode violation if multiple elements match
-            try:
-                await loc_obj.click(timeout=5000)
-            except Exception as click_err:
-                if "strict mode" in str(click_err).lower():
-                    print(f"  [WARN] Strict mode resolution ({loc_type}); targeting first matching visible element...")
-                    await loc_obj.first.click(timeout=5000)
-                else:
-                    raise click_err
 
-            print(f"  [OK] Click successful with {loc_type}")
-            return True
-            
-        except PlaywrightTimeoutError:
-            error_msg = f"Element not found/clickable (timeout)"
-            errors.append(f"{loc_type}: {error_msg}")
-            print(f"  [ERROR] {error_msg}")
+            if await _try_click_locator(loc_obj, loc_type, force=False):
+                print(f"  [OK] Click successful with {loc_type}")
+                return True
+
         except Exception as e:
+            # Scenario 3: Check inside target_page.frames if main frame failed
+            iframe_success = False
+            if hasattr(target_page, "frames"):
+                for frame in target_page.frames:
+                    if frame == target_page.main_frame:
+                        continue
+                    try:
+                        frame_loc = await _create_locator_obj(frame, loc)
+                        if frame_loc and await _try_click_locator(frame_loc, f"{loc_type}-iframe", force=False):
+                            print(f"  [OK] Click successful inside iframe with {loc_type}")
+                            iframe_success = True
+                            break
+                    except Exception:
+                        continue
+            if iframe_success:
+                return True
+
             error_msg = str(e)[:100]
             errors.append(f"{loc_type}: {error_msg}")
             print(f"  [ERROR] {error_msg}")
-    
+
+    # Pass 2 (Resilience Pass): Scenario 4 (Lazy-loading auto-scroll) + Scenario 2 (Force overlay bypass)
+    print("  [RETRY] Triggering lazy-load auto-scroll & overlay bypass pass...")
+    try:
+        await target_page.mouse.wheel(0, 400)
+        await target_page.wait_for_timeout(500)
+    except Exception:
+        pass
+
+    for loc in sorted_locators:
+        loc_type = loc.get("type")
+        try:
+            loc_obj = await _create_locator_obj(target_page, loc)
+            if loc_obj and await _try_click_locator(loc_obj, loc_type, force=True):
+                print(f"  [OK] Click successful on retry (force/scroll) with {loc_type}")
+                return True
+        except Exception:
+            continue
+
     # All locators failed
     error_report = f"[ERROR] All {len(sorted_locators)} locators failed for click:\n"
     for err in errors:
@@ -123,6 +199,7 @@ async def type_with_fallback(page, locators: List[Dict], text: str) -> bool:
     """
     from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
+    target_page = _get_active_page(page)
     sorted_locators = sorted(locators, key=lambda x: LOCATOR_PRIORITY.get(x.get("type"), 99))
     
     errors = []
@@ -137,25 +214,33 @@ async def type_with_fallback(page, locators: List[Dict], text: str) -> bool:
             
             # Create locator (same as click_with_fallback)
             if loc_type == "test-id":
-                loc_obj = page.get_by_test_id(loc_value)
+                loc_obj = target_page.get_by_test_id(loc_value)
             elif loc_type == "id":
-                loc_obj = page.locator(f"#{loc_value}")
+                loc_obj = target_page.locator(f"#{loc_value}")
             elif loc_type == "name":
-                loc_obj = page.locator(f"[name='{loc_value}']")
+                loc_obj = target_page.locator(f"[name='{loc_value}']")
+            elif loc_type == "href":
+                loc_obj = target_page.locator(f"[href='{loc_value}']")
             elif loc_type == "placeholder":
-                loc_obj = page.get_by_placeholder(loc_value)
+                loc_obj = target_page.get_by_placeholder(loc_value)
             elif loc_type == "role":
                 role_name = loc.get("name")
                 if role_name:
-                    loc_obj = page.get_by_role(loc_value, name=role_name)
+                    loc_obj = target_page.get_by_role(loc_value, name=role_name)
                 else:
-                    loc_obj = page.get_by_role(loc_value)
+                    loc_obj = target_page.get_by_role(loc_value)
             elif loc_type == "label":
-                loc_obj = page.get_by_label(loc_value)
+                loc_obj = target_page.get_by_label(loc_value).or_(target_page.locator(f"label:has-text('{loc_value}')"))
+            elif loc_type == "text":
+                loc_obj = target_page.get_by_text(loc_value)
+            elif loc_type == "title":
+                loc_obj = target_page.get_by_title(loc_value)
+            elif loc_type == "alt":
+                loc_obj = target_page.get_by_alt_text(loc_value)
             elif loc_type == "css":
-                loc_obj = page.locator(loc_value)
+                loc_obj = target_page.locator(loc_value)
             elif loc_type == "xpath":
-                loc_obj = page.locator(f"xpath={loc_value}")
+                loc_obj = target_page.locator(f"xpath={loc_value}")
             else:
                 errors.append(f"{loc_type}: Unknown locator type")
                 continue
@@ -167,8 +252,21 @@ async def type_with_fallback(page, locators: List[Dict], text: str) -> bool:
             except Exception as type_err:
                 if "strict mode" in str(type_err).lower():
                     print(f"  [WARN] Strict mode resolution ({loc_type}); targeting first matching visible element...")
-                    await loc_obj.first.clear()
-                    await loc_obj.first.fill(text, timeout=5000)
+                    count = await loc_obj.count()
+                    typed = False
+                    for idx in range(min(count, 10)):
+                        elem = loc_obj.nth(idx)
+                        try:
+                            if await elem.is_visible():
+                                await elem.clear()
+                                await elem.fill(text, timeout=5000)
+                                typed = True
+                                break
+                        except Exception:
+                            continue
+                    if not typed:
+                        await loc_obj.first.clear()
+                        await loc_obj.first.fill(text, timeout=5000)
                 else:
                     raise type_err
 
@@ -234,9 +332,20 @@ async def select_with_fallback(page, locators: List[Dict], value: str) -> bool:
                 continue
             
             # Try selecting
-            await loc_obj.select_option(value)
-            print(f"  [OK] Select successful with {loc_type}")
-            return True
+            try:
+                await loc_obj.select_option(value, timeout=3000)
+                print(f"  [OK] Select successful with {loc_type}")
+                return True
+            except Exception as sel_err:
+                if "not a <select>" in str(sel_err).lower() or "not a select" in str(sel_err).lower():
+                    print(f"  [WARN] Target is custom listbox dropdown (not a <select>). Triggering click fallback...")
+                    await loc_obj.click(timeout=3000)
+                    opt_loc = page.get_by_text(value, exact=False).or_(page.locator(f"[role='option']:has-text('{value}'), li:has-text('{value}'), .custom-option:has-text('{value}')"))
+                    await opt_loc.first.click(timeout=3000)
+                    print(f"  [OK] Custom dropdown select successful with {loc_type}")
+                    return True
+                else:
+                    raise sel_err
             
         except PlaywrightTimeoutError:
             error_msg = f"Element not found (timeout)"

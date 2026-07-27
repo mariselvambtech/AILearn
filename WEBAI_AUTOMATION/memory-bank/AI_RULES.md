@@ -4,7 +4,11 @@
 
 ## 1. Documentation & Code Synchronization
 - **Docstrings:** Whenever you modify Python code (functions, classes, methods), you MUST automatically update the corresponding docstrings to reflect the new behavior or parameters.
-- **Verification:** Never finish a task without confirming that the documentation and the codebase are perfectly in sync.
+- **Continuous Knowledge & Diagram Synchronization:** Upon modifying any source code, you MUST update all associated graph and documentation artifacts before marking the task complete:
+  - **Graphify Index:** Update the AST knowledge graph (`graphify update .`).
+  - **Mermaid Diagrams:** Regenerate or align Mermaid diagrams via `python scripts/graphify_to_mermaid.py` and update relevant system/sequence/ER diagrams.
+  - **Memory Bank Artifacts:** Update `memory-bank/activeContext.md`, `memory-bank/progress.md`, and affected `.md` files to maintain strict parity between code implementation and project documentation.
+- **Verification:** Never finish a task without confirming that the documentation, visual diagrams, knowledge graphs, and codebase are perfectly in sync.
 
 ## 2. Memory Bank Maintenance
 This project uses a `memory-bank/` directory to track state, progress, and architectural decisions. You are responsible for keeping it updated:
