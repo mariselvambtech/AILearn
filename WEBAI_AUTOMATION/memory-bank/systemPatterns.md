@@ -4,6 +4,14 @@
 
 ```mermaid
 flowchart TB
+    User([👤 User Browser])
+
+    subgraph Dashboard ["🖥️ Face: Dashboard Server (webai_dashboard, port 8080)"]
+        SPA["Static SPA (index.html / app.js)"]
+        ORCH["Orchestration API (dashboard_server.py)"]
+        PM["Process Manager + Watcher (process_manager.py)"]
+    end
+
     subgraph Client ["🤖 Hands: Browser Robot (webai_playwright_python)"]
         REC["Recorder (recorder.py)"]
         PLAY["Playback Engine (playwright_actions.py)"]
@@ -23,15 +31,20 @@ flowchart TB
     end
 
     subgraph LLM ["Ollama Service"]
-        LLM_ENG["Llama 3.1 Model (port 11434)"]
+        LLM_ENG["Hermes 3 Model (port 11434)"]
     end
 
+    User -->|HTTP :8080 (UI + X-API-Key)| Dashboard
+    ORCH -->|proxy /automations, /execute, /logs| API
+    PM -->|spawns run_from_task_txt_guided.py| Client
+    PM -->|PUT /executions/{id} on exit| API
     Client <-->|WebSocket ws://localhost:8765| Server
     Client <-->|HTTP REST /execute, /logs| API
     Server -->|HTTP POST /logs/batch| API
     Server <-->|HTTP POST /api/chat| LLM
     API <-->|SQLAlchemy ORM| DB
 ```
+
 
 ## Component Relationships
 
@@ -200,6 +213,8 @@ def compute_confidence(progress_ok, strict, url_ok, text_ok, failures):
 
 ### Pattern 9: Variable Substitution
 
+
+
 **Pattern:** `{{variable_name}}` placeholders in steps replaced at runtime.
 
 **Implementation** (`utils.py` → `substitute_variables()`):
@@ -221,7 +236,35 @@ def compute_confidence(progress_ok, strict, url_ok, text_ok, failures):
 {"action": "type", "value": "alice123"}
 ```
 
+### Pattern 10: Dashboard Orchestration & Execution Finalization
+
+**Problem:** Running/importing automations required interactive terminal use
+(`run_from_database.py`, `import_to_database.py`), and CLI-triggered executions
+stayed in "running" status forever (nothing called `PUT /executions/{id}`).
+
+**Solution:** A fourth tier — the Dashboard Server (`webai_local_server/webai_dashboard/`,
+port 8080) — acts as an orchestration layer between the browser SPA and the API server.
+
+**Run flow** (`POST /api/automations/run`):
+1. Fetch variable-substituted steps (`GET /execute/{id}/steps`) with the caller's API key
+2. Write `recorded_steps.json` + regenerate `generated_task.txt` in the client dir
+3. Create the execution record (`POST /execute`)
+4. Spawn `run_from_task_txt_guided.py` via `PlaybackProcessManager` (client venv,
+   env: `WEBAI_EXECUTION_ID`/`WEBAI_API_URL`/`WEBAI_API_KEY`)
+5. A daemon **watcher thread** blocks on process exit, then calls
+   `PUT /executions/{id}` (`success`/`failed`) and posts an audit log —
+   closing the "running forever" gap
+6. Orchestration events are flushed via `POST /logs/batch` (source="api")
+
+**Key traits:**
+- Dashboard stores **no credentials** server-side; the SPA keeps the API key in
+  `localStorage` and sends it as `X-API-Key` on every call (proxied upstream)
+- Import uses `POST /automations` with `base_url` derived from the first recorded step
+- Front-end polls `/api/executions` (3s while live, 10s idle); `live_status` is merged
+  from the process manager into DB execution rows
+
 ## Critical Implementation Paths
+
 
 ### Path 1: Recording → Storage
 ```

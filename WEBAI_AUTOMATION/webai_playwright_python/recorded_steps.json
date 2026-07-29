@@ -1,11 +1,11 @@
 [
   {
     "action": "open",
-    "url": "https://sastra.edu/",
+    "url": "https://rpachallenge.com/",
     "name": null,
     "value": null,
     "key": null,
-    "ts": 1785072879.0054085,
+    "ts": 1785327981.7170672,
     "locators": null,
     "extract_type": null,
     "attribute_name": null,
@@ -17,293 +17,23 @@
   },
   {
     "action": "click",
-    "url": "https://sastra.edu/",
-    "name": "Schools",
+    "url": "https://rpachallenge.com/",
+    "name": "Su8cG",
     "value": null,
     "key": null,
-    "ts": 1785072879.0054085,
-    "locators": [
-      {
-        "type": "href",
-        "value": "/academics/schools.html"
-      },
-      {
-        "type": "css",
-        "value": "a:nth-child(1)"
-      },
-      {
-        "type": "text",
-        "value": "Schools"
-      },
-      {
-        "type": "role",
-        "value": "link",
-        "name": "Schools"
-      },
-      {
-        "type": "xpath",
-        "value": "//ul/li[3]/ul/li[2]/a"
-      }
-    ],
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null
-  },
-  {
-    "action": "navigate",
-    "url": "https://sastra.edu/academics/schools.html",
-    "name": null,
-    "value": null,
-    "key": null,
-    "ts": 1785072885.115275,
-    "locators": null,
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null
-  },
-  {
-    "action": "click",
-    "url": "https://sastra.edu/academics/schools.html",
-    "name": "School of Chemical & Biotechnology",
-    "value": null,
-    "key": null,
-    "ts": 1785072885.115275,
-    "locators": [
-      {
-        "type": "href",
-        "value": "https://scbt.sastra.edu/"
-      },
-      {
-        "type": "css",
-        "value": "a:nth-child(1)"
-      },
-      {
-        "type": "text",
-        "value": "School of Chemical & Biotechnology"
-      },
-      {
-        "type": "role",
-        "value": "link",
-        "name": "School of Chemical & Biotechnology"
-      },
-      {
-        "type": "xpath",
-        "value": "//div/div/ul/li[1]/a"
-      }
-    ],
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null
-  },
-  {
-    "action": "navigate",
-    "url": "https://scbt.sastra.edu/",
-    "name": null,
-    "value": null,
-    "key": null,
-    "ts": 1785072900.2246082,
-    "locators": null,
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null
-  },
-  {
-    "action": "click",
-    "url": "https://scbt.sastra.edu/",
-    "name": "PEOPLE",
-    "value": null,
-    "key": null,
-    "ts": 1785072900.2246082,
-    "locators": [
-      {
-        "type": "href",
-        "value": "/faculty.html"
-      },
-      {
-        "type": "css",
-        "value": "a:nth-child(1)"
-      },
-      {
-        "type": "text",
-        "value": "PEOPLE"
-      },
-      {
-        "type": "role",
-        "value": "link",
-        "name": "PEOPLE"
-      },
-      {
-        "type": "xpath",
-        "value": "//div/div[2]/ul/li[2]/a"
-      }
-    ],
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null
-  },
-  {
-    "action": "navigate",
-    "url": "https://scbt.sastra.edu/faculty.html",
-    "name": null,
-    "value": null,
-    "key": null,
-    "ts": 1785072905.0949523,
-    "locators": null,
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null
-  },
-  {
-    "action": "click",
-    "url": "https://scbt.sastra.edu/faculty.html",
-    "name": "Faculty List",
-    "value": null,
-    "key": null,
-    "ts": 1785072905.0949523,
-    "locators": [
-      {
-        "type": "href",
-        "value": "https://www.sastra.edu/staffprofiles/schools/scbt.php"
-      },
-      {
-        "type": "css",
-        "value": "a.button"
-      },
-      {
-        "type": "text",
-        "value": "Faculty List"
-      },
-      {
-        "type": "role",
-        "value": "link",
-        "name": "Faculty List"
-      },
-      {
-        "type": "xpath",
-        "value": "//div[2]/div[1]/div[2]/center/a"
-      }
-    ],
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null
-  },
-  {
-    "action": "navigate",
-    "url": "https://www.sastra.edu/staffprofiles/schools/scbt.php",
-    "name": null,
-    "value": null,
-    "key": null,
-    "ts": 1785072911.607882,
-    "locators": null,
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null
-  },
-  {
-    "action": "click",
-    "url": "https://www.sastra.edu/staffprofiles/schools/scbt.php",
-    "name": "View",
-    "value": null,
-    "key": null,
-    "ts": 1785072911.607882,
-    "locators": [
-      {
-        "type": "css",
-        "value": "label.btn-view:nth-child(1)"
-      },
-      {
-        "type": "text",
-        "value": "View"
-      },
-      {
-        "type": "xpath",
-        "value": "//div/div[1]/div[3]/div[5]/label"
-      }
-    ],
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null
-  },
-  {
-    "action": "click",
-    "url": "https://www.sastra.edu/staffprofiles/schools/scbt.php",
-    "name": "Close",
-    "value": null,
-    "key": null,
-    "ts": 1785072915.6460803,
-    "locators": [
-      {
-        "type": "css",
-        "value": "label.modal__close:nth-child(1)"
-      },
-      {
-        "type": "xpath",
-        "value": "//div/div/div[2]/div/label"
-      }
-    ],
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null
-  },
-  {
-    "action": "click",
-    "url": "https://www.sastra.edu/staffprofiles/schools/scbt.php",
-    "name": "View",
-    "value": null,
-    "key": null,
-    "ts": 1785072915.6480813,
+    "ts": 1785327981.7170672,
     "locators": [
       {
         "type": "id",
-        "value": "modal-C406"
+        "value": "Su8cG"
       },
       {
-        "type": "label",
-        "value": "View"
+        "type": "name",
+        "value": "Su8cG"
       },
       {
         "type": "css",
-        "value": "#modal-C406"
+        "value": "#Su8cG"
       },
       {
         "type": "role",
@@ -312,7 +42,341 @@
       },
       {
         "type": "xpath",
-        "value": "//*[@id=\"modal-C406\"]"
+        "value": "//*[@id=\"Su8cG\"]"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
+  },
+  {
+    "action": "type",
+    "url": "https://rpachallenge.com/",
+    "name": "Su8cG",
+    "value": "manager",
+    "key": null,
+    "ts": 1785327985.4722238,
+    "locators": [
+      {
+        "type": "id",
+        "value": "Su8cG"
+      },
+      {
+        "type": "name",
+        "value": "Su8cG"
+      },
+      {
+        "type": "css",
+        "value": "#Su8cG"
+      },
+      {
+        "type": "role",
+        "value": "textbox",
+        "name": null
+      },
+      {
+        "type": "xpath",
+        "value": "//*[@id=\"Su8cG\"]"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
+  },
+  {
+    "action": "click",
+    "url": "https://rpachallenge.com/",
+    "name": "BVHlj",
+    "value": null,
+    "key": null,
+    "ts": 1785327985.6090446,
+    "locators": [
+      {
+        "type": "id",
+        "value": "BVHlj"
+      },
+      {
+        "type": "name",
+        "value": "BVHlj"
+      },
+      {
+        "type": "css",
+        "value": "#BVHlj"
+      },
+      {
+        "type": "role",
+        "value": "textbox",
+        "name": null
+      },
+      {
+        "type": "xpath",
+        "value": "//*[@id=\"BVHlj\"]"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
+  },
+  {
+    "action": "type",
+    "url": "https://rpachallenge.com/",
+    "name": "BVHlj",
+    "value": "mariselvam.btech@gmail.com",
+    "key": null,
+    "ts": 1785327992.7384806,
+    "locators": [
+      {
+        "type": "id",
+        "value": "BVHlj"
+      },
+      {
+        "type": "name",
+        "value": "BVHlj"
+      },
+      {
+        "type": "css",
+        "value": "#BVHlj"
+      },
+      {
+        "type": "role",
+        "value": "textbox",
+        "name": null
+      },
+      {
+        "type": "xpath",
+        "value": "//*[@id=\"BVHlj\"]"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
+  },
+  {
+    "action": "type",
+    "url": "https://rpachallenge.com/",
+    "name": "gHSj0",
+    "value": "medavakkam",
+    "key": null,
+    "ts": 1785327995.7544615,
+    "locators": [
+      {
+        "type": "id",
+        "value": "gHSj0"
+      },
+      {
+        "type": "name",
+        "value": "gHSj0"
+      },
+      {
+        "type": "css",
+        "value": "#gHSj0"
+      },
+      {
+        "type": "role",
+        "value": "textbox",
+        "name": null
+      },
+      {
+        "type": "xpath",
+        "value": "//*[@id=\"gHSj0\"]"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
+  },
+  {
+    "action": "type",
+    "url": "https://rpachallenge.com/",
+    "name": "okBMd",
+    "value": "selvam",
+    "key": null,
+    "ts": 1785327998.7787492,
+    "locators": [
+      {
+        "type": "id",
+        "value": "okBMd"
+      },
+      {
+        "type": "name",
+        "value": "okBMd"
+      },
+      {
+        "type": "css",
+        "value": "#okBMd"
+      },
+      {
+        "type": "role",
+        "value": "textbox",
+        "name": null
+      },
+      {
+        "type": "xpath",
+        "value": "//*[@id=\"okBMd\"]"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
+  },
+  {
+    "action": "type",
+    "url": "https://rpachallenge.com/",
+    "name": "sG4G4",
+    "value": "9875324",
+    "key": null,
+    "ts": 1785328001.6021872,
+    "locators": [
+      {
+        "type": "id",
+        "value": "sG4G4"
+      },
+      {
+        "type": "name",
+        "value": "sG4G4"
+      },
+      {
+        "type": "css",
+        "value": "#sG4G4"
+      },
+      {
+        "type": "role",
+        "value": "textbox",
+        "name": null
+      },
+      {
+        "type": "xpath",
+        "value": "//*[@id=\"sG4G4\"]"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
+  },
+  {
+    "action": "type",
+    "url": "https://rpachallenge.com/",
+    "name": "L7XOD",
+    "value": "mari",
+    "key": null,
+    "ts": 1785328002.5371513,
+    "locators": [
+      {
+        "type": "id",
+        "value": "L7XOD"
+      },
+      {
+        "type": "name",
+        "value": "L7XOD"
+      },
+      {
+        "type": "css",
+        "value": "#L7XOD"
+      },
+      {
+        "type": "role",
+        "value": "textbox",
+        "name": null
+      },
+      {
+        "type": "xpath",
+        "value": "//*[@id=\"L7XOD\"]"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
+  },
+  {
+    "action": "type",
+    "url": "https://rpachallenge.com/",
+    "name": "dR3sR",
+    "value": "cts",
+    "key": null,
+    "ts": 1785328006.9698145,
+    "locators": [
+      {
+        "type": "id",
+        "value": "dR3sR"
+      },
+      {
+        "type": "name",
+        "value": "dR3sR"
+      },
+      {
+        "type": "css",
+        "value": "#dR3sR"
+      },
+      {
+        "type": "role",
+        "value": "textbox",
+        "name": null
+      },
+      {
+        "type": "xpath",
+        "value": "//*[@id=\"dR3sR\"]"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null
+  },
+  {
+    "action": "click",
+    "url": "https://rpachallenge.com/",
+    "name": "Button",
+    "value": null,
+    "key": null,
+    "ts": 1785328007.0730195,
+    "locators": [
+      {
+        "type": "css",
+        "value": "input.btn.uiColorButton[type=\"submit\"]"
+      },
+      {
+        "type": "role",
+        "value": "button",
+        "name": null
+      },
+      {
+        "type": "xpath",
+        "value": "//app-rpa1/div/div[2]/form/input"
       }
     ],
     "extract_type": null,

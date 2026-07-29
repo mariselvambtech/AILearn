@@ -1,6 +1,8 @@
 import asyncio
 import hashlib
+import http
 import json
+import logging
 import os
 import re
 import urllib.parse
@@ -1771,6 +1773,53 @@ async def handle_client(ws: Any):
         raise
 
 
+class _EmptyProbeNoiseFilter(logging.Filter):
+    """
+    Downgrade 'opening handshake failed' tracebacks caused by bare TCP probes.
+
+    Health checks and port monitors (e.g. a raw ``socket.create_connection``
+    probe) open a TCP connection to the WebSocket server and close it without
+    sending any bytes. The websockets library has no hook for connections that
+    die before the HTTP request is parsed, so it logs an ERROR with a full
+    traceback (EOFError: stream ends after 0 bytes -> InvalidMessage), flooding
+    the terminal. These records are downgraded to DEBUG so they stay available
+    when debugging but no longer spam the console. Genuine handshake failures
+    (malformed requests, invalid headers) still surface at ERROR level.
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.getMessage() != "opening handshake failed":
+            return True
+        exc: Optional[BaseException] = record.exc_info[1] if record.exc_info else None
+        while exc is not None:
+            if isinstance(exc, EOFError) and "0 bytes" in str(exc):
+                # Empty probe: connection closed before any data was sent.
+                record.levelno = logging.DEBUG
+                record.levelname = logging.getLevelName(logging.DEBUG)
+                return True
+            exc = exc.__cause__
+        return True
+
+
+def _http_health_response(connection: Any, request: Any) -> Any:
+    """
+    Answer plain HTTP requests cleanly instead of failing the WS handshake.
+
+    Registered as ``process_request`` for ``websockets.serve``. Health checks
+    (dashboard ``_probe_ws``, browser visits, curl) send a normal HTTP GET
+    without WebSocket upgrade headers; by default the library rejects these
+    with ``InvalidUpgrade`` and logs an ERROR traceback. Returning an HTTP
+    response here makes the exchange clean and log-free. Genuine WebSocket
+    upgrade requests return ``None`` so the normal handshake proceeds.
+    """
+    if request.headers.get("Upgrade", "").lower() == "websocket":
+        return None  # genuine WebSocket client: continue the handshake
+    return connection.protocol.reject(
+        http.HTTPStatus.OK,
+        "WebAI AI server is running. Connect with a WebSocket client at /api.\n",
+    )
+
+
 async def main():
     """
     Entrypoint for the Local WebAI Server.
@@ -1796,6 +1845,10 @@ async def main():
             return
         await handle_client(ws)
 
+    # Silence bare TCP probe noise (health checks that connect and close
+    # without sending data) while keeping genuine handshake errors visible.
+    logging.getLogger("websockets.server").addFilter(_EmptyProbeNoiseFilter())
+
     # IMPORTANT: max_size=None removes the 1MB limit that caused 1009 errors.
     async with websockets.serve(
         handler,
@@ -1805,6 +1858,7 @@ async def main():
         max_queue=32,
         ping_interval=20,
         ping_timeout=60,
+        process_request=_http_health_response,  # clean 200 for HTTP health checks
     ):
         await asyncio.Future()
 

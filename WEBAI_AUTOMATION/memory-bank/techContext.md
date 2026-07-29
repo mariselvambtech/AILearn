@@ -32,7 +32,15 @@
 | API Server (FastAPI) | 8000 | `cd e:\WebAI_Project\webai_api_server && python run.py` |
 | AI Server (WebSocket) | 8765 | `cd e:\WebAI_Project\webai_local_server && python -m webai_local_server.local_webai_server_guided` |
 | Ollama (LLM) | 11434 | `ollama serve` |
+| **Dashboard Server (Web UI)** | **8080** | `cd webai_local_server && python -m webai_dashboard.dashboard_server` |
 | MSSQL | 1433 (default) | SQL Server service |
+
+> 🖥️ **Dashboard (new, 2026-07-28):** The Web UI at `http://localhost:8080` replaces the
+> terminal for run/import/monitor flows. It runs with the Playwright client venv
+> (`webai_playwright_python/.venv`), which now also hosts `uvicorn`, `pytest`, `httpx`,
+> `python-multipart` and the API-server QA stack (`sqlalchemy`, `pyodbc`, `python-jose`,
+> `passlib`, `croniter`, `python-dotenv`, `aiohttp`).
+
 
 > ⚠️ **Note:** The shim file `webai_local_server/local_webai_server.py` imports from `webai_local_server.local_webai_server` (a non-existent module). The actual implementation is in `local_webai_server_guided.py`. Always run the guided module directly as shown above.
 
@@ -61,7 +69,16 @@ ENCRYPTION_KEY=f1HDOevt9N9oTVaTRjH21CtQjasFCjuvBCd9-vkNvAo=
 }
 ```
 
+### Dashboard Server (optional env vars, with defaults)
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `WEBAI_API_URL` | `http://localhost:8000` | Upstream API server the dashboard proxies to |
+| `WEBAI_OLLAMA_URL` | `http://localhost:11434` | Ollama base URL (health badge probe) |
+| `AI_SERVER_HOST` / `AI_SERVER_PORT` | `localhost` / `8765` | AI server TCP probe (health badge) |
+| `DASHBOARD_HOST` / `DASHBOARD_PORT` | `127.0.0.1` / `8080` | Dashboard bind address |
+
 ### AI Server (optional env vars, with defaults)
+
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `OLLAMA_URL` | `http://localhost:11434/api/chat` | Ollama chat endpoint |

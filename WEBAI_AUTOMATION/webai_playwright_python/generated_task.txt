@@ -1,12 +1,2 @@
-Open https://sastra.edu/
-Click "Schools"
-Navigate to https://sastra.edu/academics/schools.html
-Click "School of Chemical & Biotechnology"
-Navigate to https://scbt.sastra.edu/
-Click "PEOPLE"
-Navigate to https://scbt.sastra.edu/faculty.html
-Click "Faculty List"
-Navigate to https://www.sastra.edu/staffprofiles/schools/scbt.php
-Click "View"
-Click "Close"
+Execute the recorded automation 'rpachallenge' step by step.
 Finish with done only after verification.

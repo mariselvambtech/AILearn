@@ -13,6 +13,8 @@ import subprocess
 import traceback  # For capturing full error stacktraces
 from pathlib import Path
 from datetime import datetime
+from typing import Optional, Tuple
+
 
 
 def log(message: str):
@@ -212,25 +214,34 @@ def run_playback(execution_id: int = None):
         return False
 
 
-def main():
-    print("="*60)
-    print(" WebAI Automation Runner (API -> JSON -> Playback)")
-    print("="*60)
-    
-    # Get automation ID from user
-    automation_id = input("\nEnter Automation ID to run (default: 1): ").strip()
-    if not automation_id:
-        automation_id = 1
-    else:
-        automation_id = int(automation_id)
-    
+def run_automation(automation_id: int, api_key: str, auto_confirm: bool = False) -> Tuple[bool, Optional[int]]:
+    """
+
+    Programmatically fetch an automation from the API database and execute it.
+
+    This is the no-terminal-input entry point used by both the interactive CLI
+    wrapper (`main()`) and the WebAI dashboard server. It performs the full
+    pipeline: fetch substituted steps -> save `recorded_steps.json` -> create an
+    execution record -> run browser playback -> flush buffered logs.
+
+    Args:
+        automation_id: Database ID of the automation to execute.
+        api_key: User's X-API-Key for API server authentication.
+        auto_confirm: When True, skips the interactive "Execute now? (y/n)"
+            confirmation prompt and runs playback immediately.
+
+    Returns:
+        A tuple of (success, execution_id). `success` is True only when
+        playback completed without errors; `execution_id` is the database
+        execution record ID, or None if the record could not be created.
+    """
     # Fetch from API
-    steps, base_url = fetch_automation_steps(automation_id, API_KEY)
-    
+    steps, base_url = fetch_automation_steps(automation_id, api_key)
+
     if not steps:
         print("\n[ERROR] Could not fetch automation. Exiting.")
-        return
-    
+        return False, None
+
     # Show steps preview
     print("\n[STEPS] Steps to execute:")
     for i, step in enumerate(steps[:5], 1):  # Show first 5
@@ -239,39 +250,36 @@ def main():
         url = step.get('url', '')
         display = f" - {value[:50]}" if value else (f" - {url[:50]}" if url else "")
         print(f"   {i}. {action}{display}")
-    
+
     if len(steps) > 5:
         print(f"   ... and {len(steps) - 5} more steps")
-    
+
     # Save to file (this is what the playback server reads)
     if not save_steps_to_file(steps):
-        return
-    
+        return False, None
+
     # Create execution record in API
-    execution_id = create_execution_record(automation_id, API_KEY)
-    
-    # Confirm execution
-    print("\n" + "="*60)
-    confirm = input("[?] Execute this automation now? (y/n): ").strip().lower()
-    if confirm != 'y':
-        print("[CANCEL] Cancelled.")
-        print(f"   Steps are saved in {OUTPUT_FILE}")
-        print("   You can run later with: python run_from_task_txt_guided.py")
-        return
-    
+    execution_id = create_execution_record(automation_id, api_key)
+
+    # Confirm execution (skipped for programmatic/dashboard callers)
+    if not auto_confirm:
+        print("\n" + "="*60)
+        confirm = input("[?] Execute this automation now? (y/n): ").strip().lower()
+        if confirm != 'y':
+            print("[CANCEL] Cancelled.")
+            print(f"   Steps are saved in {OUTPUT_FILE}")
+            print("   You can run later with: python run_from_task_txt_guided.py")
+            return False, execution_id
+
     # Run playback
     success = run_playback(execution_id)
-    
+
     # Final status
     if success:
         print("\n" + "="*60)
         print(" SUCCESS!")
         print("="*60)
         print("\n[OK] Automation executed from database!")
-        
-        # Send all logs to database
-        if execution_id:
-            flush_logs(execution_id)
     else:
         print("\n" + "="*60)
         print(" READY TO EXECUTE")
@@ -279,23 +287,49 @@ def main():
         print(f"\nSteps saved to {OUTPUT_FILE}")
         print("\n[RUN] Run playback with:")
         print("   python run_from_task_txt_guided.py")
-        
-        # Send logs even on failure
-        if execution_id:
-            flush_logs(execution_id)
-    
+
+    # Send buffered logs to database (success or failure)
+    if execution_id:
+        flush_logs(execution_id)
+
+    return success, execution_id
+
+
+def main():
+    """
+    Interactive CLI wrapper around `run_automation()`.
+
+    Prompts the user for an Automation ID, delegates execution to
+    `run_automation()`, and prints API tips for browsing execution
+    history and logs afterwards.
+    """
+    print("="*60)
+    print(" WebAI Automation Runner (API -> JSON -> Playback)")
+    print("="*60)
+
+    # Get automation ID from user
+    automation_id = input("\nEnter Automation ID to run (default: 1): ").strip()
+    if not automation_id:
+        automation_id = 1
+    else:
+        automation_id = int(automation_id)
+
+    _, execution_id = run_automation(automation_id, API_KEY, auto_confirm=False)
+
     print("\nTip: View execution history in API:")
     print(f"   GET {API_URL}/executions")
-    
+
     # Show logs if we have an execution ID
     if execution_id:
         print(f"\nView execution logs:")
         print(f"   GET {API_URL}/executions/{execution_id}/logs")
         print(f"   {API_URL}/docs#/default/get_execution_logs")
-    
+
     print("\nOr browse all executions:")
     print(f"   {API_URL}/docs#/default/list_executions_executions_get")
 
 
 if __name__ == "__main__":
     main()
+
+

@@ -1,64 +1,29 @@
-# Active Context  WebAI Platform
-
-> **This file updates most frequently.** It tracks the current session state, recent changes, open questions, and immediate next steps.
-
-## Current Session (2026-07-29)
-
-### WebSocket Handshake Error Fix (AI Server :8765) ✅
-- **Bug:** The `webai_local_server` terminal flooded with `EOFError: stream ends after 0 bytes, before end of line` → `websockets.exceptions.InvalidMessage: did not receive a valid HTTP request` tracebacks (dozens, repeating).
-- **Root cause (two-layer):**
-  1. The dashboard server's `/api/health` endpoint probed the AI WebSocket server (port 8765) using `_probe_tcp()`, which opens a raw TCP socket, sends **0 bytes**, and closes immediately. The `websockets` library (`asyncio/server.py:365`) logs `connection.logger.error("opening handshake failed", exc_info=True)` for these — a full traceback per probe. The dashboard SPA polls `/api/health` every 30s (`app.js`), so one error block per health check. (Fixed earlier: `dashboard_health()` now uses `_probe_ws()` which sends a valid `GET / HTTP/1.1` request line.)
-  2. **The AI server itself had no probe tolerance.** Library source analysis showed: (a) bare TCP probes die inside `Request.parse` before any hook runs — only a logging filter can silence them; (b) even a *valid* plain-HTTP GET (what `_probe_ws` sends) is rejected by `accept()` with `InvalidUpgrade`, which still sets `handshake_exc` and still logs an ERROR traceback — so the `_probe_ws` docstring's "no error logging" claim was wrong. The clean path is the `process_request` hook: when it returns an HTTP response, `accept()` is skipped and nothing is logged (confirmed by comment at `asyncio/server.py:203-204`).
-- **Fix in `local_webai_server_guided.py` (robust, server-side):**
-  - `_http_health_response()` registered as `process_request` in `websockets.serve()` → plain HTTP requests (health checks, browsers, curl) get a clean `200 OK`, zero error logging; genuine `Upgrade: websocket` requests return `None` and continue the normal handshake.
-  - `_EmptyProbeNoiseFilter` on the `websockets.server` logger → downgrades `opening handshake failed` records whose exception chain contains `EOFError ... "0 bytes"` (definitively an empty probe) from ERROR to DEBUG. Genuine failures (malformed requests, bad headers) still surface at ERROR.
-- **Verification:** New E2E test [`scratch/test_ws_probe_fix.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/scratch/test_ws_probe_fix.py) (starts the real server on isolated port 8766) — bare TCP probes silent ✅, plain HTTP GET → 200 with no error ✅, garbage bytes still log exactly one genuine ERROR ✅, genuine WS client connects + round-trips ✅. **ALL CHECKS PASSED.** Plus 34/34 pytest pass (`test_dashboard_api.py` + `test_hermes_features.py` + `test_action_normalization.py`). The 6 collection errors in other test files are the pre-existing shim-module bug (known issue #5), unrelated.
-- **Note:** Restart both the AI server (8765) and dashboard (8080) to pick up the fix; the old dashboard process keeps sending bare TCP probes until restarted (now harmless — silenced by the filter).
-
-### Dashboard Enhancements & Performance Optimization 
-- Executed the Enterprise Multi-Agent Fleet Workflow from `.agents/workflows/dashboard_enhancements_and_performance.md`.
-- **Enhancement 1  Automation Deletion Feature:** Added `DELETE /api/automations/{id}` proxy to `dashboard_server.py`; trash icon button + confirmation modal in `app.js`/`index.html`/`styles.css`.
-- **Enhancement 2  Stale Execution Reconciliation:** Added `reconcile_stale_executions()` to `process_manager.py`; triggered on startup + during `/api/executions` polling.
-- **Enhancement 3  Modal Performance:** Added `get_user_automations_summary()` to `crud.py` + `GET /automations/summary` endpoint to `main.py`; dashboard proxies to summary for card grid; client-side `stepsCache` in `app.js`; created `migrate_indexes.py`.
-- **QA:** 29/29 pytest pass; benchmark + E2E test scripts created in `scratch/`.
-
-## Previous Session (2026-07-18)
-
-# Active Context  WebAI Platform
-
-> **This file updates most frequently.** It tracks the current session state, recent changes, open questions, and immediate next steps.
-
-## Current Session (2026-07-29)
-
-### Dashboard Enhancements & Performance Optimization 
-- Executed the Enterprise Multi-Agent Fleet Workflow from `.agents/workflows/dashboard_enhancements_and_performance.md`.
-- **Enhancement 1  Automation Deletion Feature:** Added `DELETE /api/automations/{id}` proxy to `dashboard_server.py`; trash icon button + confirmation modal in `app.js`/`index.html`/`styles.css`.
-- **Enhancement 2  Stale Execution Reconciliation:** Added `reconcile_stale_executions()` to `process_manager.py`; triggered on startup + during `/api/executions` polling.
-- **Enhancement 3  Modal Performance:** Added `get_user_automations_summary()` to `crud.py` + `GET /automations/summary` endpoint to `main.py`; dashboard proxies to summary for card grid; client-side `stepsCache` in `app.js`; created `migrate_indexes.py`.
-- **QA:** 29/29 pytest pass; benchmark + E2E test scripts created in `scratch/`.
-
-## Previous Session (2026-07-18)
-
-# Active Context  WebAI Platform
-
-> **This file updates most frequently.** It tracks the current session state, recent changes, open questions, and immediate next steps.
-
-## Current Session (2026-07-29)
-
-### Dashboard Enhancements & Performance Optimization 
-- Executed the Enterprise Multi-Agent Fleet Workflow from `.agents/workflows/dashboard_enhancements_and_performance.md`.
-- **Enhancement 1  Automation Deletion Feature:** Added `DELETE /api/automations/{id}` proxy to `dashboard_server.py`; trash icon button + confirmation modal in `app.js`/`index.html`/`styles.css`.
-- **Enhancement 2  Stale Execution Reconciliation:** Added `reconcile_stale_executions()` to `process_manager.py`; triggered on startup + during `/api/executions` polling.
-- **Enhancement 3  Modal Performance:** Added `get_user_automations_summary()` to `crud.py` + `GET /automations/summary` endpoint to `main.py`; dashboard proxies to summary for card grid; client-side `stepsCache` in `app.js`; created `migrate_indexes.py`.
-- **QA:** 29/29 pytest pass; benchmark + E2E test scripts created in `scratch/`.
-
-## Previous Session (2026-07-18)
-
 # Active Context — WebAI Platform
 
 > **This file updates most frequently.** It tracks the current session state, recent changes, open questions, and immediate next steps.
 
-## Current Session (2026-07-18)
+## Current Session (2026-07-29)
+
+### Dashboard Enhancements & Performance Optimization ✅
+- Executed the Enterprise Multi-Agent Fleet Workflow from `.agents/workflows/dashboard_enhancements_and_performance.md`.
+- **Enhancement 1 — Automation Deletion Feature:**
+  - Added `DELETE /api/automations/{id}` proxy endpoint to `dashboard_server.py` (cascades to configs, execution_history, execution_logs, scheduled_runs via API server).
+  - Added trash icon "Delete" button on each automation card in `app.js` with confirmation modal (`index.html`, `styles.css`).
+  - `openDeleteModal()` + `confirmDelete()` functions with stepsCache invalidation on delete.
+- **Enhancement 2 — Stale Execution Status Reconciliation:**
+  - Added `reconcile_stale_executions()` + `active_execution_ids()` methods to `PlaybackProcessManager` in `process_manager.py`.
+  - Sweeper fetches recent executions, finds orphan `RUNNING` rows not tracked by process manager, marks them `FAILED` via `PUT /executions/{id}`.
+  - Triggered on dashboard startup (`_startup_reconcile()` with `WEBAI_RECONCILE_API_KEY` env var) and during `/api/executions` polling.
+- **Enhancement 3 — Modal Retrieval Performance Optimization:**
+  - Added `get_user_automations_summary()` to `crud.py` — column projection excluding heavy `steps_json` NVARCHAR(MAX) blob.
+  - Added `GET /automations/summary` lightweight endpoint to `main.py` (returns metadata only, no steps).
+  - Dashboard `GET /api/automations` now proxies to `/automations/summary` for card grid (steps fetched on demand for modals).
+  - Added client-side `state.stepsCache` in `app.js` to avoid re-fetching steps on repeated modal opens.
+  - Created `migrate_indexes.py` — idempotent SQL Server index creation for `execution_logs(execution_id)` and `execution_history(automation_id)`.
+- **QA:** 29/29 pytest pass (`test_dashboard_api.py`); benchmark script created (`scratch/benchmark_modal_speed.py`); E2E test created (`scratch/test_dashboard_enhancements.py`).
+- **Benchmark finding:** All endpoints show ~2000ms latency due to pre-existing `echo=True` SQL logging (known issue #6 in `progress.md`), not query design. The `/automations/summary` endpoint returns 422 until the API server is restarted with the new code.
+
+## Previous Session (2026-07-18)
 
 ### What Was Done Today
 - ✅ Read and analyzed all three project components (`webai_api_server`, `webai_local_server`, `webai_playwright_python`)
@@ -285,12 +250,12 @@ The project is **functional and feature-complete** for its current scope. All th
 
 | File | Last Change | Purpose |
 |------|-------------|---------|
-| `webai_local_server/webai_local_server/local_webai_server_guided.py` | Phase 8.2/8.3/9.1 | AI brain with extraction + table + wait |
-| `webai_playwright_python/webai_playwright/recorder.py` | Phase 8.2/8.3/9.1 | Recorder with context menu + save dialogs |
-| `webai_playwright_python/webai_playwright/fallback_helpers.py` | Phase 8.2/8.3 | Extraction + table extraction logic |
-| `webai_playwright_python/webai_playwright/ai.py` | Phase 8.2/8.3 | Command handlers for extract/extractTableData |
-| `webai_api_server/main.py` | Logging endpoints | API with log batch + stats endpoints |
-| `webai_api_server/models.py` | IST + automation_id | Database models with IST columns |
+| `webai_local_server/webai_dashboard/dashboard_server.py` | Dashboard Enhancements | Delete proxy + reconciliation sweep + summary proxy |
+| `webai_local_server/webai_dashboard/process_manager.py` | Dashboard Enhancements | Stale execution reconciler |
+| `webai_local_server/webai_dashboard/static/app.js` | Dashboard Enhancements | Delete button + stepsCache |
+| `webai_api_server/crud.py` | Dashboard Enhancements | `get_user_automations_summary()` lightweight query |
+| `webai_api_server/main.py` | Dashboard Enhancements | `GET /automations/summary` endpoint |
+| `webai_api_server/migrate_indexes.py` | Dashboard Enhancements | Index migration script |
 
 ## Key Context for Next Session
 
@@ -303,6 +268,8 @@ The project is **functional and feature-complete** for its current scope. All th
 7. **Encryption key** in `.env` must be preserved — losing it loses all encrypted credentials
 8. **Shim module is broken** — always run `local_webai_server_guided` directly, not via shim
 9. **LOCATOR_PRIORITY differs** between server (13 types) and client (9 types) — see `progress.md` issue #8
+10. **Restart API server** after code changes — the `/automations/summary` endpoint returns 422 until the server is restarted with the new code
+11. **Run `migrate_indexes.py`** after restarting the API server to ensure DB indexes exist
 
 ## Related Documents
 - `progress.md` — Detailed feature status and known issues

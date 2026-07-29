@@ -15,6 +15,7 @@ replay the recorded JSON sequence.
 """
 import asyncio
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -30,7 +31,7 @@ from webai_playwright import ai
 
 OUTPUT_JSON = "recorded_steps.json"
 OUTPUT_TASK = "generated_task.txt"
-START_URL = "about:blank"
+START_URL = os.environ.get("WEBAI_START_URL", "about:blank")
 
 
 def ask_yes_no(prompt: str, default: str = "n") -> bool:
@@ -48,6 +49,7 @@ def ask_yes_no(prompt: str, default: str = "n") -> bool:
 
 async def main():
     recorder = WebRecorder()
+    auto_import = os.environ.get("WEBAI_AUTO_IMPORT") == "1"
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False)
@@ -58,6 +60,7 @@ async def main():
         await page.goto(START_URL)
 
         print("\n=== Web Recorder Started ===")
+        print(f"Target URL: {START_URL}")
         print("Do actions in the browser.")
         print("Stop options:")
         print("  - Click Stop Recording button (bottom-right)")
@@ -83,7 +86,7 @@ async def main():
         print(task_text)
         print("\n======================\n")
 
-        run_ai = ask_yes_no("Run AI after recording?", default="n")
+        run_ai = False if auto_import else ask_yes_no("Run AI after recording?", default="n")
 
         if run_ai:
             print("\nRunning AI health-check with generated TASK...\n")
@@ -94,13 +97,23 @@ async def main():
 
         await browser.close()
 
-        # Prompt user to save recording to SQL database
-        save_db = ask_yes_no("Save this recording to SQL database?", default="y")
+        # Upload recording to SQL database
+        save_db = True if auto_import else ask_yes_no("Save this recording to SQL database?", default="y")
         if save_db:
             try:
                 import import_to_database
                 print("\n=== Uploading Recording to SQL Database ===")
-                import_to_database.main()
+                if auto_import:
+                    rec_name = os.environ.get("WEBAI_AUTOMATION_NAME", "Recorded Automation")
+                    rec_desc = os.environ.get("WEBAI_AUTOMATION_DESC", "Recorded via Dashboard")
+                    api_key = os.environ.get("WEBAI_API_KEY")
+                    api_url = os.environ.get("WEBAI_API_URL", "http://localhost:8000")
+                    if api_key:
+                        import_to_database.import_recording(steps_json, rec_name, rec_desc, api_key, api_url)
+                    else:
+                        import_to_database.main()
+                else:
+                    import_to_database.main()
             except Exception as db_err:
                 print(f"Failed to upload to SQL database: {db_err}")
 
