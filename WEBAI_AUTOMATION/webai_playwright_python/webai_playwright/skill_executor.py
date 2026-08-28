@@ -78,9 +78,17 @@ class SkillExecutor:
 
         return resolved_steps
 
-    async def execute_skill(self, page: Page, runtime_params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def execute_skill(
+        self,
+        page: Page,
+        runtime_params: Optional[Dict[str, Any]] = None,
+        keep_alive: bool = False,
+        handoff_intent: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         Replays resolved skill steps sequentially in Playwright with multi-locator fallbacks.
+        If keep_alive=True and handoff_intent is provided, skips browser closing and hands off
+        live page context to the AI Brain server via a WebSocket task-start message.
         """
         steps = self.resolve_steps(runtime_params)
         print(f"\n=== Executing Skill: '{self.skill_name}' ({len(steps)} steps) ===")
@@ -97,7 +105,7 @@ class SkillExecutor:
 
             print(f" [Step {idx}/{len(steps)}] {action.upper()}: name='{name}', val='{value or url or ''}'")
 
-            if action in ("open", "navigate"):
+            if action in ("goto", "open", "navigate"):
                 if url:
                     await page.goto(url, wait_until="domcontentloaded")
             
@@ -141,9 +149,32 @@ class SkillExecutor:
             executed_count += 1
 
         print(f"=== Skill Execution Finished Successfully ({executed_count}/{len(steps)} steps) ===\n")
+
+        status = "success"
+        if keep_alive and handoff_intent:
+            status = "handoff"
+            print(f" [SkillExecutor] Handing off live browser session for task: '{handoff_intent}'")
+            try:
+                from .websocket_client import send_message
+                payload = {
+                    "type": "task-start",
+                    "task": handoff_intent,
+                    "url": page.url,
+                    "options": {
+                        "keep_alive": True,
+                        "from_skill": self.skill_name
+                    }
+                }
+                await send_message(payload)
+                print(" [SkillExecutor] WebSocket 'task-start' message emitted successfully.")
+            except Exception as e:
+                print(f" [WARN] [SkillExecutor] WebSocket handoff dispatch failed: {e}")
+
         return {
-            "status": "success",
+            "status": status,
             "skill_name": self.skill_name,
             "steps_executed": executed_count,
-            "extracted_data": extracted_data
+            "extracted_data": extracted_data,
+            "keep_alive": keep_alive,
+            "handoff_intent": handoff_intent
         }
