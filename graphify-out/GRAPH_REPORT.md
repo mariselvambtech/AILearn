@@ -1,16 +1,16 @@
 # Graph Report - AILearn  (2026-08-28)
 
 ## Corpus Check
-- 248 files · ~250,384 words
+- 249 files · ~250,971 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 953 nodes · 1356 edges · 63 communities (56 shown, 7 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 13 edges (avg confidence: 0.62)
+- 966 nodes · 1372 edges · 65 communities (56 shown, 9 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 15 edges (avg confidence: 0.6)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0d3e9723`
+- Built from commit: `f95b5b1e`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -77,6 +77,8 @@
 - test_dashboard_ui.py
 - migrate_indexes.py
 - test_dashboard_visual.py
+- Page
+- Path
 
 ## God Nodes (most connected - your core abstractions)
 1. `WebRecorder` - 25 edges
@@ -88,24 +90,24 @@
 7. `api()` - 15 edges
 8. `DataExtractionPlugin` - 14 edges
 9. `SkillSynthesizer` - 13 edges
-10. `Tech Context — WebAI Platform` - 12 edges
+10. `SkillExecutor` - 12 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `test_audio_alignment_math()` --calls--> `Step`  [EXTRACTED]
-  WEBAI_AUTOMATION/scratch/test_audio_alignment.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/recorder.py
+- `MockKeyboard` --uses--> `SkillExecutor`  [INFERRED]
+  WEBAI_AUTOMATION/scratch/test_browser_handoff.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/skill_executor.py
+- `MockPage` --uses--> `SkillExecutor`  [INFERRED]
+  WEBAI_AUTOMATION/scratch/test_browser_handoff.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/skill_executor.py
 - `test_e2e_skill_playback()` --calls--> `SkillExecutor`  [EXTRACTED]
   WEBAI_AUTOMATION/scratch/test_e2e_skill_execution.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/skill_executor.py
-- `test_intent_routing_and_variable_extraction()` --calls--> `IntentRouter`  [EXTRACTED]
-  WEBAI_AUTOMATION/scratch/test_intent_router.py → WEBAI_AUTOMATION/webai_local_server/webai_local_server/intent_router.py
-- `test_no_matching_skill_fallback()` --calls--> `IntentRouter`  [EXTRACTED]
-  WEBAI_AUTOMATION/scratch/test_intent_router.py → WEBAI_AUTOMATION/webai_local_server/webai_local_server/intent_router.py
 - `test_skill_executor_resolution()` --calls--> `SkillExecutor`  [EXTRACTED]
   WEBAI_AUTOMATION/scratch/test_skill_execution.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/skill_executor.py
+- `main()` --calls--> `SkillExecutor`  [EXTRACTED]
+  WEBAI_AUTOMATION/webai_playwright_python/run_skill.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/skill_executor.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (63 total, 7 thin omitted)
+## Communities (65 total, 9 thin omitted)
 
 ### Community 0 - "Recent Work Completed"
 Cohesion: 0.05
@@ -113,7 +115,7 @@ Nodes (40): 1. Conditional Branching (Future Enhancement), 2. Variable Storage f
 
 ### Community 1 - "Active Context — WebAI Platform"
 Cohesion: 0.08
-Nodes (24): Active Context  WebAI Platform, Active Context  WebAI Platform, Active Context  WebAI Platform, Current Session (2026-07-29), Current Session (2026-07-29), Current Session (2026-08-28), Dashboard Enhancements & Performance Optimization, Dashboard Enhancements & Performance Optimization (+16 more)
+Nodes (25): Active Context  WebAI Platform, Active Context  WebAI Platform, Active Context  WebAI Platform, Current Session (2026-07-29), Current Session (2026-07-29), Current Session (2026-08-28), Dashboard Enhancements & Performance Optimization, Dashboard Enhancements & Performance Optimization (+17 more)
 
 ### Community 2 - "Open Questions / Decisions Pending"
 Cohesion: 0.05
@@ -216,8 +218,8 @@ Cohesion: 0.24
 Nodes (11): bare_tcp_probe(), garbage_probe(), http_get_probe(), main(), E2E verification for the WebSocket probe-tolerance fix in webai_local_server/lo, Connect and close without sending a single byte (old _probe_tcp)., Send a plain HTTP/1.1 GET (dashboard _probe_ws) and return the response., Send non-HTTP garbage bytes (genuine malformed request). (+3 more)
 
 ### Community 32 - ".json"
-Cohesion: 0.13
-Nodes (14): Headless E2E Test for SkillExecutor Playwright Execution. Verifies loading synth, test_e2e_skill_playback(), TDVC Test Harness for SkillExecutor Parameter Injection & Schema Resolution. Ver, test_skill_executor_resolution(), main(), CLI Runner for Executing Synthesized AI Skills.  Loads synthesized_skill.json, p, Any, Page (+6 more)
+Cohesion: 0.09
+Nodes (18): Any, Page, Path, MockKeyboard, MockPage, TDVC Test Suite for Phase 7: The Browser Handoff Engine (Rule 7) Verifies: 1. Br, test_browser_handoff_lifecycle(), Headless E2E Test for SkillExecutor Playwright Execution. Verifies loading synth (+10 more)
 
 ### Community 33 - "Implementation Plan — WebAI Front-End Automation Dashboard"
 Cohesion: 0.18
@@ -328,9 +330,9 @@ Cohesion: 0.50
 Nodes (3): migrate_indexes(), Database Migration: Add performance indexes for modal rendering.  Creates explic, Create missing performance indexes on execution_logs and execution_history.
 
 ## Knowledge Gaps
-- **240 isolated node(s):** `1. Documentation & Code Synchronization`, `2. Memory Bank Maintenance`, `3. Code Quality & Style`, `4. Testing & Verification`, `5. Dependency Management` (+235 more)
+- **241 isolated node(s):** `Phase 7: The Browser Handoff Engine (The Bridge) ✅`, `Phase 6: Semantic Intent Router & Agentic Handoff Engine ✅`, `System Architecture & Workflow Documentation Generated ✅`, `Phase 5: Dashboard UI Integration & Skill Management ✅`, `Phase 4: Skill Execution Engine & Dynamic Replay ✅` (+236 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **7 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **9 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
@@ -339,12 +341,12 @@ _Questions this graph is uniquely positioned to answer:_
   _High betweenness centrality (0.022) - this node is a cross-community bridge._
 - **Why does `WebRecorder` connect `Open Questions / Decisions Pending` to `Page`?**
   _High betweenness centrality (0.013) - this node is a cross-community bridge._
-- **What connects `1. Documentation & Code Synchronization`, `2. Memory Bank Maintenance`, `3. Code Quality & Style` to the rest of the system?**
-  _240 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `Phase 7: The Browser Handoff Engine (The Bridge) ✅`, `Phase 6: Semantic Intent Router & Agentic Handoff Engine ✅`, `System Architecture & Workflow Documentation Generated ✅` to the rest of the system?**
+  _241 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Recent Work Completed` be split into smaller, more focused modules?**
   _Cohesion score 0.05 - nodes in this community are weakly interconnected._
 - **Should `Active Context — WebAI Platform` be split into smaller, more focused modules?**
-  _Cohesion score 0.08 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07692307692307693 - nodes in this community are weakly interconnected._
 - **Should `Open Questions / Decisions Pending` be split into smaller, more focused modules?**
   _Cohesion score 0.05030181086519115 - nodes in this community are weakly interconnected._
 - **Should `Immediate Next Steps (If User Requests)` be split into smaller, more focused modules?**
