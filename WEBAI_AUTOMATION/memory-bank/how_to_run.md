@@ -2,6 +2,8 @@
 
 To run the WebAI Automation project successfully, you need to run **three separate servers** simultaneously, plus the **client script**. You will need a total of four terminal windows.
 
+> 🖥️ **No-terminal alternative (Dashboard):** Instead of running client scripts from a terminal, you can start the **Web UI Dashboard** (see Section 5 below) and drive run/import/monitor flows entirely from your browser at `http://localhost:8080`.
+
 ---
 
 ## 1. Start the API Server (Terminal 1)
@@ -12,7 +14,13 @@ This server handles the database, REST API endpoints, and execution logging.
    ```bash
    cd webai_api_server
    ```
-3. Start the server:
+3. Activate the virtual environment:
+   ```bash
+   .\venv\Scripts\Activate.ps1
+   # or on Command Prompt / Bash:
+   # venv\Scripts\activate
+   ```
+4. Start the server:
    ```bash
    python run.py
    ```
@@ -28,9 +36,11 @@ This server handles the WebSockets and AI communication/logic for guided automat
    ```bash
    cd webai_local_server
    ```
-3. Activate the virtual environment (if you are using one):
+3. Activate the virtual environment:
    ```bash
    .\.venv\Scripts\Activate.ps1
+   # or on Command Prompt / Bash:
+   # .venv\Scripts\activate
    ```
 4. Start the server:
    ```bash
@@ -60,9 +70,11 @@ Once all three servers are running, you can run the actual automation client scr
    ```bash
    cd webai_playwright_python
    ```
-3. Activate the virtual environment (if you are using one):
+3. Activate the virtual environment:
    ```bash
    .\.venv\Scripts\Activate.ps1
+   # or on Command Prompt / Bash:
+   # .venv\Scripts\activate
    ```
 4. Run your desired script. For example, to run an automation from the database:
    ```bash
@@ -74,3 +86,34 @@ Once all three servers are running, you can run the actual automation client scr
 - `import_to_database.py`: Imports a previously recorded `recorded_steps.json` into the API Server and MSSQL Database.
 - `run_from_database.py`: Fetches and runs a previously recorded automation from the database using its Automation ID.
 - `run_from_task_txt_guided.py`: Runs a guided AI automation based on a natural language task description.
+
+### Running Event Bus & Plugin Tests:
+To verify the WebRecorder Event Bus pub/sub architecture and DataExtractionPlugin isolation:
+```bash
+python test_event_bus_core.py
+# or using pytest:
+pytest test_event_bus_core.py
+```
+
+---
+
+## 5. (Optional) Start the Web UI Dashboard (Terminal 5)
+The dashboard replaces the terminal for run/import/monitor flows — a browser-based front end for `run_from_database.py` and `import_to_database.py`.
+
+1. Open Terminal 5
+2. Navigate to the `webai_local_server` directory:
+   ```bash
+   cd webai_local_server
+   ```
+3. Activate the virtual environment:
+   ```bash
+   .\.venv\Scripts\Activate.ps1
+   # or on Command Prompt / Bash:
+   # .venv\Scripts\activate
+   ```
+4. Start the dashboard server:
+   ```bash
+   python -m webai_dashboard.dashboard_server
+   ```
+   *(Note: This runs on **Port 8080**. Open `http://localhost:8080` in your browser, log in with your API username/password, and you can run automations, import `recorded_steps.json` files, watch execution status live, and view logs — no terminal needed for those flows.)*
+> The dashboard still requires the **API Server (8000)** and **AI Server (8765)** to be running. Ollama (11434) is only needed for freeform (non-recorded) tasks.

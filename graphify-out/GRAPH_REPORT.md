@@ -1,16 +1,16 @@
-# Graph Report - AILearn  (2026-07-27)
+# Graph Report - AILearn  (2026-08-28)
 
 ## Corpus Check
-- 216 files · ~218,184 words
+- 248 files · ~250,384 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 312 nodes · 396 edges · 22 communities (16 shown, 6 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 5 edges (avg confidence: 0.8)
+- 953 nodes · 1356 edges · 63 communities (56 shown, 7 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 13 edges (avg confidence: 0.62)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `bc775fb6`
+- Built from commit: `0d3e9723`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -36,63 +36,108 @@
 - crawl_helper.py
 - AI Assistant Core Rules
 - Page
+- crud.py
+- app.js
+- Tech Context — WebAI Platform
+- PlaybackProcessManager
+- Any
+- run_automation_endpoint
+- dashboard_server.py
+- MonkeyPatch
+- test_dashboard_enhancements.py
+- test_ws_probe_fix.py
+- .json
+- Implementation Plan — WebAI Front-End Automation Dashboard
+- benchmark_modal_speed.py
+- _safe_detail
+- test_dashboard_recording.py
+- test_dashboard_api.py
+- validate_steps_payload
+- Decision Log — WebAI Platform
+- Decision 1: Multi-Locator Fallback vs Single Selector
+- Decision 2: LLM Bypass for Click/Type When Locators Exist
+- test_e2e_recording_full.py
+- derive_base_url
+- Decision 4: Fernet Symmetric Encryption for Credentials
+- Decision 5: IST Timezone Computed Columns
+- Decision 6: Batch Logging vs Individual Log Entries
+- Decision 7: WebSocket for AI Server vs HTTP Polling
+- Decision 8: Task Normalization Before LLM
+- Decision 9: Action Normalization (LLM Tolerance)
+- Decision 10: Plan Caching Disabled
+- Decision 11: Right-Click Context Menu for Extraction
+- Decision 12: Table Extraction via Injected JavaScript
+- Decision 13: Database-Backed Orchestration vs File-Based
+- Decision 17: Front-End Dashboard as Orchestration Layer (Not API Server Extension)
+- Decision 3: Local Ollama vs Cloud LLM API
+- build_task_text
+- TestAuthEnforcement
+- Decision 18: Probe-Tolerant WebSocket Server (process_request + logging filter)
+- TestImportValidation
+- test_dashboard_ui.py
+- migrate_indexes.py
+- test_dashboard_visual.py
 
 ## God Nodes (most connected - your core abstractions)
-1. `handle_client()` - 22 edges
-2. `Recent Work Completed` - 18 edges
-3. `WebRecorder` - 13 edges
-4. `Active Context — WebAI Platform` - 10 edges
-5. `Project Milestones` - 10 edges
-6. `Design Patterns` - 10 edges
-7. `Progress — WebAI Platform` - 9 edges
-8. `System Patterns — WebAI Platform` - 9 edges
-9. `Known Issues` - 8 edges
-10. `ai()` - 8 edges
+1. `WebRecorder` - 25 edges
+2. `handle_client()` - 22 edges
+3. `Step` - 21 edges
+4. `Recent Work Completed` - 20 edges
+5. `Decision Log — WebAI Platform` - 19 edges
+6. `bindEvents()` - 17 edges
+7. `api()` - 15 edges
+8. `DataExtractionPlugin` - 14 edges
+9. `SkillSynthesizer` - 13 edges
+10. `Tech Context — WebAI Platform` - 12 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `main()` --calls--> `WebRecorder`  [EXTRACTED]
-  WEBAI_AUTOMATION/webai_playwright_python/record_then_run.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/recorder.py
-- `_execute_command()` --calls--> `extract_with_fallback()`  [EXTRACTED]
-  WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/ai.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/fallback_helpers.py
-- `_execute_command()` --calls--> `extract_table_data()`  [EXTRACTED]
-  WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/ai.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/fallback_helpers.py
+- `test_audio_alignment_math()` --calls--> `Step`  [EXTRACTED]
+  WEBAI_AUTOMATION/scratch/test_audio_alignment.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/recorder.py
+- `test_e2e_skill_playback()` --calls--> `SkillExecutor`  [EXTRACTED]
+  WEBAI_AUTOMATION/scratch/test_e2e_skill_execution.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/skill_executor.py
+- `test_intent_routing_and_variable_extraction()` --calls--> `IntentRouter`  [EXTRACTED]
+  WEBAI_AUTOMATION/scratch/test_intent_router.py → WEBAI_AUTOMATION/webai_local_server/webai_local_server/intent_router.py
+- `test_no_matching_skill_fallback()` --calls--> `IntentRouter`  [EXTRACTED]
+  WEBAI_AUTOMATION/scratch/test_intent_router.py → WEBAI_AUTOMATION/webai_local_server/webai_local_server/intent_router.py
+- `test_skill_executor_resolution()` --calls--> `SkillExecutor`  [EXTRACTED]
+  WEBAI_AUTOMATION/scratch/test_skill_execution.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/skill_executor.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (22 total, 6 thin omitted)
+## Communities (63 total, 7 thin omitted)
 
 ### Community 0 - "Recent Work Completed"
-Cohesion: 0.11
-Nodes (18): 7 Web Failure Scenario Fortification & Test Suite Verification ✅, API Server Startup Bug Fixes ✅, Auto SQL Upload in `record_then_run.py` ✅, Crawl4AI Integration & Semantic DOM Fingerprinting ✅, Database Migrations ✅, Graphify Knowledge Graph Integration ✅, Hermes 3 Model Integration ✅, `<label>` Button Click Locator Fix & Hermes 3 Self-Healing ✅ (+10 more)
+Cohesion: 0.05
+Nodes (40): 1. Conditional Branching (Future Enhancement), 2. Variable Storage for Conditions, 3. Explicit Page Validation, 4. LOCATOR_PRIORITY Inconsistency, 5. Shim Module Bug, 7 Web Failure Scenario Fortification & Test Suite Verification ✅, Active Context — WebAI Platform, Active Files (Most Recently Modified) (+32 more)
 
 ### Community 1 - "Active Context — WebAI Platform"
-Cohesion: 0.10
-Nodes (19): 1. Conditional Branching (Future Enhancement), 2. Variable Storage for Conditions, 3. Explicit Page Validation, 4. LOCATOR_PRIORITY Inconsistency, 5. Shim Module Bug, Active Context — WebAI Platform, Active Files (Most Recently Modified), Current Session (2026-07-18) (+11 more)
+Cohesion: 0.08
+Nodes (24): Active Context  WebAI Platform, Active Context  WebAI Platform, Active Context  WebAI Platform, Current Session (2026-07-29), Current Session (2026-07-29), Current Session (2026-08-28), Dashboard Enhancements & Performance Optimization, Dashboard Enhancements & Performance Optimization (+16 more)
 
 ### Community 2 - "Open Questions / Decisions Pending"
-Cohesion: 0.13
-Nodes (12): Page, ask_yes_no(), main(), Any, Browser Interaction Recorder utilizing Chrome DevTools Protocol (CDP).  This m, Attaches the recorder to the BrowserContext and all current / newly opened tabs, Save single extraction to files immediately, Save extraction to Excel file (+4 more)
+Cohesion: 0.05
+Nodes (41): TDVC Test Harness for AudioCapturePlugin & WebRecorder Synchronization. Verifies, test_audio_plugin_synchronization(), Phase 1 Test Suite: test_event_bus_core.py  Tests the WebRecorder Event Bus pub/, Tests that WebRecorder correctly broadcasts click and type events     with full, Tests that if a subscriber plugin raises an exception during execution,     the, Tests that DataExtractionPlugin subscribes to extract channel and safely handles, test_data_extraction_plugin_subscription(), test_event_bus_click_and_type_events() (+33 more)
 
 ### Community 3 - "Immediate Next Steps (If User Requests)"
 Cohesion: 0.09
-Nodes (34): Exception, RuntimeError, Exception raised internally when the LLM outputs `action=done`.          This si, TaskDone, ai(), ai_sync(), ClientError, _execute_command() (+26 more)
+Nodes (34): Exception, RuntimeError, Exception raised internally when the LLM outputs `action=done`.          This, TaskDone, ai(), ai_sync(), ClientError, _execute_command() (+26 more)
 
 ### Community 4 - "Current Session (2026-07-18)"
-Cohesion: 0.22
-Nodes (16): buffer_log(), create_execution_record(), fetch_automation_steps(), flush_logs(), log(), main(), Run automation from API database - Simple file-based approach.  This script de, Save steps to JSON file (+8 more)
+Cohesion: 0.18
+Nodes (19): buffer_log(), create_execution_record(), fetch_automation_steps(), flush_logs(), log(), main(), Run automation from API database - Simple file-based approach.  This script de, Save steps to JSON file (+11 more)
 
 ### Community 8 - "test_cdp_fixes.py"
 Cohesion: 0.17
 Nodes (11): Test suite for verifying CDP and Playwright Actions fixes, Test that cdp.get_dom_snapshot works correctly, Test that playwright_actions.get_snapshot works correctly, Test that cdp.get_interactive_elements works correctly, Test that playwright_actions.get_dom_snapshot works correctly, Test that playwright_actions.get_interactive_elements works correctly, test_cdp_get_dom_snapshot(), test_cdp_get_interactive_elements() (+3 more)
 
 ### Community 9 - "fallback_helpers.py"
-Cohesion: 0.06
-Nodes (56): build_subgoal_prompt(), build_system_prompt(), cache_get_plan(), _cache_key(), cache_put_plan(), _compact_context(), _env(), _extract_json_array() (+48 more)
+Cohesion: 0.05
+Nodes (61): LogRecord, build_subgoal_prompt(), build_system_prompt(), cache_get_plan(), _cache_key(), cache_put_plan(), _compact_context(), _EmptyProbeNoiseFilter (+53 more)
 
 ### Community 10 - "How to Run the WebAI Automation Project"
-Cohesion: 0.29
-Nodes (6): 1. Start the API Server (Terminal 1), 2. Start the AI Server (Terminal 2), 3. Start the Ollama Server (Terminal 3), 4. Run the Client Script (Terminal 4), Available Client Scripts:, How to Run the WebAI Automation Project
+Cohesion: 0.22
+Nodes (8): 1. Start the API Server (Terminal 1), 2. Start the AI Server (Terminal 2), 3. Start the Ollama Server (Terminal 3), 4. Run the Client Script (Terminal 4), 5. (Optional) Start the Web UI Dashboard (Terminal 5), Available Client Scripts:, How to Run the WebAI Automation Project, Running Event Bus & Plugin Tests:
 
 ### Community 11 - "test_quick.py"
 Cohesion: 0.33
@@ -102,13 +147,17 @@ Nodes (5): Quick Test: Verify Playback Works, Test that generated_task.txt match
 Cohesion: 0.50
 Nodes (3): Test error logging with stacktrace capture Forces an error scenario to verify s, Test that errors are logged with full stacktraces, test_error_logging()
 
+### Community 13 - "import_to_database.py"
+Cohesion: 0.24
+Nodes (10): import_recording(), login_user(), main(), Any, Import recorded_steps.json into the WebAI API database.  This script bridges t, Interactive CLI wrapper for importing `recorded_steps.json` into the database., Register a new user account via the API server.      Args:         username:, Authenticate a user and retrieve their API key.      Args:         username: (+2 more)
+
 ### Community 16 - "Project Milestones"
 Cohesion: 0.06
-Nodes (34): 1. Plan Caching Disabled, 2. No Explicit Navigation Validation, 3. Variable Persistence Limited, 4. LLM Sometimes Returns Invalid Actions, 5. Hardcoded API Key in Scripts, 6. Database Echo Enabled, 7. CORS Wide Open, API Server Tests ✅ (+26 more)
+Nodes (35): 1. Plan Caching Disabled, 2. No Explicit Navigation Validation, 3. Variable Persistence Limited, 4. LLM Sometimes Returns Invalid Actions, 5. Hardcoded API Key in Scripts, 6. Database Echo Enabled, 7. CORS Wide Open, API Server Tests ✅ (+27 more)
 
 ### Community 17 - "Design Patterns"
 Cohesion: 0.07
-Nodes (26): 1. Browser Robot ↔ AI Brain (WebSocket), 2. Browser Robot ↔ API Server (HTTP REST), 3. AI Brain ↔ API Server (HTTP REST), 4. AI Brain ↔ Ollama (HTTP), Component Relationships, Critical Implementation Paths, Database Schema, Design Patterns (+18 more)
+Nodes (27): 1. Browser Robot ↔ AI Brain (WebSocket), 2. Browser Robot ↔ API Server (HTTP REST), 3. AI Brain ↔ API Server (HTTP REST), 4. AI Brain ↔ Ollama (HTTP), Component Relationships, Critical Implementation Paths, Database Schema, Design Patterns (+19 more)
 
 ### Community 18 - "graphify_to_mermaid.py"
 Cohesion: 0.27
@@ -119,28 +168,184 @@ Cohesion: 0.22
 Nodes (8): build_element_fingerprint(), generate_page_summary(), html_to_llm_markdown(), Any, Crawl4AI Helper Module for LLM Markdown Page Understanding & Semantic Fingerprin, Convert raw HTML DOM into clean, noise-free LLM Markdown.     Strips scripts, st, Extract a concise 1-2 sentence page summary from LLM Markdown content., Build a rich semantic fingerprint for recorded elements.     Includes tag, role,
 
 ### Community 20 - "AI Assistant Core Rules"
+Cohesion: 0.14
+Nodes (13): 10. Strict Prompting Contracts, 11. Autonomous E2E Validation Loop (Self-Healing), 1. Documentation & Code Synchronization, 2. Memory Bank Maintenance, 3. Code Quality & Style, 4. Testing & Verification, 5. Dependency Management, 6. Safety & Permissions (+5 more)
+
+### Community 21 - "Page"
+Cohesion: 0.07
+Nodes (23): TDVC Test Harness for AudioAligner Temporal Alignment Logic. Verifies time windo, test_audio_alignment_math(), TDVC Test Harness for SkillSynthesizer. Verifies Ollama synthesis, JSON parsing,, test_skill_synthesis(), ask_yes_no(), main(), AudioAligner, Any (+15 more)
+
+### Community 22 - "crud.py"
+Cohesion: 0.06
+Nodes (52): Automation, AutomationConfig, AutomationCreate, AutomationUpdate, ConfigCreate, ConfigUpdate, ExecutionHistory, ScheduleCreate (+44 more)
+
+### Community 23 - "app.js"
+Cohesion: 0.19
+Nodes (36): api(), automationNameFor(), bindEvents(), clearSession(), confirmDelete(), confirmRun(), escapeHtml(), handleApiKeySubmit() (+28 more)
+
+### Community 24 - "Tech Context — WebAI Platform"
+Cohesion: 0.06
+Nodes (32): 1. Install ODBC Driver 17 for SQL Server, 2. Create Database, 3. Install Python Dependencies, 4. Initialize Database Tables, 5. Pull Ollama Model, Additional (for data extraction features), AI Server (optional env vars, with defaults), Dashboard Server (optional env vars, with defaults) (+24 more)
+
+### Community 25 - "PlaybackProcessManager"
+Cohesion: 0.09
+Nodes (17): Popen, PlaybackProcessManager, PlaybackRun, Path, Playback subprocess lifecycle manager for the WebAI dashboard server.  The das, Return True while at least one playback subprocess is still alive., Return execution IDs of all currently-running playback subprocesses., Mark orphan RUNNING executions as FAILED.          Historical executions stay (+9 more)
+
+### Community 26 - "Any"
+Cohesion: 0.21
+Nodes (12): get_automation(), get_execution_logs(), list_automations(), list_executions(), _proxy_get(), Validate that the caller supplied an X-API-Key header.      Args:         x_a, Proxy an authenticated GET request to the API server.      Args:         path, List the caller's automations (dashboard card grid data source). (+4 more)
+
+### Community 27 - "run_automation_endpoint"
+Cohesion: 0.16
+Nodes (14): BaseModel, execute_skill_endpoint(), Path, Result of a successfully dispatched automation run., Payload for triggering dynamic execution of a synthesized AI skill., Choose the Python interpreter for the playback subprocess.      Prefers the Pl, Execute a synthesized AI Skill asynchronously via SkillExecutor in Playwright ve, Trigger browser playback of a database-backed automation.      Replaces the in (+6 more)
+
+### Community 28 - "dashboard_server.py"
+Cohesion: 0.18
+Nodes (13): dashboard_health(), _probe_http(), _probe_tcp(), _probe_ws(), WebAI Dashboard Server — web UI + orchestration API.  This FastAPI server is t, Return True when a TCP connection to host:port succeeds., Probe a WebSocket server by sending a minimal HTTP request.      Unlike a raw, Return True when an HTTP GET to url returns any non-server-error status. (+5 more)
+
+### Community 29 - "MonkeyPatch"
+Cohesion: 0.05
+Nodes (27): MonkeyPatch, _api_server_online(), FakeResponse, Any, QA suite for the WebAI Dashboard Server (webai_dashboard).  Covers two layers:, generated_task.txt content generation for guided playback., X-API-Key header enforcement on protected endpoints., Health endpoint always reports dashboard status plus dependency probes. (+19 more)
+
+### Community 30 - "test_dashboard_enhancements.py"
+Cohesion: 0.23
+Nodes (11): _api_online(), _dashboard_online(), main(), E2E test: Dashboard enhancements (delete + stale reconciliation).  Playwright, Run all enhancement tests., Check if the dashboard server is reachable., Check if the API server is reachable., Test that the delete button appears and opens a confirmation modal. (+3 more)
+
+### Community 31 - "test_ws_probe_fix.py"
+Cohesion: 0.24
+Nodes (11): bare_tcp_probe(), garbage_probe(), http_get_probe(), main(), E2E verification for the WebSocket probe-tolerance fix in webai_local_server/lo, Connect and close without sending a single byte (old _probe_tcp)., Send a plain HTTP/1.1 GET (dashboard _probe_ws) and return the response., Send non-HTTP garbage bytes (genuine malformed request). (+3 more)
+
+### Community 32 - ".json"
+Cohesion: 0.13
+Nodes (14): Headless E2E Test for SkillExecutor Playwright Execution. Verifies loading synth, test_e2e_skill_playback(), TDVC Test Harness for SkillExecutor Parameter Injection & Schema Resolution. Ver, test_skill_executor_resolution(), main(), CLI Runner for Executing Synthesized AI Skills.  Loads synthesized_skill.json, p, Any, Page (+6 more)
+
+### Community 33 - "Implementation Plan — WebAI Front-End Automation Dashboard"
+Cohesion: 0.18
+Nodes (10): 1. Objective, 2. Architecture, 3. API Contract (Dashboard Server), 4. CLI Refactoring (Workflow Requirement), 5. Front-End, 6. Environment & Dependencies, 7. QA Plan, 8. Documentation Plan (Doc Agent) (+2 more)
+
+### Community 34 - "benchmark_modal_speed.py"
+Cohesion: 0.28
+Nodes (8): _api_online(), main(), Any, Benchmark: Modal rendering response time.  Measures the latency of the endpoin, Return the response time in milliseconds for a GET request., Check if the API server is reachable., Run the benchmark and print results., _time_get()
+
+### Community 35 - "_safe_detail"
+Cohesion: 0.20
+Nodes (10): Response, UploadFile, import_automation(), login(), LoginPayload, Extract an error detail payload from an upstream API response.      Args:, Proxy login to the API server and return the user's API key.      The front-en, Import a recorded_steps.json file as a new database automation.      Replaces (+2 more)
+
+### Community 36 - "test_dashboard_recording.py"
+Cohesion: 0.36
+Nodes (7): _dashboard_online(), main(), Test suite for the Dashboard Interactive Recording endpoint.  Tests:   1. POST /, Test 401 when X-API-Key is missing., Test 422 when required fields are missing., test_recording_endpoint_auth(), test_recording_endpoint_validation()
+
+### Community 37 - "test_dashboard_api.py"
+Cohesion: 0.15
+Nodes (12): TDVC Test Suite for Phase 6: Semantic Intent Router & Agentic Handoff Engine (Ru, test_intent_routing_and_variable_extraction(), test_no_matching_skill_fallback(), IntentRouter, Any, Semantic Intent Router & Agentic Handoff Module for WebAI Local AI Server.  Anal, Extracts and binds JSON classification output from Ollama to full skill dict., Deterministic rule-based intent router when Ollama is offline or in test mode. (+4 more)
+
+### Community 38 - "validate_steps_payload"
 Cohesion: 0.25
-Nodes (7): 1. Documentation & Code Synchronization, 2. Memory Bank Maintenance, 3. Code Quality & Style, 4. Testing & Verification, 5. Dependency Management, 6. Safety & Permissions, AI Assistant Core Rules
+Nodes (9): _buffer_log(), delete_automation(), list_runs(), list_skills(), Any, Append one orchestration log entry to the buffer (source='api')., List all synthesized AI skills available in the client directory., Delete an automation and its dependent records via the API server.      Proxie (+1 more)
+
+### Community 39 - "Decision Log — WebAI Platform"
+Cohesion: 0.18
+Nodes (10): Context, Decision, Decision 14: Conditional Branching Implementation (Pending), Decision 15: Jira Integration Approach (Pending), Decision 16: Variable Persistence Model (Pending), Decision Log — WebAI Platform, Decision: Refactoring `recorder.py` to Event Bus & Plugin Isolation, Future Decisions Pending (+2 more)
+
+### Community 40 - "Decision 1: Multi-Locator Fallback vs Single Selector"
+Cohesion: 0.29
+Nodes (7): Alternatives Considered, Context, Decision 1: Multi-Locator Fallback vs Single Selector, Decision, Impact, Implementation, Rationale
+
+### Community 41 - "Decision 2: LLM Bypass for Click/Type When Locators Exist"
+Cohesion: 0.29
+Nodes (7): Alternatives Considered, Code Location, Context, Decision 2: LLM Bypass for Click/Type When Locators Exist, Decision, Impact, Rationale
+
+### Community 42 - "test_e2e_recording_full.py"
+Cohesion: 0.48
+Nodes (6): _check_servers(), main(), _obtain_api_key(), Full E2E Verification for Dashboard Recording Feature.  Prerequisites:   API Ser, test_api_e2e_record_dispatch(), test_ui_e2e_recording_modal()
+
+### Community 43 - "derive_base_url"
+Cohesion: 0.38
+Nodes (4): Base-URL derivation from recorded steps., TestDeriveBaseUrl, derive_base_url(), Derive an automation's starting URL from its recorded steps.      Args:
+
+### Community 44 - "Decision 4: Fernet Symmetric Encryption for Credentials"
+Cohesion: 0.33
+Nodes (6): Alternatives Considered, Context, Decision, Decision 4: Fernet Symmetric Encryption for Credentials, Impact, Rationale
+
+### Community 45 - "Decision 5: IST Timezone Computed Columns"
+Cohesion: 0.33
+Nodes (6): Alternatives Considered, Context, Decision, Decision 5: IST Timezone Computed Columns, Impact, Rationale
+
+### Community 46 - "Decision 6: Batch Logging vs Individual Log Entries"
+Cohesion: 0.33
+Nodes (6): Alternatives Considered, Context, Decision, Decision 6: Batch Logging vs Individual Log Entries, Impact, Rationale
+
+### Community 47 - "Decision 7: WebSocket for AI Server vs HTTP Polling"
+Cohesion: 0.33
+Nodes (6): Alternatives Considered, Context, Decision, Decision 7: WebSocket for AI Server vs HTTP Polling, Impact, Rationale
+
+### Community 48 - "Decision 8: Task Normalization Before LLM"
+Cohesion: 0.33
+Nodes (6): Alternatives Considered, Context, Decision, Decision 8: Task Normalization Before LLM, Impact, Rationale
+
+### Community 49 - "Decision 9: Action Normalization (LLM Tolerance)"
+Cohesion: 0.33
+Nodes (6): Alternatives Considered, Context, Decision, Decision 9: Action Normalization (LLM Tolerance), Impact, Rationale
+
+### Community 50 - "Decision 10: Plan Caching Disabled"
+Cohesion: 0.33
+Nodes (6): Alternatives Considered, Context, Decision 10: Plan Caching Disabled, Decision, Impact, Rationale
+
+### Community 51 - "Decision 11: Right-Click Context Menu for Extraction"
+Cohesion: 0.33
+Nodes (6): Alternatives Considered, Context, Decision 11: Right-Click Context Menu for Extraction, Decision, Impact, Rationale
+
+### Community 52 - "Decision 12: Table Extraction via Injected JavaScript"
+Cohesion: 0.33
+Nodes (6): Alternatives Considered, Context, Decision 12: Table Extraction via Injected JavaScript, Decision, Impact, Rationale
+
+### Community 53 - "Decision 13: Database-Backed Orchestration vs File-Based"
+Cohesion: 0.33
+Nodes (6): Alternatives Considered, Context, Decision 13: Database-Backed Orchestration vs File-Based, Decision, Impact, Rationale
+
+### Community 54 - "Decision 17: Front-End Dashboard as Orchestration Layer (Not API Server Extension)"
+Cohesion: 0.33
+Nodes (6): Alternatives Considered, Context, Decision 17: Front-End Dashboard as Orchestration Layer (Not API Server Extension), Decision, Impact, Rationale
+
+### Community 55 - "Decision 3: Local Ollama vs Cloud LLM API"
+Cohesion: 0.33
+Nodes (6): Alternatives Considered, Context, Decision, Decision 3: Local Ollama vs Cloud LLM API, Impact, Rationale
+
+### Community 56 - "build_task_text"
+Cohesion: 0.33
+Nodes (6): _flush_orchestration_logs(), Payload for starting a new interactive recording session from the dashboard., Best-effort batch upload of dashboard orchestration logs to the API server., Launch an interactive browser session to record a new automation.      Spawns, record_automation_endpoint(), RecordRequest
+
+### Community 58 - "Decision 18: Probe-Tolerant WebSocket Server (process_request + logging filter)"
+Cohesion: 0.40
+Nodes (5): Alternatives Considered, Context, Decision 18: Probe-Tolerant WebSocket Server (process_request + logging filter), Decision, Impact
+
+### Community 60 - "test_dashboard_ui.py"
+Cohesion: 0.67
+Nodes (3): check(), main(), Browser-driven UI test for the WebAI Dashboard front-end (scratch QA tool).  D
+
+### Community 61 - "migrate_indexes.py"
+Cohesion: 0.50
+Nodes (3): migrate_indexes(), Database Migration: Add performance indexes for modal rendering.  Creates explic, Create missing performance indexes on execution_logs and execution_history.
 
 ## Knowledge Gaps
-- **95 isolated node(s):** `graphify`, `1. Documentation & Code Synchronization`, `2. Memory Bank Maintenance`, `3. Code Quality & Style`, `4. Testing & Verification` (+90 more)
+- **240 isolated node(s):** `1. Documentation & Code Synchronization`, `2. Memory Bank Maintenance`, `3. Code Quality & Style`, `4. Testing & Verification`, `5. Dependency Management` (+235 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **7 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `TaskDone` connect `Immediate Next Steps (If User Requests)` to `fallback_helpers.py`?**
-  _High betweenness centrality (0.078) - this node is a cross-community bridge._
-- **What connects `graphify`, `1. Documentation & Code Synchronization`, `2. Memory Bank Maintenance` to the rest of the system?**
-  _95 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _High betweenness centrality (0.022) - this node is a cross-community bridge._
+- **Why does `WebRecorder` connect `Open Questions / Decisions Pending` to `Page`?**
+  _High betweenness centrality (0.013) - this node is a cross-community bridge._
+- **What connects `1. Documentation & Code Synchronization`, `2. Memory Bank Maintenance`, `3. Code Quality & Style` to the rest of the system?**
+  _240 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Recent Work Completed` be split into smaller, more focused modules?**
-  _Cohesion score 0.1111111111111111 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05 - nodes in this community are weakly interconnected._
 - **Should `Active Context — WebAI Platform` be split into smaller, more focused modules?**
-  _Cohesion score 0.1 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08 - nodes in this community are weakly interconnected._
 - **Should `Open Questions / Decisions Pending` be split into smaller, more focused modules?**
-  _Cohesion score 0.12681159420289856 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05030181086519115 - nodes in this community are weakly interconnected._
 - **Should `Immediate Next Steps (If User Requests)` be split into smaller, more focused modules?**
   _Cohesion score 0.08677098150782361 - nodes in this community are weakly interconnected._
-- **Should `fallback_helpers.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.05792349726775956 - nodes in this community are weakly interconnected._

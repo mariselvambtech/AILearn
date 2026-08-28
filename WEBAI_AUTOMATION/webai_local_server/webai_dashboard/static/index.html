@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebAI Automation Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+    <!-- ===== Header ===== -->
+    <header class="app-header">
+        <div class="header-left">
+            <div class="logo">⚡ WebAI</div>
+            <span class="header-subtitle">Automation Dashboard</span>
+        </div>
+        <div class="header-right">
+            <div class="health-badges" id="healthBadges">
+                <span class="badge" id="badgeApi" title="API Server :8000"><i class="dot"></i>API</span>
+                <span class="badge" id="badgeAi" title="AI Server :8765"><i class="dot"></i>AI</span>
+                <span class="badge" id="badgeOllama" title="Ollama :11434"><i class="dot"></i>Ollama</span>
+            </div>
+            <div class="auth-area" id="authArea">
+                <span class="user-chip hidden" id="userChip"></span>
+                <button class="btn btn-ghost" id="logoutBtn" hidden>Log out</button>
+                <button class="btn btn-primary" id="loginBtn">Log in</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- ===== Automations ===== -->
+        <section class="panel">
+            <div class="panel-toolbar">
+                <h2>Automations</h2>
+                <div class="toolbar-actions">
+                    <button class="btn btn-ghost" id="refreshBtn" title="Refresh automations">↻ Refresh</button>
+                    <button class="btn btn-danger" id="recordBtn">🔴 Record New</button>
+                    <button class="btn btn-accent" id="importBtn">⬆ Import Recording</button>
+                </div>
+            </div>
+            <div class="grid" id="automationGrid">
+                <div class="empty-state" id="automationsEmpty">Log in to load your automations.</div>
+            </div>
+        </section>
+
+        <!-- ===== AI Skills ===== -->
+        <section class="panel">
+            <div class="panel-toolbar">
+                <h2>⚡ Synthesized AI Skills</h2>
+                <div class="toolbar-actions">
+                    <button class="btn btn-ghost" id="refreshSkillsBtn" title="Refresh skills">↻ Refresh Skills</button>
+                </div>
+            </div>
+            <div class="grid" id="skillsGrid">
+                <div class="empty-state" id="skillsEmpty">Loading AI Skills...</div>
+            </div>
+        </section>
+
+        <!-- ===== Executions ===== -->
+        <section class="panel">
+            <div class="panel-toolbar">
+                <h2>Recent Executions</h2>
+                <span class="live-indicator hidden" id="liveIndicator"><i class="pulse"></i>Live run in progress</span>
+            </div>
+            <div class="table-wrap">
+                <table class="table" id="executionsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Automation</th>
+                            <th>Status</th>
+                            <th>Started</th>
+                            <th>Duration</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="executionsBody">
+                        <tr>
+                            <td colspan="6" class="empty-state">No executions yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- ===== Auth Modal ===== -->
+    <div class="modal-backdrop hidden" id="authModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Account</h3>
+                <button class="modal-close" data-close="authModal">×</button>
+            </div>
+            <div class="tabs">
+                <button class="tab active" id="tabLogin">Login</button>
+                <button class="tab" id="tabRegister">Register</button>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm">
+                    <label>Username<input type="text" id="loginUsername" required autocomplete="username" /></label>
+                    <label>Password<input type="password" id="loginPassword" required
+                            autocomplete="current-password" /></label>
+                    <button type="submit" class="btn btn-primary btn-block">Log in</button>
+                </form>
+                <form id="registerForm" class="hidden">
+                    <label>Username<input type="text" id="regUsername" required autocomplete="username" /></label>
+                    <label>Email<input type="email" id="regEmail" autocomplete="email" /></label>
+                    <label>Password<input type="password" id="regPassword" required
+                            autocomplete="new-password" /></label>
+                    <button type="submit" class="btn btn-primary btn-block">Create account</button>
+                </form>
+                <div class="divider"><span>or</span></div>
+                <form id="apiKeyForm">
+                    <label>Paste API key directly<input type="text" id="apiKeyInput" placeholder="X-API-Key" /></label>
+                    <button type="submit" class="btn btn-ghost btn-block">Use API key</button>
+                </form>
+                <p class="form-error hidden" id="authError"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Run Confirmation Modal ===== -->
+    <div class="modal-backdrop hidden" id="runModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="runModalTitle">Run Automation</h3>
+                <button class="modal-close" data-close="runModal">×</button>
+            </div>
+            <div class="modal-body">
+                <p class="muted" id="runModalDesc"></p>
+                <div class="steps-preview" id="runStepsPreview"></div>
+                <p class="hint">A browser window will open on this machine and execute the recorded steps.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" data-close="runModal">Cancel</button>
+                <button class="btn btn-success" id="confirmRunBtn">▶ Run now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Steps Viewer Modal ===== -->
+    <div class="modal-backdrop hidden" id="stepsModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 id="stepsModalTitle">Recorded Steps</h3>
+                <button class="modal-close" data-close="stepsModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="steps-list" id="stepsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Import Modal ===== -->
+    <div class="modal-backdrop hidden" id="importModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Import Recording</h3>
+                <button class="modal-close" data-close="importModal">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="importForm">
+                    <label>Recording file (recorded_steps.json)
+                        <input type="file" id="importFile" accept=".json,application/json" required />
+                    </label>
+                    <label>Automation name<input type="text" id="importName" required
+                            placeholder="e.g. Wikipedia Search" /></label>
+                    <label>Description (optional)<input type="text" id="importDesc"
+                            placeholder="What does this automation do?" /></label>
+                    <button type="submit" class="btn btn-accent btn-block" id="importSubmitBtn">Import to
+                        database</button>
+                </form>
+                <p class="form-error hidden" id="importError"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Record Modal ===== -->
+    <div class="modal-backdrop hidden" id="recordModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Record New Automation</h3>
+                <button class="modal-close" data-close="recordModal">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="recordForm">
+                    <label>Automation name<input type="text" id="recordName" required
+                            placeholder="e.g. IRCTC Train Search" /></label>
+                    <label>Start URL<input type="url" id="recordUrl" required
+                            placeholder="https://www.google.com" /></label>
+                    <label>Description (optional)<input type="text" id="recordDesc"
+                            placeholder="What does this automation do?" /></label>
+                    <button type="submit" class="btn btn-danger btn-block" id="recordSubmitBtn">🔴 Launch Recorder</button>
+                </form>
+                <p class="form-error hidden" id="recordError"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Delete Confirmation Modal ===== -->
+    <div class="modal-backdrop hidden" id="deleteModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="deleteModalTitle">Delete Automation</h3>
+                <button class="modal-close" data-close="deleteModal">×</button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteModalDesc"></p>
+                <p class="hint">This will permanently remove the automation, its configs, execution history, and logs.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" data-close="deleteModal">Cancel</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Logs Modal ===== -->
+    <div class="modal-backdrop hidden" id="logsModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 id="logsModalTitle">Execution Logs</h3>
+                <button class="modal-close" data-close="logsModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="logs-list" id="logsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

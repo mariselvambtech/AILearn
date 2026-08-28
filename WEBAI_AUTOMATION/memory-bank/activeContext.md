@@ -1,3 +1,116 @@
+# Active Context  WebAI Platform
+
+> **This file updates most frequently.** It tracks the current session state, recent changes, open questions, and immediate next steps.
+
+## Current Session (2026-08-28)
+
+### Phase 6: Semantic Intent Router & Agentic Handoff Engine ✅
+- **Semantic Intent Router (`IntentRouter`):** Created [`webai_local_server/webai_local_server/intent_router.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_local_server/webai_local_server/intent_router.py). Classifies natural language prompts against available AI skills via Ollama (`hermes3` model) or rule-based fallback. Extracts dynamic parameter values (`{"color_filter": "red"}`) and performs gap analysis returning `requires_agentic_handoff=True` when prompt requests unrecorded actions (e.g. *"Buy"* vs recorded *"Search"*).
+- **Rule 7 TDVC Test Suite (`scratch/test_intent_router.py`):** Created and executed [`scratch/test_intent_router.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/scratch/test_intent_router.py). Verified 100% PASS for prompt intent classification, parameter extraction, and gap handoff detection.
+- **Verification & Zero Regressions:** Executed full test suite with 100% pass (34/34 PASS). Regenerated knowledge graph visualizations with `python scripts/graphify_to_mermaid.py`.
+
+### System Architecture & Workflow Documentation Generated ✅
+- **Comprehensive Documentation Artifact:** Created [`system_architecture_and_flow_guide.md`](file:///C:/Users/Mari/.gemini/antigravity-ide/brain/85dcfc02-b9db-4b5f-baeb-5d6c1fb1b5dd/system_architecture_and_flow_guide.md) detailing project purpose, 4-tier architecture, interactive Mermaid flow diagrams, 13-locator self-healing strategy, audio alignment, AI skill synthesis, and MSSQL entity relationships.
+
+## Previous Session (2026-08-27)
+
+### Phase 5: Dashboard UI Integration & Skill Management ✅
+- **Server API Routes (`dashboard_server.py`):** Added `GET /api/skills` and `POST /api/skills/execute` to [`webai_local_server/webai_dashboard/dashboard_server.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_local_server/webai_dashboard/dashboard_server.py). `GET /api/skills` scans for synthesized skill recipes (`synthesized_skill.json`), exposing metadata and parameter schemas. `POST /api/skills/execute` accepts dynamic runtime parameters and executes the skill asynchronously via `SkillExecutor` in Playwright venv.
+- **Frontend SPA Components (`static/`):** Updated [`index.html`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_local_server/webai_dashboard/static/index.html), [`app.js`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_local_server/webai_dashboard/static/app.js), and [`styles.css`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_local_server/webai_dashboard/static/styles.css) on port 8080. Renders an "AI Skills" panel, dynamic web forms generated per parameter (pre-filled with schema default values), and "Run Skill" buttons with live toast notifications.
+- **TDVC & Integration Verification:** Created and executed [`scratch/test_dashboard_api.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/scratch/test_dashboard_api.py) (Rule 7) using FastAPI's `TestClient` — initially observed failing 404, then implemented routes and verified 100% PASS. Verified 0 regressions with `pytest webai_local_server/tests/test_dashboard_api.py` (29/29 PASS).
+
+### Phase 4: Skill Execution Engine & Dynamic Replay ✅
+- **Skill Executor Utility (`SkillExecutor`):** Created [`webai_playwright_python/webai_playwright/skill_executor.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/skill_executor.py). Resolves template placeholders (`{{variable}}`) in step definitions using user-provided runtime values or `parameters_schema` defaults. Replays steps sequentially in Playwright using `fallback_helpers.py` for multi-locator self-healing.
+- **Terminal CLI Runner (`run_skill.py`):** Created [`webai_playwright_python/run_skill.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/run_skill.py) to load synthesized skill recipes (`synthesized_skill.json`), prompt users interactively for parameter inputs with default suggestions, launch Chromium, and execute skill replay live.
+- **TDVC & E2E Verification:** Created and verified [`scratch/test_skill_execution.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/scratch/test_skill_execution.py) (Rule 7) for parameter substitution and default fallback resolution (100% PASS). Created and verified [`scratch/test_e2e_skill_execution.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/scratch/test_e2e_skill_execution.py) executing live Playwright playback of `Search Wikipedia` skill with dynamic parameter `{"search_query": "Kerala"}` (100% PASS). Verified zero regressions with `pytest webai_playwright_python/test_event_bus_core.py` (3/3 PASS).
+
+### Phase 3: AI Skill Synthesis & Auto-Parameterization ✅
+- **Skill Synthesizer Utility (`SkillSynthesizer`):** Created [`webai_playwright_python/webai_playwright/skill_synthesizer.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/skill_synthesizer.py) connecting to local Ollama (`hermes3` model). Analyzes recorded steps, target locators, typed values, and `voice_context` snippets. Automatically detects literal values (e.g. `"tamilnadu"`) and converts them into parameter templates (`{{search_query}}`), generating `skill_name`, `description`, `trigger_phrases`, and `parameters_schema`.
+- **Deterministic Rule-Based Fallback:** Included a fallback synthesizer if Ollama is offline or raises exceptions, extracting parameters from step names and voice context snippets.
+- **Post-Recording Terminal Integration:** Integrated `SkillSynthesizer` into [`webai_playwright_python/record_then_run.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/record_then_run.py) after Phase 2 audio alignment, prompting the user `Synthesize into AI Skill? (y/n)` and outputting `synthesized_skill.json`. Wrapped in a safe `try/except` guard (Rule 9).
+- **E2E & TDVC Verification:** Created and verified [`scratch/test_skill_synthesis.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/scratch/test_skill_synthesis.py) (Rule 7) covering Ollama JSON extraction, parameter substitution, and offline fallback (100% PASS). Executed against live Wikipedia recording payload (`recorded_steps.json`), generating `synthesized_skill.json` with parameterized `{{search_query}}` step value. Verified zero regressions with `pytest webai_playwright_python/test_event_bus_core.py` (3/3 PASS).
+
+### Phase 2: Local Transcription & Alignment ✅
+- **Standalone Audio Aligner (`AudioAligner`):** Created [`webai_playwright_python/webai_playwright/audio_aligner.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/audio_aligner.py) utilizing `faster-whisper` with hardware auto-detection (`WhisperModel("base", device="auto", compute_type="default")`). Converts audio timestamps from seconds to milliseconds (`* 1000.0`).
+- **Temporal Alignment & Concatenation:** Aligns transcript segments to step timestamps based on window matching (`segment_start_ms - 1000 <= step.timestamp_ms <= segment_end_ms + 2000`). Concatenates overlapping segments cleanly into `voice_context`.
+- **`Step` Dataclass & Serialization:** Added `voice_context: Optional[str] = None` to `Step` dataclass in [`webai_playwright_python/webai_playwright/recorder.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/recorder.py) for automatic `recorded_steps.json` persistence.
+- **Fail-Safe Post-Recording Integration:** Integrated `AudioAligner` into [`webai_playwright_python/record_then_run.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/record_then_run.py) after `recorder.wait_for_stop()`, wrapped in a broad `try/except` guard so recording flow never crashes if audio dependencies are missing or corrupted.
+- **TDVC Verification:** Created and verified [`scratch/test_audio_alignment.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/scratch/test_audio_alignment.py) (Rule 7) covering single/overlapping segments across dataclasses and dicts (100% PASS). Ran `pytest webai_playwright_python/test_event_bus_core.py` (3/3 PASS).
+
+### Phase 1: Audio Capture & Event Synchronization ✅
+- **Isolated Audio Plugin (`AudioCapturePlugin`):** Created [`webai_playwright_python/webai_playwright/plugins/audio_plugin.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/plugins/audio_plugin.py) following Rule 9 (Plugin Architecture). Subscribes to `recording_started` and `recording_stopped` events emitted by `WebRecorder`. Records 16kHz Mono PCM WAV audio (`session_audio.wav`) in a background daemon thread with safe fallback handling.
+- **Auto-Attachment in Core Recorder:** Auto-attached `AudioCapturePlugin` inside `WebRecorder.__init__()` in [`webai_playwright_python/webai_playwright/recorder.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/recorder.py) wrapped in a safe `try/except` block, ensuring interactive live recording sessions (`record_then_run.py`) automatically start audio recording.
+- **Event Bus Master Clock & Timestamps:** Added `timestamp_ms: float = 0.0` to the `Step` dataclass in [`webai_playwright_python/webai_playwright/recorder.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/recorder.py) and added master clock tracking (`master_start_epoch`) to calculate millisecond offsets for every recorded action.
+- **TDVC Verification:** Created and verified [`scratch/test_audio_plugin.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/scratch/test_audio_plugin.py) (Rule 7), confirming audio recording thread lifecycle, WAV output (>1000 bytes, 48KB verified), and `timestamp_ms` synchronization. Verified zero regressions with `pytest webai_playwright_python/test_event_bus_core.py` (100% PASS).
+
+### Documentation Update: Virtual Environment Activation in `how_to_run.md` ✅
+- **Update:** Added explicit virtual environment activation steps (`.\venv\Scripts\Activate.ps1` for `webai_api_server`, `.\.venv\Scripts\Activate.ps1` for `webai_local_server`, `webai_playwright_python`, and `webai_dashboard`) to [`memory-bank/how_to_run.md`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/memory-bank/how_to_run.md).
+
+## Previous Session (2026-08-03)
+
+### Plugin Architecture Refactoring: `recorder.py` & `DataExtractionPlugin` ✅
+- **Refactoring:** Converted `webai_playwright_python/webai_playwright/recorder.py` into a lightweight, decoupled **Event Bus** engine in accordance with Section 9 of `memory-bank/AI_RULES.md`.
+- **Event Bus Core Engine (`WebRecorder`):**
+  - Added pub/sub event infrastructure (`subscribe`, `unsubscribe`, `emit`).
+  - Core CDP browser event handler broadcasts events (`click`, `type`, `press_key`, `extract`, `extract_table`, `verify_text`, `verify_visible`, `wait`) to subscribed plugins.
+  - Retained strict `LOCATOR_PRIORITY` strategy ranking (`test-id` -> `id` -> `name` -> `aria-label` -> `placeholder` -> `title` -> `alt` -> `href` -> `label` -> `css` -> `text` -> `role` -> `xpath`) in `getLocatorCandidates`.
+- **Isolated Data Extraction Plugin (`DataExtractionPlugin`):**
+  - Extracted extraction UI (right-click context menu, text/attribute/table dialogs, save dialogs) into `webai_playwright_python/webai_playwright/plugins/data_extraction_plugin.py`.
+  - Subscribes to `extract` and `extract_table` events emitted by `WebRecorder`.
+  - Handles immediate file saving (`_save_extraction_immediately`, `_save_to_excel_immediate`, `_save_to_word_immediate`, `_save_to_txt_immediate`) inside safe `try/except` wrappers.
+- **TDVC Verification:** Created and verified pre-refactor test harness [`scratch/test_event_bus_core.py`](file:///C:/Users/Mari/.gemini/antigravity-ide/brain/5b3cd44e-44e7-49a2-82a0-9432d99d228b/scratch/test_event_bus_core.py) proving event bus pub/sub, 13-locator preservation, and plugin exception isolation. Ran `python scripts/graphify_to_mermaid.py` successfully.
+
+
+### WebSocket Handshake Error Fix (AI Server :8765) ✅
+- **Bug:** The `webai_local_server` terminal flooded with `EOFError: stream ends after 0 bytes, before end of line` → `websockets.exceptions.InvalidMessage: did not receive a valid HTTP request` tracebacks (dozens, repeating).
+- **Root cause (two-layer):**
+  1. The dashboard server's `/api/health` endpoint probed the AI WebSocket server (port 8765) using `_probe_tcp()`, which opens a raw TCP socket, sends **0 bytes**, and closes immediately. The `websockets` library (`asyncio/server.py:365`) logs `connection.logger.error("opening handshake failed", exc_info=True)` for these — a full traceback per probe. The dashboard SPA polls `/api/health` every 30s (`app.js`), so one error block per health check. (Fixed earlier: `dashboard_health()` now uses `_probe_ws()` which sends a valid `GET / HTTP/1.1` request line.)
+  2. **The AI server itself had no probe tolerance.** Library source analysis showed: (a) bare TCP probes die inside `Request.parse` before any hook runs — only a logging filter can silence them; (b) even a *valid* plain-HTTP GET (what `_probe_ws` sends) is rejected by `accept()` with `InvalidUpgrade`, which still sets `handshake_exc` and still logs an ERROR traceback — so the `_probe_ws` docstring's "no error logging" claim was wrong. The clean path is the `process_request` hook: when it returns an HTTP response, `accept()` is skipped and nothing is logged (confirmed by comment at `asyncio/server.py:203-204`).
+- **Fix in `local_webai_server_guided.py` (robust, server-side):**
+  - `_http_health_response()` registered as `process_request` in `websockets.serve()` → plain HTTP requests (health checks, browsers, curl) get a clean `200 OK`, zero error logging; genuine `Upgrade: websocket` requests return `None` and continue the normal handshake.
+  - `_EmptyProbeNoiseFilter` on the `websockets.server` logger → downgrades `opening handshake failed` records whose exception chain contains `EOFError ... "0 bytes"` (definitively an empty probe) from ERROR to DEBUG. Genuine failures (malformed requests, bad headers) still surface at ERROR.
+- **Verification:** New E2E test [`scratch/test_ws_probe_fix.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/scratch/test_ws_probe_fix.py) (starts the real server on isolated port 8766) — bare TCP probes silent ✅, plain HTTP GET → 200 with no error ✅, garbage bytes still log exactly one genuine ERROR ✅, genuine WS client connects + round-trips ✅. **ALL CHECKS PASSED.** Plus 34/34 pytest pass (`test_dashboard_api.py` + `test_hermes_features.py` + `test_action_normalization.py`). The 6 collection errors in other test files are the pre-existing shim-module bug (known issue #5), unrelated.
+- **Note:** Restart both the AI server (8765) and dashboard (8080) to pick up the fix; the old dashboard process keeps sending bare TCP probes until restarted (now harmless — silenced by the filter).
+
+### Dashboard Enhancements & Performance Optimization 
+- Executed the Enterprise Multi-Agent Fleet Workflow from `.agents/workflows/dashboard_enhancements_and_performance.md`.
+- **Enhancement 1  Automation Deletion Feature:** Added `DELETE /api/automations/{id}` proxy to `dashboard_server.py`; trash icon button + confirmation modal in `app.js`/`index.html`/`styles.css`.
+- **Enhancement 2  Stale Execution Reconciliation:** Added `reconcile_stale_executions()` to `process_manager.py`; triggered on startup + during `/api/executions` polling.
+- **Enhancement 3  Modal Performance:** Added `get_user_automations_summary()` to `crud.py` + `GET /automations/summary` endpoint to `main.py`; dashboard proxies to summary for card grid; client-side `stepsCache` in `app.js`; created `migrate_indexes.py`.
+- **QA:** 29/29 pytest pass; benchmark + E2E test scripts created in `scratch/`.
+
+## Previous Session (2026-07-18)
+
+# Active Context  WebAI Platform
+
+> **This file updates most frequently.** It tracks the current session state, recent changes, open questions, and immediate next steps.
+
+## Current Session (2026-07-29)
+
+### Dashboard Enhancements & Performance Optimization 
+- Executed the Enterprise Multi-Agent Fleet Workflow from `.agents/workflows/dashboard_enhancements_and_performance.md`.
+- **Enhancement 1  Automation Deletion Feature:** Added `DELETE /api/automations/{id}` proxy to `dashboard_server.py`; trash icon button + confirmation modal in `app.js`/`index.html`/`styles.css`.
+- **Enhancement 2  Stale Execution Reconciliation:** Added `reconcile_stale_executions()` to `process_manager.py`; triggered on startup + during `/api/executions` polling.
+- **Enhancement 3  Modal Performance:** Added `get_user_automations_summary()` to `crud.py` + `GET /automations/summary` endpoint to `main.py`; dashboard proxies to summary for card grid; client-side `stepsCache` in `app.js`; created `migrate_indexes.py`.
+- **QA:** 29/29 pytest pass; benchmark + E2E test scripts created in `scratch/`.
+
+## Previous Session (2026-07-18)
+
+# Active Context  WebAI Platform
+
+> **This file updates most frequently.** It tracks the current session state, recent changes, open questions, and immediate next steps.
+
+## Current Session (2026-07-29)
+
+### Dashboard Enhancements & Performance Optimization 
+- Executed the Enterprise Multi-Agent Fleet Workflow from `.agents/workflows/dashboard_enhancements_and_performance.md`.
+- **Enhancement 1  Automation Deletion Feature:** Added `DELETE /api/automations/{id}` proxy to `dashboard_server.py`; trash icon button + confirmation modal in `app.js`/`index.html`/`styles.css`.
+- **Enhancement 2  Stale Execution Reconciliation:** Added `reconcile_stale_executions()` to `process_manager.py`; triggered on startup + during `/api/executions` polling.
+- **Enhancement 3  Modal Performance:** Added `get_user_automations_summary()` to `crud.py` + `GET /automations/summary` endpoint to `main.py`; dashboard proxies to summary for card grid; client-side `stepsCache` in `app.js`; created `migrate_indexes.py`.
+- **QA:** 29/29 pytest pass; benchmark + E2E test scripts created in `scratch/`.
+
+## Previous Session (2026-07-18)
+
 # Active Context — WebAI Platform
 
 > **This file updates most frequently.** It tracks the current session state, recent changes, open questions, and immediate next steps.
@@ -22,10 +135,34 @@ The project is **functional and feature-complete** for its current scope. All th
 | API Server | 8000 | ⚠️ Not running (needs manual start) | `cd e:\WebAI_Project\webai_api_server && python run.py` |
 | AI Server | 8765 | ⚠️ Not running (needs manual start) | `cd e:\WebAI_Project\webai_local_server && python -m webai_local_server.local_webai_server_guided` |
 | Ollama | 11434 | ⚠️ Not running (needs manual start) | `ollama serve` |
+| Dashboard | 8080 | ⚠️ Not running (needs manual start) | `cd webai_local_server && python -m webai_dashboard.dashboard_server` |
 
-**To use the system:** Start all 3 servers in separate terminals, then run client scripts from `e:\WebAI_Project\webai_playwright_python`.
+**To use the system:** Start the 3 core servers in separate terminals, then either run client scripts from `e:\WebAI_Project\webai_playwright_python` — **or** start the Dashboard server and drive everything from the browser at `http://localhost:8080` (no terminal needed for run/import).
+
 
 ## Recent Work Completed
+
+### Web UI Automation Dashboard (Enterprise Frontend Fleet Workflow) ✅
+- Executed the full CTO → Developer → QA → Doc pipeline from [`.agents/workflows/enterprise_frontend_fleet.md`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/.agents/workflows/enterprise_frontend_fleet.md) (plan: [`implementation_plan.md`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/implementation_plan.md)).
+- **New 4th tier:** [`webai_dashboard/`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_local_server/webai_dashboard) — FastAPI dashboard server on **port 8080** (orchestration layer; API server untouched) + dependency-free SPA (`static/index.html`, `styles.css`, `app.js`).
+- **Terminal-free flows:** run automations (`POST /api/automations/run` → fetch steps → write `recorded_steps.json`/`generated_task.txt` → create execution → spawn playback subprocess), import recordings via browser file upload (`POST /api/automations/import`), login/register modals (API key in localStorage), health badges, executions panel with live polling, logs viewer.
+- **Refactored CLIs (backward compatible):** `run_from_database.py` → `run_automation(auto_confirm=True)`; `import_to_database.py` → `register_user()/login_user()/import_recording()`.
+- **Process watcher closes audit gap:** playback subprocess watcher finalizes `PUT /executions/{id}` (success/failed) — previously executions stayed "running" forever.
+- **QA fixes (3 iterations):** (1) installed `python-multipart`; (2) AI server cp1252 emoji crash → forced UTF-8 streams in `local_webai_server_guided.py`; (3) `crud.get_user_automations` MSSQL `OFFSET/LIMIT` without `ORDER BY` → added `id.desc()`.
+- **Verified E2E:** 29/29 pytest pass; dashboard-triggered run of automation 1 → execution 2016 **success** (13.3s) with orchestration logs in DB.
+- Playwright venv now also hosts the QA/API stack (`uvicorn`, `pytest`, `httpx`, `sqlalchemy`, `pyodbc`, `python-jose`, `passlib`, `croniter`, `python-dotenv`, `aiohttp`).
+
+#### Browser-driven UI verification (2026-07-29) ✅
+- Started API (8000) + AI (8765) + Dashboard (8080); drove the real SPA headlessly with Playwright.
+- [`scratch/test_dashboard_ui.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/scratch/test_dashboard_ui.py) → **15/15 PASS**: page title, health badges online, auth modal auto-open, UI login (user chip + logout + localStorage api_key), automation grid (5 cards), view-steps modal (12 steps), run modal preview, executions table, logs modal, zero JS console errors.
+- [`scratch/test_dashboard_visual.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/scratch/test_dashboard_visual.py) → verified **Import flow end-to-end** (file picker upload → new card appears) + captured UI screenshots (`scratch/ui_dashboard.png`, `ui_steps_modal.png`).
+- Test automation records created during testing were removed via `DELETE /automations/{id}`; servers stopped after verification.
+
+### Native Agentic Enterprise Framework Workflow (.agents/workflows/enterprise_frontend_fleet.md) ✅
+
+- Created Option 1 Enterprise Multi-Agent Fleet Workflow [`enterprise_frontend_fleet.md`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/.agents/workflows/enterprise_frontend_fleet.md).
+- Established 4 distinct AI Agent roles (CTO/Architect, Full-Stack Developer, QA Automation Engineer, Release & Doc Specialist).
+- Mapped 5-stage AI loop execution pipeline with human-in-the-loop approval gates, test iteration loop, and memory-bank / graphify sync automation.
 
 ### Mermaid.js Visual Representation & Graphify Export Integration ✅
 - Integrated [Mermaid.js](https://github.com/mermaid-js/mermaid) into repository documentation and knowledge graph visualization.

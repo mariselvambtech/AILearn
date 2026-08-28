@@ -1,0 +1,12 @@
+# WebAI Dashboard Server dependencies.
+# NOTE: This project runs with the shared Playwright client venv
+#       (webai_playwright_python/.venv). Install with:
+#       webai_playwright_python/.venv/Scripts/python.exe -m pip install -r webai_local_server/webai_dashboard/requirements.txt
+fastapi>=0.100.0
+uvicorn>=0.27.0
+requests>=2.31.0
+python-multipart>=0.0.6   # required by FastAPI for file upload (Form/File) endpoints
+
+# QA (test suite)
+pytest>=8.0.0
+httpx>=0.26.0             # required by FastAPI TestClient

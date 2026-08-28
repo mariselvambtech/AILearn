@@ -6,6 +6,20 @@
 
 | Feature | Status | Phase | Notes |
 |---------|--------|-------|-------|
+| **Plugin Architecture (Event Bus)** | ✅ Working | Core Refactor | Decoupled `WebRecorder` Event Bus & `DataExtractionPlugin` |
+| **Audio Capture & Event Sync** | ✅ Working | Phase 1 Audio | `AudioCapturePlugin` (16kHz WAV + `timestamp_ms` synchronization) |
+| **Transcription & Alignment** | ✅ Working | Phase 2 Audio | `AudioAligner` (faster-whisper auto-device + `voice_context` step enrichment) |
+| **Skill Synthesis & Auto-Param** | ✅ Working | Phase 3 Audio | `SkillSynthesizer` (Ollama hermes3 + `{{variable_name}}` parameterization + `synthesized_skill.json`) |
+| **Skill Execution Engine & Replay** | ✅ Working | Phase 4 Audio | `SkillExecutor` (`run_skill.py` CLI + dynamic runtime parameter substitution + multi-locator Playwright replay) |
+| **Dashboard Skill UI & Management** | ✅ Working | Phase 5 Audio | Web Dashboard port 8080 (`GET /api/skills`, `POST /api/skills/execute`, dynamic parameter forms in SPA) |
+| **Semantic Intent Router & Handoff** | ✅ Working | Phase 6 AI | `IntentRouter` (`webai_local_server/intent_router.py` + Ollama hermes3 + parameter extraction + gap handoff analysis) |
+| **Web UI Automation Dashboard** | ✅ Working | Frontend Fleet | `webai_dashboard/` port 8080 — run/import/monitor without terminal |
+| Dashboard orchestration API | ✅ Working | Frontend Fleet | `dashboard_server.py` (proxies API server, spawns playback) |
+| Playback process watcher | ✅ Working | Frontend Fleet | `process_manager.py` — finalizes execution status on exit |
+| Dashboard SPA front-end | ✅ Working | Frontend Fleet | `static/` — cards, modals, live polling, logs viewer |
+| Dashboard QA suite | ✅ Working | Frontend Fleet | `tests/test_dashboard_api.py` — 29 tests (unit + live) |
+| Enterprise Multi-Agent Workflow | ✅ Ready | Framework | `.agents/workflows/enterprise_frontend_fleet.md` |
+
 | Browser recording (click/type/navigate) | ✅ Working | Phase 1 | Core recording via JS injection |
 | Multi-locator capture (10+ strategies) | ✅ Working | Phase 1 | `getLocatorCandidates()` in recorder |
 | Stop recording (button/keyboard/Esc) | ✅ Working | Phase 1 | Multiple stop methods |
@@ -99,7 +113,13 @@
 - 1-60 second validation
 - Server-side execution
 
+### ✅ Milestone 10: Front-End Automation Dashboard
+- Web UI replaces CLI for run/import/monitor (Enterprise Frontend Fleet workflow)
+- CTO plan (`implementation_plan.md`) → Developer build → QA (29/29 tests, live E2E execution 2016 success) → Doc sync
+- CLI scripts refactored to programmatic functions (backward compatible)
+
 ### 🔲 Milestone 9: Conditional Branching (Future)
+
 - Condition evaluation on extracted variables
 - If/else branching in automation flow
 - Comparison operators (>, <, ==, >=, <=)
@@ -197,8 +217,13 @@
 
 ## Recently Fixed Issues
 
-1. **API Server Startup Failures (Schemas)**: `schemas.py` was accidentally truncated in a draft commit, causing `AutomationCreate` missing errors. Restored the original schemas and replaced `EmailStr` with `Optional[str]` to fix `email-validator` import errors.
-2. **Windows UnicodeEncodeError**: Removed unicode emojis (🚀, ✅, ❌) from `run.py`, `main.py`, and `database.py` print statements, which were causing the server to crash on startup in Windows terminals using `cp1252` encoding.
+1. **AI WebSocket server flooded with handshake errors (2026-07-29)**: The `webai_local_server` terminal filled with repeating `EOFError: stream ends after 0 bytes` → `websockets.exceptions.InvalidMessage` tracebacks. Root cause: health-check probes hitting port 8765 — the dashboard's `/api/health` used `_probe_tcp()` (raw TCP connect + close, 0 bytes sent) polled every 30s by the SPA, and the `websockets` library logs an ERROR traceback for any connection that dies before/during the HTTP upgrade. Two-layer fix: (a) dashboard `dashboard_health()` now uses `_probe_ws()` (sends a valid HTTP/1.1 request line); (b) hardened `local_webai_server_guided.py` itself — `_http_health_response()` registered as `process_request` answers plain HTTP requests with a clean `200 OK` (no `InvalidUpgrade` traceback), and `_EmptyProbeNoiseFilter` downgrades empty-probe (`EOFError ... "0 bytes"`) `opening handshake failed` records from ERROR to DEBUG while genuine failures stay at ERROR. Verified by `scratch/test_ws_probe_fix.py` E2E (bare TCP probes silent, HTTP GET → 200, garbage bytes still log genuine ERROR, real WS client unaffected) + 34/34 pytest pass.
+2. **Executions stuck in "running" forever**: Nothing called `PUT /executions/{id}` after CLI-triggered runs. The dashboard's playback watcher (`process_manager.py`) now finalizes status (`success`/`failed`) + writes an audit log on process exit.
+3. **`GET /automations` 500 on MSSQL**: `crud.get_user_automations` used `OFFSET/LIMIT` without `ORDER BY` — MSSQL rejects this. Added `.order_by(models.Automation.id.desc())` (matches the docstring's "newest-first" promise).
+4. **AI server startup crash (cp1252)**: `local_webai_server_guided.py` emoji prints crashed on Windows terminals. Fixed centrally by forcing UTF-8 `sys.stdout`/`sys.stderr` reconfiguration at module startup.
+5. **API Server Startup Failures (Schemas)**: `schemas.py` was accidentally truncated in a draft commit, causing `AutomationCreate` missing errors. Restored the original schemas and replaced `EmailStr` with `Optional[str]` to fix `email-validator` import errors.
+6. **Windows UnicodeEncodeError**: Removed unicode emojis (🚀, ✅, ❌) from `run.py`, `main.py`, and `database.py` print statements, which were causing the server to crash on startup in Windows terminals using `cp1252` encoding.
+
 
 ## What's Left to Build
 

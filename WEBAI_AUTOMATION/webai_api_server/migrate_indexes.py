@@ -1,0 +1,71 @@
+﻿"""
+Database Migration: Add performance indexes for modal rendering.
+
+Creates explicit SQL Server indexes on:
+  - execution_logs(execution_id)  speeds up the Logs modal query
+  - execution_history(automation_id) speeds up execution lookups by automation
+
+These indexes are declared in models.py (index=True) but may not exist in the
+live database if tables were created before the index flags were added. This
+script uses IF NOT EXISTS checks so it is safe to run repeatedly.
+"""
+from database import get_db
+from sqlalchemy import text
+
+
+def migrate_indexes() -> None:
+    """Create missing performance indexes on execution_logs and execution_history."""
+    db = next(get_db())
+
+    try:
+        print("Starting index migration...")
+        print("=" * 60)
+
+        print("\n1. Checking index on execution_logs(execution_id)...")
+        check_logs = """
+        IF NOT EXISTS (
+            SELECT 1 FROM sys.indexes
+            WHERE name = 'IX_execution_logs_execution_id'
+            AND object_id = OBJECT_ID('execution_logs')
+        )
+        BEGIN
+            CREATE INDEX IX_execution_logs_execution_id
+            ON execution_logs(execution_id)
+        END
+        """
+        db.execute(text(check_logs))
+        print("   OK: execution_logs(execution_id) index ensured")
+
+        print("\n2. Checking index on execution_history(automation_id)...")
+        check_history = """
+        IF NOT EXISTS (
+            SELECT 1 FROM sys.indexes
+            WHERE name = 'IX_execution_history_automation_id'
+            AND object_id = OBJECT_ID('execution_history')
+        )
+        BEGIN
+            CREATE INDEX IX_execution_history_automation_id
+            ON execution_history(automation_id)
+        END
+        """
+        db.execute(text(check_history))
+        print("   OK: execution_history(automation_id) index ensured")
+
+        db.commit()
+
+        print("\n" + "=" * 60)
+        print("Index migration completed successfully!")
+        print("\nIndexes ensured:")
+        print("  - IX_execution_logs_execution_id")
+        print("  - IX_execution_history_automation_id")
+
+    except Exception as e:
+        print(f"\nMigration failed: {e}")
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
+
+if __name__ == "__main__":
+    migrate_indexes()

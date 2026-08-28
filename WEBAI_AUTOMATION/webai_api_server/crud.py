@@ -182,9 +182,11 @@ def get_user_automations(db: Session, user_id: int, skip: int = 0, limit: int = 
     Returns:
         List[models.Automation]: The user's automations, newest-first by id.
     """
+    # NOTE: MSSQL requires an explicit ORDER BY when OFFSET/LIMIT is used
     return db.query(models.Automation).filter(
         models.Automation.user_id == user_id
-    ).offset(skip).limit(limit).all()
+    ).order_by(models.Automation.id.desc()).offset(skip).limit(limit).all()
+
 
 
 def get_template_automations(db: Session, category: Optional[str] = None) -> List[models.Automation]:

@@ -1,0 +1,10 @@
+=== Extracted Data Log ===
+Started: 2026-08-03 10:06:01
+
+────────────────────────────────────────────────────────────
+Variable: test_var
+Value: sample
+Type: text
+URL: http://localhost:8000
+Time: 1970-01-01 05:30:00
+

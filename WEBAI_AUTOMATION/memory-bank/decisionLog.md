@@ -2,6 +2,24 @@
 
 > **Records important architectural choices, technical decisions, and alternative approaches that were considered.**
 
+## Decision: Refactoring `recorder.py` to Event Bus & Plugin Isolation
+
+**Date:** 2026-08-03
+**Status:** Implemented ✅
+
+### Context
+`recorder.py` previously mixed browser recording, event handling, context menu UI dialog generation, and file IO (Excel, Word, TXT saving) inside a single class, violating Section 9 of `AI_RULES.md`.
+
+### Decision
+Converted `WebRecorder` into a pure **Event Bus** core engine exposing pub/sub methods (`subscribe`, `unsubscribe`, `emit`). Extracted all data extraction dialogs and background file persistence logic into an isolated plugin ([data_extraction_plugin.py](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/plugins/data_extraction_plugin.py)).
+
+### Impact
+- Core recorder loop is lightweight and immutable.
+- `DataExtractionPlugin` handles text/attribute/table extraction and file persistence independently.
+- Plugin IO exceptions are isolated in `try/except` blocks, ensuring the main browser event loop never crashes.
+
+---
+
 ## Decision 1: Multi-Locator Fallback vs Single Selector
 
 **Date:** Phase 6
@@ -408,7 +426,100 @@ Should automations be stored as files (`recorded_steps.json`) or in a database?
 
 ---
 
+## Decision 17: Front-End Dashboard as Orchestration Layer (Not API Server Extension)
+
+**Date:** 2026-07-28
+**Status:** Implemented ✅
+
+### Context
+The Enterprise Frontend Fleet workflow required a Web UI to run/import automations
+without a terminal. The API server (port 8000) already exposes every required
+endpoint — where should the dashboard live?
+
+### Decision
+Build the dashboard as a **separate orchestration tier** (`webai_local_server/webai_dashboard/`,
+port 8080) that proxies the API server and owns the Playwright playback subprocess
+lifecycle. The API server remains untouched.
+
+### Alternatives Considered
+1. **Extend `webai_api_server` with UI + run endpoints** — Rejected: couples the stable
+   Warehouse DB layer to process management; workflow mandates the web server under
+   `webai_local_server/`; higher regression risk.
+2. **Static SPA calling the API server directly** — Rejected: the browser cannot spawn
+   the local Playwright playback process; a server-side orchestrator is required.
+3. **Dashboard as orchestration proxy** ✅ — Chosen: zero API-server changes, clear
+   separation of concerns, dashboard owns subprocess + status finalization.
+
+### Rationale
+- Browser playback must run on the host machine (visible Chromium) — only a local
+  server-side component can spawn it.
+- A watcher thread finalizing `PUT /executions/{id}` closes the pre-existing gap
+  where executions stayed "running" forever.
+- Import uses `POST /automations` (not `/migrate/import-recording`) so `base_url`
+  is derived from the first recorded step and stored.
+
+### Impact
+- **Positive:** Terminal-free run/import/monitor; executions finalize correctly;
+  audit logs preserved (source="api").
+- **Negative:** Orchestration logic partially duplicates `run_from_database.py`
+  (accepted; CLI remains the canonical file-based fallback).
+- **Note:** CLI scripts were refactored into programmatic functions
+  (`run_automation`, `import_recording`) keeping both entry points in parity.
+
+---
+
+## Decision 18: Probe-Tolerant WebSocket Server (process_request + logging filter)
+
+**Date:** 2026-07-29
+**Status:** Implemented ✅
+
+### Context
+The AI WebSocket server (port 8765) terminal flooded with repeating
+`EOFError: stream ends after 0 bytes` → `InvalidMessage` tracebacks. Health-check
+probes (dashboard `/api/health` → `_probe_tcp`, port monitors) open a TCP
+connection and close it without sending bytes; the `websockets` library
+(`asyncio/server.py:365`) logs `logger.error("opening handshake failed",
+exc_info=True)` for every such connection. Even a *valid* plain-HTTP GET is
+rejected by `accept()` with `InvalidUpgrade` and still logged at ERROR.
+
+### Decision
+Harden the server itself, two layers, in `local_webai_server_guided.py`:
+1. **`process_request=_http_health_response`** in `websockets.serve()` — plain
+   HTTP requests (health checks, browsers, curl) get a clean `200 OK` response;
+   genuine `Upgrade: websocket` requests return `None` and continue the normal
+   handshake. When `process_request` returns a response, the library skips
+   `accept()`, so no `handshake_exc` is set and nothing is logged.
+2. **`_EmptyProbeNoiseFilter`** on the `websockets.server` logger — downgrades
+   `opening handshake failed` records whose exception chain contains
+   `EOFError ... "0 bytes"` (definitively an empty probe: no data was ever sent)
+   from ERROR to DEBUG. Genuine failures (malformed bytes, bad headers) remain
+   at ERROR.
+
+Client side: dashboard `dashboard_health()` switched from `_probe_tcp()` to
+`_probe_ws()` (sends a valid `GET / HTTP/1.1` request line).
+
+### Alternatives Considered
+1. **Only fix the dashboard probe** — Rejected: insufficient; the old dashboard
+   process keeps probing until restarted, other tools (port monitors, IDEs) can
+   probe too, and even `_probe_ws`'s plain GET triggers `InvalidUpgrade` ERROR
+   logs without layer 1.
+2. **Suppress ALL 'opening handshake failed' records** — Rejected: hides genuine
+   handshake failures (malformed clients, config mistakes) that should stay visible.
+3. **`process_request` + targeted empty-probe downgrade** ✅ — Chosen: clean HTTP
+   semantics for health checks, silent for empty probes, loud for real errors.
+
+### Impact
+- **Positive:** Terminal stays clean regardless of which client probes the port;
+  HTTP health checks get a meaningful 200 response; real WebSocket clients and
+  genuine error visibility unaffected.
+- **Negative:** Empty-probe events only visible at DEBUG (acceptable — they carry
+  no actionable information).
+- **Verification:** `scratch/test_ws_probe_fix.py` E2E (4 scenarios) + 34/34 pytest.
+
+---
+
 ## Future Decisions Pending
+
 
 ### Decision 14: Conditional Branching Implementation (Pending)
 **Question:** How to implement if/else logic based on extracted variable values?

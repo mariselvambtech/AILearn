@@ -1,0 +1,124 @@
+{
+  "skill_name": "Search Wikipedia",
+  "description": "Search for information on Wikipedia using a search query.",
+  "trigger_phrases": [
+    "Search Wikipedia",
+    "Wikipedia search",
+    "Look up on Wikipedia"
+  ],
+  "parameters_schema": {
+    "search_query": {
+      "type": "string",
+      "description": "The search query to use on Wikipedia.",
+      "default": "tamilnadu"
+    }
+  },
+  "parameterized_steps": [
+    {
+      "step_index": 1,
+      "action": "open",
+      "url": "https://www.wikipedia.org/",
+      "name": null,
+      "value": null,
+      "locators": null,
+      "timestamp_ms": 22373.584508895874
+    },
+    {
+      "step_index": 2,
+      "action": "click",
+      "url": "https://www.wikipedia.org/",
+      "name": "search",
+      "value": null,
+      "locators": [
+        {
+          "type": "id",
+          "value": "searchInput"
+        },
+        {
+          "type": "name",
+          "value": "search"
+        },
+        {
+          "type": "label",
+          "value": "Search Wikipedia"
+        },
+        {
+          "type": "css",
+          "value": "#searchInput"
+        },
+        {
+          "type": "role",
+          "value": "textbox",
+          "name": null
+        },
+        {
+          "type": "xpath",
+          "value": "//*[@id=\"searchInput\"]"
+        }
+      ],
+      "timestamp_ms": 22373.584508895874
+    },
+    {
+      "step_index": 3,
+      "action": "type",
+      "url": "https://www.wikipedia.org/",
+      "name": "search",
+      "value": "{{search_query}}",
+      "locators": [
+        {
+          "type": "id",
+          "value": "searchInput"
+        },
+        {
+          "type": "name",
+          "value": "search"
+        },
+        {
+          "type": "label",
+          "value": "Search Wikipedia"
+        },
+        {
+          "type": "css",
+          "value": "#searchInput"
+        },
+        {
+          "type": "role",
+          "value": "textbox",
+          "name": null
+        },
+        {
+          "type": "xpath",
+          "value": "//*[@id=\"searchInput\"]"
+        }
+      ],
+      "timestamp_ms": 37118.05963516235
+    },
+    {
+      "step_index": 4,
+      "action": "click",
+      "url": "https://www.wikipedia.org/",
+      "name": "Search",
+      "value": null,
+      "locators": [
+        {
+          "type": "css",
+          "value": "button.pure-button.pure-button-primary-progressive[type=\"submit\"]"
+        },
+        {
+          "type": "text",
+          "value": "Search"
+        },
+        {
+          "type": "role",
+          "value": "button",
+          "name": "Search"
+        },
+        {
+          "type": "xpath",
+          "value": "//main/div[2]/form/fieldset/button"
+        }
+      ],
+      "timestamp_ms": 37242.56110191345
+    }
+  ]
+}
