@@ -61,5 +61,7 @@
   "59": "TestImportValidation",
   "60": "test_dashboard_ui.py",
   "61": "migrate_indexes.py",
-  "62": "test_dashboard_visual.py"
+  "62": "test_dashboard_visual.py",
+  "63": "Page",
+  "64": "Path"
 }
