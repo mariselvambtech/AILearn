@@ -488,7 +488,86 @@ function startExecutionsPolling(fast) {
 // ===== Boot =====
 function loadDashboard() {
     loadAutomations();
+    loadSkills();
     startExecutionsPolling(false);
+}
+
+// ===== AI Skills =====
+async function loadSkills() {
+    const grid = $("skillsGrid");
+    if (!grid) return;
+    try {
+        const skills = await api("/api/skills");
+        renderSkills(skills);
+    } catch (err) {
+        grid.innerHTML = `<div class="empty-state">Failed to load AI skills: ${escapeHtml(err.message)}</div>`;
+    }
+}
+
+function renderSkills(skills) {
+    const grid = $("skillsGrid");
+    if (!grid) return;
+    if (!skills || skills.length === 0) {
+        grid.innerHTML = `<div class="empty-state">No synthesized AI skills found. Record a skill using record_then_run.py!</div>`;
+        return;
+    }
+
+    grid.innerHTML = skills.map(skill => {
+        const params = skill.parameters_schema || {};
+        const paramFields = Object.keys(params).map(pKey => {
+            const pInfo = params[pKey] || {};
+            const desc = typeof pInfo === 'object' ? (pInfo.description || pKey) : pKey;
+            const defVal = typeof pInfo === 'object' ? (pInfo.default || '') : pInfo;
+            return `
+                <div class="form-group" style="margin-top: 8px;">
+                    <label style="font-size: 0.85rem; color: var(--text-muted);">${escapeHtml(desc)}</label>
+                    <input type="text" class="input skill-param-input" data-skill-id="${escapeHtml(skill.id)}" data-param-key="${escapeHtml(pKey)}" value="${escapeHtml(defVal)}" placeholder="${escapeHtml(defVal)}" style="padding: 6px 10px; font-size: 0.9rem;" />
+                </div>
+            `;
+        }).join("");
+
+        return `
+            <div class="card skill-card" id="skill-card-${escapeHtml(skill.id)}">
+                <div class="card-header">
+                    <h3 class="card-title">⚡ ${escapeHtml(skill.skill_name)}</h3>
+                    <span class="badge badge-accent">${skill.step_count} steps</span>
+                </div>
+                <p class="card-desc" style="font-size: 0.9rem; color: var(--text-muted); margin: 8px 0;">${escapeHtml(skill.description)}</p>
+                <div class="trigger-phrases" style="font-size: 0.8rem; font-style: italic; opacity: 0.8; margin-bottom: 10px;">
+                    Triggers: ${escapeHtml((skill.trigger_phrases || []).join(", "))}
+                </div>
+                <form onsubmit="handleSkillExecute(event, '${escapeHtml(skill.id)}', '${escapeHtml(skill.filename)}')">
+                    ${paramFields}
+                    <button type="submit" class="btn btn-accent" style="width: 100%; margin-top: 12px;">▶ Run Skill</button>
+                </form>
+            </div>
+        `;
+    }).join("");
+}
+
+async function handleSkillExecute(event, skillId, filename) {
+    event.preventDefault();
+    const inputs = document.querySelectorAll(`.skill-param-input[data-skill-id="${skillId}"]`);
+    const parameters = {};
+    inputs.forEach(input => {
+        const key = input.dataset.paramKey;
+        parameters[key] = input.value;
+    });
+
+    toast(`Starting execution for skill '${skillId}'...`, "info");
+    try {
+        const res = await api("/api/skills/execute", {
+            method: "POST",
+            json: { skill_id: skillId, filename: filename, parameters: parameters }
+        });
+        if (res.status === "success") {
+            toast(`Skill '${res.skill_name || skillId}' completed successfully! (${res.steps_executed} steps)`, "success");
+        } else {
+            toast(`Skill execution status: ${res.status}`, "warning");
+        }
+    } catch (err) {
+        toast(`Skill execution failed: ${err.message}`, "danger");
+    }
 }
 
 function bindEvents() {
@@ -499,7 +578,8 @@ function bindEvents() {
     $("apiKeyForm").addEventListener("submit", handleApiKeySubmit);
     $("tabLogin").addEventListener("click", () => switchTab(true));
     $("tabRegister").addEventListener("click", () => switchTab(false));
-    $("refreshBtn").addEventListener("click", () => { loadAutomations(); loadExecutions(); refreshHealth(); });
+    $("refreshBtn").addEventListener("click", () => { loadAutomations(); loadSkills(); loadExecutions(); refreshHealth(); });
+    $("refreshSkillsBtn")?.addEventListener("click", () => { loadSkills(); toast("Refreshed AI Skills", "info"); });
     $("importBtn").addEventListener("click", () => {
         if (!state.apiKey) return showModal("authModal");
         showModal("importModal");

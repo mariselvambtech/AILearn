@@ -2,7 +2,64 @@
 
 > **This file updates most frequently.** It tracks the current session state, recent changes, open questions, and immediate next steps.
 
-## Current Session (2026-07-29)
+## Current Session (2026-08-28)
+
+### Phase 6: Semantic Intent Router & Agentic Handoff Engine ✅
+- **Semantic Intent Router (`IntentRouter`):** Created [`webai_local_server/webai_local_server/intent_router.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_local_server/webai_local_server/intent_router.py). Classifies natural language prompts against available AI skills via Ollama (`hermes3` model) or rule-based fallback. Extracts dynamic parameter values (`{"color_filter": "red"}`) and performs gap analysis returning `requires_agentic_handoff=True` when prompt requests unrecorded actions (e.g. *"Buy"* vs recorded *"Search"*).
+- **Rule 7 TDVC Test Suite (`scratch/test_intent_router.py`):** Created and executed [`scratch/test_intent_router.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/scratch/test_intent_router.py). Verified 100% PASS for prompt intent classification, parameter extraction, and gap handoff detection.
+- **Verification & Zero Regressions:** Executed full test suite with 100% pass (34/34 PASS). Regenerated knowledge graph visualizations with `python scripts/graphify_to_mermaid.py`.
+
+### System Architecture & Workflow Documentation Generated ✅
+- **Comprehensive Documentation Artifact:** Created [`system_architecture_and_flow_guide.md`](file:///C:/Users/Mari/.gemini/antigravity-ide/brain/85dcfc02-b9db-4b5f-baeb-5d6c1fb1b5dd/system_architecture_and_flow_guide.md) detailing project purpose, 4-tier architecture, interactive Mermaid flow diagrams, 13-locator self-healing strategy, audio alignment, AI skill synthesis, and MSSQL entity relationships.
+
+## Previous Session (2026-08-27)
+
+### Phase 5: Dashboard UI Integration & Skill Management ✅
+- **Server API Routes (`dashboard_server.py`):** Added `GET /api/skills` and `POST /api/skills/execute` to [`webai_local_server/webai_dashboard/dashboard_server.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_local_server/webai_dashboard/dashboard_server.py). `GET /api/skills` scans for synthesized skill recipes (`synthesized_skill.json`), exposing metadata and parameter schemas. `POST /api/skills/execute` accepts dynamic runtime parameters and executes the skill asynchronously via `SkillExecutor` in Playwright venv.
+- **Frontend SPA Components (`static/`):** Updated [`index.html`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_local_server/webai_dashboard/static/index.html), [`app.js`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_local_server/webai_dashboard/static/app.js), and [`styles.css`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_local_server/webai_dashboard/static/styles.css) on port 8080. Renders an "AI Skills" panel, dynamic web forms generated per parameter (pre-filled with schema default values), and "Run Skill" buttons with live toast notifications.
+- **TDVC & Integration Verification:** Created and executed [`scratch/test_dashboard_api.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/scratch/test_dashboard_api.py) (Rule 7) using FastAPI's `TestClient` — initially observed failing 404, then implemented routes and verified 100% PASS. Verified 0 regressions with `pytest webai_local_server/tests/test_dashboard_api.py` (29/29 PASS).
+
+### Phase 4: Skill Execution Engine & Dynamic Replay ✅
+- **Skill Executor Utility (`SkillExecutor`):** Created [`webai_playwright_python/webai_playwright/skill_executor.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/skill_executor.py). Resolves template placeholders (`{{variable}}`) in step definitions using user-provided runtime values or `parameters_schema` defaults. Replays steps sequentially in Playwright using `fallback_helpers.py` for multi-locator self-healing.
+- **Terminal CLI Runner (`run_skill.py`):** Created [`webai_playwright_python/run_skill.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/run_skill.py) to load synthesized skill recipes (`synthesized_skill.json`), prompt users interactively for parameter inputs with default suggestions, launch Chromium, and execute skill replay live.
+- **TDVC & E2E Verification:** Created and verified [`scratch/test_skill_execution.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/scratch/test_skill_execution.py) (Rule 7) for parameter substitution and default fallback resolution (100% PASS). Created and verified [`scratch/test_e2e_skill_execution.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/scratch/test_e2e_skill_execution.py) executing live Playwright playback of `Search Wikipedia` skill with dynamic parameter `{"search_query": "Kerala"}` (100% PASS). Verified zero regressions with `pytest webai_playwright_python/test_event_bus_core.py` (3/3 PASS).
+
+### Phase 3: AI Skill Synthesis & Auto-Parameterization ✅
+- **Skill Synthesizer Utility (`SkillSynthesizer`):** Created [`webai_playwright_python/webai_playwright/skill_synthesizer.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/skill_synthesizer.py) connecting to local Ollama (`hermes3` model). Analyzes recorded steps, target locators, typed values, and `voice_context` snippets. Automatically detects literal values (e.g. `"tamilnadu"`) and converts them into parameter templates (`{{search_query}}`), generating `skill_name`, `description`, `trigger_phrases`, and `parameters_schema`.
+- **Deterministic Rule-Based Fallback:** Included a fallback synthesizer if Ollama is offline or raises exceptions, extracting parameters from step names and voice context snippets.
+- **Post-Recording Terminal Integration:** Integrated `SkillSynthesizer` into [`webai_playwright_python/record_then_run.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/record_then_run.py) after Phase 2 audio alignment, prompting the user `Synthesize into AI Skill? (y/n)` and outputting `synthesized_skill.json`. Wrapped in a safe `try/except` guard (Rule 9).
+- **E2E & TDVC Verification:** Created and verified [`scratch/test_skill_synthesis.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/scratch/test_skill_synthesis.py) (Rule 7) covering Ollama JSON extraction, parameter substitution, and offline fallback (100% PASS). Executed against live Wikipedia recording payload (`recorded_steps.json`), generating `synthesized_skill.json` with parameterized `{{search_query}}` step value. Verified zero regressions with `pytest webai_playwright_python/test_event_bus_core.py` (3/3 PASS).
+
+### Phase 2: Local Transcription & Alignment ✅
+- **Standalone Audio Aligner (`AudioAligner`):** Created [`webai_playwright_python/webai_playwright/audio_aligner.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/audio_aligner.py) utilizing `faster-whisper` with hardware auto-detection (`WhisperModel("base", device="auto", compute_type="default")`). Converts audio timestamps from seconds to milliseconds (`* 1000.0`).
+- **Temporal Alignment & Concatenation:** Aligns transcript segments to step timestamps based on window matching (`segment_start_ms - 1000 <= step.timestamp_ms <= segment_end_ms + 2000`). Concatenates overlapping segments cleanly into `voice_context`.
+- **`Step` Dataclass & Serialization:** Added `voice_context: Optional[str] = None` to `Step` dataclass in [`webai_playwright_python/webai_playwright/recorder.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/recorder.py) for automatic `recorded_steps.json` persistence.
+- **Fail-Safe Post-Recording Integration:** Integrated `AudioAligner` into [`webai_playwright_python/record_then_run.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/record_then_run.py) after `recorder.wait_for_stop()`, wrapped in a broad `try/except` guard so recording flow never crashes if audio dependencies are missing or corrupted.
+- **TDVC Verification:** Created and verified [`scratch/test_audio_alignment.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/scratch/test_audio_alignment.py) (Rule 7) covering single/overlapping segments across dataclasses and dicts (100% PASS). Ran `pytest webai_playwright_python/test_event_bus_core.py` (3/3 PASS).
+
+### Phase 1: Audio Capture & Event Synchronization ✅
+- **Isolated Audio Plugin (`AudioCapturePlugin`):** Created [`webai_playwright_python/webai_playwright/plugins/audio_plugin.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/plugins/audio_plugin.py) following Rule 9 (Plugin Architecture). Subscribes to `recording_started` and `recording_stopped` events emitted by `WebRecorder`. Records 16kHz Mono PCM WAV audio (`session_audio.wav`) in a background daemon thread with safe fallback handling.
+- **Auto-Attachment in Core Recorder:** Auto-attached `AudioCapturePlugin` inside `WebRecorder.__init__()` in [`webai_playwright_python/webai_playwright/recorder.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/recorder.py) wrapped in a safe `try/except` block, ensuring interactive live recording sessions (`record_then_run.py`) automatically start audio recording.
+- **Event Bus Master Clock & Timestamps:** Added `timestamp_ms: float = 0.0` to the `Step` dataclass in [`webai_playwright_python/webai_playwright/recorder.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/recorder.py) and added master clock tracking (`master_start_epoch`) to calculate millisecond offsets for every recorded action.
+- **TDVC Verification:** Created and verified [`scratch/test_audio_plugin.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/scratch/test_audio_plugin.py) (Rule 7), confirming audio recording thread lifecycle, WAV output (>1000 bytes, 48KB verified), and `timestamp_ms` synchronization. Verified zero regressions with `pytest webai_playwright_python/test_event_bus_core.py` (100% PASS).
+
+### Documentation Update: Virtual Environment Activation in `how_to_run.md` ✅
+- **Update:** Added explicit virtual environment activation steps (`.\venv\Scripts\Activate.ps1` for `webai_api_server`, `.\.venv\Scripts\Activate.ps1` for `webai_local_server`, `webai_playwright_python`, and `webai_dashboard`) to [`memory-bank/how_to_run.md`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/memory-bank/how_to_run.md).
+
+## Previous Session (2026-08-03)
+
+### Plugin Architecture Refactoring: `recorder.py` & `DataExtractionPlugin` ✅
+- **Refactoring:** Converted `webai_playwright_python/webai_playwright/recorder.py` into a lightweight, decoupled **Event Bus** engine in accordance with Section 9 of `memory-bank/AI_RULES.md`.
+- **Event Bus Core Engine (`WebRecorder`):**
+  - Added pub/sub event infrastructure (`subscribe`, `unsubscribe`, `emit`).
+  - Core CDP browser event handler broadcasts events (`click`, `type`, `press_key`, `extract`, `extract_table`, `verify_text`, `verify_visible`, `wait`) to subscribed plugins.
+  - Retained strict `LOCATOR_PRIORITY` strategy ranking (`test-id` -> `id` -> `name` -> `aria-label` -> `placeholder` -> `title` -> `alt` -> `href` -> `label` -> `css` -> `text` -> `role` -> `xpath`) in `getLocatorCandidates`.
+- **Isolated Data Extraction Plugin (`DataExtractionPlugin`):**
+  - Extracted extraction UI (right-click context menu, text/attribute/table dialogs, save dialogs) into `webai_playwright_python/webai_playwright/plugins/data_extraction_plugin.py`.
+  - Subscribes to `extract` and `extract_table` events emitted by `WebRecorder`.
+  - Handles immediate file saving (`_save_extraction_immediately`, `_save_to_excel_immediate`, `_save_to_word_immediate`, `_save_to_txt_immediate`) inside safe `try/except` wrappers.
+- **TDVC Verification:** Created and verified pre-refactor test harness [`scratch/test_event_bus_core.py`](file:///C:/Users/Mari/.gemini/antigravity-ide/brain/5b3cd44e-44e7-49a2-82a0-9432d99d228b/scratch/test_event_bus_core.py) proving event bus pub/sub, 13-locator preservation, and plugin exception isolation. Ran `python scripts/graphify_to_mermaid.py` successfully.
+
 
 ### WebSocket Handshake Error Fix (AI Server :8765) ✅
 - **Bug:** The `webai_local_server` terminal flooded with `EOFError: stream ends after 0 bytes, before end of line` → `websockets.exceptions.InvalidMessage: did not receive a valid HTTP request` tracebacks (dozens, repeating).

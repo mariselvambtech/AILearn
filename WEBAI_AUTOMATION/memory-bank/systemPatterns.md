@@ -13,7 +13,8 @@ flowchart TB
     end
 
     subgraph Client ["🤖 Hands: Browser Robot (webai_playwright_python)"]
-        REC["Recorder (recorder.py)"]
+        REC["Recorder (recorder.py - Event Bus Engine)"]
+        PLUG["Plugins (plugins/data_extraction_plugin.py)"]
         PLAY["Playback Engine (playwright_actions.py)"]
         FALL["Fallback Engine (fallback_helpers.py)"]
     end

@@ -1,0 +1,100 @@
+[
+  {
+    "action": "open",
+    "url": "https://www.wikipedia.org/",
+    "name": null,
+    "value": null,
+    "key": null,
+    "ts": 1787829439.254229,
+    "locators": null,
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null,
+    "timestamp_ms": 25778.38706970215,
+    "voice_context": "I am going to put the search icon."
+  },
+  {
+    "action": "type",
+    "url": "https://www.wikipedia.org/",
+    "name": "search",
+    "value": "tamilnadu",
+    "key": null,
+    "ts": 1787829439.2562282,
+    "locators": [
+      {
+        "type": "id",
+        "value": "searchInput"
+      },
+      {
+        "type": "name",
+        "value": "search"
+      },
+      {
+        "type": "label",
+        "value": "Search Wikipedia"
+      },
+      {
+        "type": "css",
+        "value": "#searchInput"
+      },
+      {
+        "type": "role",
+        "value": "textbox",
+        "name": null
+      },
+      {
+        "type": "xpath",
+        "value": "//*[@id=\"searchInput\"]"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null,
+    "timestamp_ms": 25780.386209487915,
+    "voice_context": "I am going to put the search icon."
+  },
+  {
+    "action": "click",
+    "url": "https://www.wikipedia.org/",
+    "name": "Search",
+    "value": null,
+    "key": null,
+    "ts": 1787829439.3579981,
+    "locators": [
+      {
+        "type": "css",
+        "value": "button.pure-button.pure-button-primary-progressive[type=\"submit\"]"
+      },
+      {
+        "type": "text",
+        "value": "Search"
+      },
+      {
+        "type": "role",
+        "value": "button",
+        "name": "Search"
+      },
+      {
+        "type": "xpath",
+        "value": "//main/div[2]/form/fieldset/button"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null,
+    "timestamp_ms": 25882.156133651733,
+    "voice_context": "I am going to put the search icon."
+  }
+]

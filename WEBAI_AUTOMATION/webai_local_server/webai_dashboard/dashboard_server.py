@@ -113,6 +113,13 @@ class RunResponse(BaseModel):
     message: str
 
 
+class SkillExecutePayload(BaseModel):
+    """Payload for triggering dynamic execution of a synthesized AI skill."""
+    skill_id: Optional[str] = "synthesized_skill"
+    filename: Optional[str] = "synthesized_skill.json"
+    parameters: Optional[Dict[str, Any]] = None
+
+
 # ---------------------------------------------------------------------------
 # Helper functions
 # ---------------------------------------------------------------------------
@@ -428,6 +435,97 @@ async def register(payload: RegisterPayload) -> Dict[str, Any]:
     if resp.status_code not in (200, 201):
         raise HTTPException(status_code=resp.status_code, detail=_safe_detail(resp))
     return resp.json()
+
+
+# ---------------------------------------------------------------------------
+# AI Skill endpoints
+# ---------------------------------------------------------------------------
+
+@app.get("/api/skills")
+async def list_skills() -> List[Dict[str, Any]]:
+    """List all synthesized AI skills available in the client directory."""
+    skills = []
+    candidate_files = list(CLIENT_DIR.glob("*skill*.json"))
+    if not candidate_files:
+        default_file = CLIENT_DIR / "synthesized_skill.json"
+        if default_file.exists():
+            candidate_files = [default_file]
+
+    for sf in candidate_files:
+        try:
+            data = json.loads(sf.read_text(encoding="utf-8"))
+            if isinstance(data, dict) and ("parameterized_steps" in data or "skill_name" in data):
+                skills.append({
+                    "id": sf.stem,
+                    "skill_name": data.get("skill_name", sf.stem),
+                    "description": data.get("description", ""),
+                    "trigger_phrases": data.get("trigger_phrases", []),
+                    "parameters_schema": data.get("parameters_schema", {}),
+                    "step_count": len(data.get("parameterized_steps", [])),
+                    "filename": sf.name
+                })
+        except Exception:
+            continue
+
+    return skills
+
+
+@app.post("/api/skills/execute")
+async def execute_skill_endpoint(payload: SkillExecutePayload) -> Dict[str, Any]:
+    """Execute a synthesized AI Skill asynchronously via SkillExecutor in Playwright venv."""
+    filename = payload.filename or "synthesized_skill.json"
+    skill_path = CLIENT_DIR / filename
+    if not skill_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Skill file '{filename}' not found."
+        )
+
+    venv_python = CLIENT_DIR / ".venv" / "Scripts" / "python.exe"
+    if not venv_python.exists():
+        venv_python = Path(sys.executable)
+
+    params_json = json.dumps(payload.parameters or {})
+    script_content = (
+        f"import asyncio, json, sys\n"
+        f"sys.path.insert(0, r'{CLIENT_DIR}')\n"
+        f"from playwright.async_api import async_playwright\n"
+        f"from webai_playwright.skill_executor import SkillExecutor\n"
+        f"executor = SkillExecutor(r'{skill_path}')\n"
+        f"async def run():\n"
+        f"    async with async_playwright() as p:\n"
+        f"        browser = await p.chromium.launch(headless=True)\n"
+        f"        page = await browser.new_page()\n"
+        f"        res = await executor.execute_skill(page, json.loads(r'''{params_json}'''))\n"
+        f"        await browser.close()\n"
+        f"        print('SKILL_RESULT:' + json.dumps(res))\n"
+        f"asyncio.run(run())\n"
+    )
+
+    try:
+        import subprocess
+        proc = subprocess.run(
+            [str(venv_python), "-c", script_content],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            cwd=str(CLIENT_DIR)
+        )
+        if proc.returncode != 0:
+            err_msg = proc.stderr.strip() or proc.stdout.strip() or f"Exited with code {proc.returncode}"
+            raise Exception(err_msg)
+
+        for line in proc.stdout.splitlines():
+            if line.startswith("SKILL_RESULT:"):
+                return json.loads(line[13:])
+
+        return {"status": "success", "message": "Skill executed successfully", "output": proc.stdout}
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Skill execution failed: {exc}"
+        )
 
 
 # ---------------------------------------------------------------------------

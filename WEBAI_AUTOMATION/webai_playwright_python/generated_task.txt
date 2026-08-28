@@ -1,2 +1,2 @@
-Execute the recorded automation 'rpachallenge' step by step.
+Execute the recorded automation 'flipkart' step by step.
 Finish with done only after verification.

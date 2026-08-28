@@ -2,6 +2,24 @@
 
 > **Records important architectural choices, technical decisions, and alternative approaches that were considered.**
 
+## Decision: Refactoring `recorder.py` to Event Bus & Plugin Isolation
+
+**Date:** 2026-08-03
+**Status:** Implemented ✅
+
+### Context
+`recorder.py` previously mixed browser recording, event handling, context menu UI dialog generation, and file IO (Excel, Word, TXT saving) inside a single class, violating Section 9 of `AI_RULES.md`.
+
+### Decision
+Converted `WebRecorder` into a pure **Event Bus** core engine exposing pub/sub methods (`subscribe`, `unsubscribe`, `emit`). Extracted all data extraction dialogs and background file persistence logic into an isolated plugin ([data_extraction_plugin.py](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/plugins/data_extraction_plugin.py)).
+
+### Impact
+- Core recorder loop is lightweight and immutable.
+- `DataExtractionPlugin` handles text/attribute/table extraction and file persistence independently.
+- Plugin IO exceptions are isolated in `try/except` blocks, ensuring the main browser event loop never crashes.
+
+---
+
 ## Decision 1: Multi-Locator Fallback vs Single Selector
 
 **Date:** Phase 6

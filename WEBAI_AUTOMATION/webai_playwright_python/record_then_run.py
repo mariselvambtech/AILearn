@@ -80,6 +80,37 @@ async def main():
         Path(OUTPUT_JSON).write_text(json.dumps(steps_json, indent=2), encoding="utf-8")
         Path(OUTPUT_TASK).write_text(task_text, encoding="utf-8")
 
+        # Phase 2: Post-recording audio transcription & spoken context alignment
+        audio_file = "session_audio.wav"
+        if os.path.exists(audio_file) and os.path.getsize(audio_file) > 100:
+            try:
+                print("\n[AudioAligner] Transcribing recorded audio session...")
+                from webai_playwright.audio_aligner import AudioAligner
+                aligner = AudioAligner()
+                segments = aligner.transcribe_audio(audio_file)
+                if segments:
+                    steps_json = aligner.align_steps(steps_json, segments)
+                    Path(OUTPUT_JSON).write_text(json.dumps(steps_json, indent=2), encoding="utf-8")
+                    print(f" [AudioAligner] Enriched {OUTPUT_JSON} with voice_context tags.")
+            except Exception as e:
+                print(f" [WARN] [AudioAligner] Audio transcription skipped: {e}")
+
+        # Phase 3: AI Skill Synthesis & Auto-Parameterization
+        synthesize_skill = False if auto_import else ask_yes_no("Synthesize into AI Skill?", default="y")
+        if synthesize_skill:
+            try:
+                print("\n[SkillSynthesizer] Synthesizing recorded steps into reusable AI Skill...")
+                from webai_playwright.skill_synthesizer import SkillSynthesizer
+                synthesizer = SkillSynthesizer()
+                skill_recipe = synthesizer.synthesize(steps_json)
+                output_skill = "synthesized_skill.json"
+                Path(output_skill).write_text(json.dumps(skill_recipe, indent=2), encoding="utf-8")
+                print(f" [SkillSynthesizer] Saved skill recipe: {output_skill}")
+                print(f" Skill Name: {skill_recipe.get('skill_name')}")
+                print(f" Parameters: {list(skill_recipe.get('parameters_schema', {}).keys())}")
+            except Exception as e:
+                print(f" [WARN] [SkillSynthesizer] Skill synthesis skipped: {e}")
+
         print(f"\nSaved: {OUTPUT_JSON}")
         print(f"Saved: {OUTPUT_TASK}")
         print("\n=== GENERATED TASK ===\n")

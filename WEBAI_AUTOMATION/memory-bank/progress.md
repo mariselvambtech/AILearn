@@ -6,6 +6,13 @@
 
 | Feature | Status | Phase | Notes |
 |---------|--------|-------|-------|
+| **Plugin Architecture (Event Bus)** | ✅ Working | Core Refactor | Decoupled `WebRecorder` Event Bus & `DataExtractionPlugin` |
+| **Audio Capture & Event Sync** | ✅ Working | Phase 1 Audio | `AudioCapturePlugin` (16kHz WAV + `timestamp_ms` synchronization) |
+| **Transcription & Alignment** | ✅ Working | Phase 2 Audio | `AudioAligner` (faster-whisper auto-device + `voice_context` step enrichment) |
+| **Skill Synthesis & Auto-Param** | ✅ Working | Phase 3 Audio | `SkillSynthesizer` (Ollama hermes3 + `{{variable_name}}` parameterization + `synthesized_skill.json`) |
+| **Skill Execution Engine & Replay** | ✅ Working | Phase 4 Audio | `SkillExecutor` (`run_skill.py` CLI + dynamic runtime parameter substitution + multi-locator Playwright replay) |
+| **Dashboard Skill UI & Management** | ✅ Working | Phase 5 Audio | Web Dashboard port 8080 (`GET /api/skills`, `POST /api/skills/execute`, dynamic parameter forms in SPA) |
+| **Semantic Intent Router & Handoff** | ✅ Working | Phase 6 AI | `IntentRouter` (`webai_local_server/intent_router.py` + Ollama hermes3 + parameter extraction + gap handoff analysis) |
 | **Web UI Automation Dashboard** | ✅ Working | Frontend Fleet | `webai_dashboard/` port 8080 — run/import/monitor without terminal |
 | Dashboard orchestration API | ✅ Working | Frontend Fleet | `dashboard_server.py` (proxies API server, spawns playback) |
 | Playback process watcher | ✅ Working | Frontend Fleet | `process_manager.py` — finalizes execution status on exit |

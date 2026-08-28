@@ -14,7 +14,13 @@ This server handles the database, REST API endpoints, and execution logging.
    ```bash
    cd webai_api_server
    ```
-3. Start the server:
+3. Activate the virtual environment:
+   ```bash
+   .\venv\Scripts\Activate.ps1
+   # or on Command Prompt / Bash:
+   # venv\Scripts\activate
+   ```
+4. Start the server:
    ```bash
    python run.py
    ```
@@ -30,9 +36,11 @@ This server handles the WebSockets and AI communication/logic for guided automat
    ```bash
    cd webai_local_server
    ```
-3. Activate the virtual environment (if you are using one):
+3. Activate the virtual environment:
    ```bash
    .\.venv\Scripts\Activate.ps1
+   # or on Command Prompt / Bash:
+   # .venv\Scripts\activate
    ```
 4. Start the server:
    ```bash
@@ -62,9 +70,11 @@ Once all three servers are running, you can run the actual automation client scr
    ```bash
    cd webai_playwright_python
    ```
-3. Activate the virtual environment (if you are using one):
+3. Activate the virtual environment:
    ```bash
    .\.venv\Scripts\Activate.ps1
+   # or on Command Prompt / Bash:
+   # .venv\Scripts\activate
    ```
 4. Run your desired script. For example, to run an automation from the database:
    ```bash
@@ -77,6 +87,14 @@ Once all three servers are running, you can run the actual automation client scr
 - `run_from_database.py`: Fetches and runs a previously recorded automation from the database using its Automation ID.
 - `run_from_task_txt_guided.py`: Runs a guided AI automation based on a natural language task description.
 
+### Running Event Bus & Plugin Tests:
+To verify the WebRecorder Event Bus pub/sub architecture and DataExtractionPlugin isolation:
+```bash
+python test_event_bus_core.py
+# or using pytest:
+pytest test_event_bus_core.py
+```
+
 ---
 
 ## 5. (Optional) Start the Web UI Dashboard (Terminal 5)
@@ -87,7 +105,13 @@ The dashboard replaces the terminal for run/import/monitor flows — a browser-b
    ```bash
    cd webai_local_server
    ```
-3. Start the dashboard server:
+3. Activate the virtual environment:
+   ```bash
+   .\.venv\Scripts\Activate.ps1
+   # or on Command Prompt / Bash:
+   # .venv\Scripts\activate
+   ```
+4. Start the dashboard server:
    ```bash
    python -m webai_dashboard.dashboard_server
    ```
