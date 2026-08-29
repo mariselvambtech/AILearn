@@ -78,6 +78,17 @@ async def _send_command_response(index: int, task_id: str, result: Any) -> None:
     await send_message(message)
 
 async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
+    """Execute a single AI command against the active Playwright page.
+
+    Dynamically targets the most recently opened tab/page in the browser context
+    (page.context.pages[-1]) to support multi-tab scenarios (e.g. target='_blank' links).
+    """
+    # Dynamically target the most recently opened tab
+    if hasattr(page, "context") and page.context and page.context.pages:
+        active_page = page.context.pages[-1]
+    else:
+        active_page = page
+
     name = command.get("name")
     args = command.get("arguments") or {}
     if LOGS_ENABLED:
@@ -85,55 +96,55 @@ async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
 
     # CDP (ported from src/index.ts switch)
     if name == "getDOMSnapshot":
-        return await cdp.get_dom_snapshot(page)
+        return await cdp.get_dom_snapshot(active_page)
     if name == "executeScript":
-        return await cdp.execute_script(page, args.get("script", ""), args.get("args", []))
+        return await cdp.execute_script(active_page, args.get("script", ""), args.get("args", []))
     if name == "getCurrentUrl":
-        return await cdp.get_current_url(page)
+        return await cdp.get_current_url(active_page)
     if name == "findElements":
-        return await cdp.find_elements(page, args.get("using", ""), args.get("value", ""))
+        return await cdp.find_elements(active_page, args.get("using", ""), args.get("value", ""))
     if name == "getElementTagName":
-        return await cdp.get_element_tag_name(page, args.get("id"))
+        return await cdp.get_element_tag_name(active_page, args.get("id"))
     if name == "getElementRect":
-        return await cdp.get_element_rect(page, args.get("id"))
+        return await cdp.get_element_rect(active_page, args.get("id"))
     if name == "getElementAttribute":
-        return await cdp.get_element_attribute(page, args.get("id"), args.get("name"))
+        return await cdp.get_element_attribute(active_page, args.get("id"), args.get("name"))
     if name == "clearElement":
-        return await cdp.clear_element(page, args.get("id"))
+        return await cdp.clear_element(active_page, args.get("id"))
     if name == "get":
-        await cdp.get(page, args.get("url", ""))
+        await cdp.get(active_page, args.get("url", ""))
         return True
     if name == "getTitle":
-        return await cdp.get_title(page)
+        return await cdp.get_title(active_page)
     if name == "getCurrentUrl":
-        return page.url
+        return active_page.url
 
     if name == "scrollIntoView":
-        return await cdp.scroll_into_view(page, args.get("id"))
+        return await cdp.scroll_into_view(active_page, args.get("id"))
     if name == "scrollElement":
-        return await cdp.scroll_element(page, args.get("id"), args.get("target"))
+        return await cdp.scroll_element(active_page, args.get("id"), args.get("target"))
     if name == "setWindowState":
-        return await pw.set_window_state(page, args.get("state", "maximized"))
+        return await pw.set_window_state(active_page, args.get("state", "maximized"))
 
     # Actions using CDP element
     if name == "clickElement":
-        return await pw.click_cdp_element(page, args.get("id"))
+        return await pw.click_cdp_element(active_page, args.get("id"))
     if name == "sendKeysToElement":
         # Note: CDP sendKeysToElement expects objectId and value as [string]
-        return await cdp.send_keys_to_element(page, args.get("id"), args.get("value", [""]))
+        return await cdp.send_keys_to_element(active_page, args.get("id"), args.get("value", [""]))
     if name == "hoverElement":
-        return await pw.hover_cdp_element(page, args.get("id"))
+        return await pw.hover_cdp_element(active_page, args.get("id"))
 
     # Actions using location
     if name == "clickLocation":
-        return await pw.click_location(page, float(args.get("x")), float(args.get("y")))
+        return await pw.click_location(active_page, float(args.get("x")), float(args.get("y")))
     if name == "hoverLocation":
-        return await pw.hover_location(page, float(args.get("x")), float(args.get("y")))
+        return await pw.hover_location(active_page, float(args.get("x")), float(args.get("y")))
     if name == "clickAndInputLocation":
-        return await pw.click_and_input_location(page, float(args.get("x")), float(args.get("y")), args.get("value", ""))
+        return await pw.click_and_input_location(active_page, float(args.get("x")), float(args.get("y")), args.get("value", ""))
     if name == "getElementAtLocation":
         return await cdp.get_element_at_location(
-            page,
+            active_page,
             float(args.get("x")),
             float(args.get("y")),
             bool(args.get("isShadowRoot", False)),
@@ -141,24 +152,24 @@ async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
 
     # Device actions
     if name == "sendKeys":
-        return await pw.input_text(page, args.get("value", ""))
+        return await pw.input_text(active_page, args.get("value", ""))
     if name == "keypressEnter":
-        return await pw.keypress_enter(page)
+        return await pw.keypress_enter(active_page)
     if name == "navigate":
-        return await pw.navigate(page, args.get("url", ""))
+        return await pw.navigate(active_page, args.get("url", ""))
 
     # Script actions
     if name == "scrollPage":
-        return await pw.scroll_page_script(page, args.get("target"))
+        return await pw.scroll_page_script(active_page, args.get("target"))
 
 
     # ===== Commands used by latest upgraded  server =====
     if name == "getInteractiveElements":
-        return await pw.get_interactive_elements(page)
+        return await pw.get_interactive_elements(active_page)
 
     if name == "clickByRole":
         return await pw.click_by_role(
-            page,
+            active_page,
             args.get("role", ""),
             args.get("name", "") or "",
             bool(args.get("exact", False)),
@@ -166,21 +177,21 @@ async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
 
     if name == "clickByText":
         return await pw.click_by_text(
-            page,
+            active_page,
             args.get("text", "") or "",
             bool(args.get("exact", False)),
         )
 
     if name == "clickByLabel":
         return await pw.click_by_label(
-            page,
+            active_page,
             args.get("label", "") or "",
             bool(args.get("exact", False)),
         )
 
     if name == "typeByLabel":
         return await pw.type_by_label(
-            page,
+            active_page,
             args.get("label", "") or "",
             args.get("text", "") or "",
             bool(args.get("exact", False)),
@@ -188,7 +199,7 @@ async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
 
     if name == "typeByPlaceholder":
         return await pw.type_by_placeholder(
-            page,
+            active_page,
             args.get("placeholder", "") or "",
             args.get("text", "") or "",
             bool(args.get("exact", False)),
@@ -196,7 +207,7 @@ async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
 
     if name == "typeByRole":
         return await pw.type_by_role(
-            page,
+            active_page,
             args.get("role", "") or "",
             args.get("name", "") or "",
             args.get("text", "") or "",
@@ -205,14 +216,14 @@ async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
 
     if name == "waitForText":
         return await pw.wait_for_text(
-            page,
+            active_page,
             args.get("text", "") or "",
             int(args.get("timeoutMs", 10000)),
         )
 
     if name == "waitForRole":
         return await pw.wait_for_role(
-            page,
+            active_page,
             args.get("role", "") or "",
             args.get("name", "") or "",
             bool(args.get("exact", False)),
@@ -220,18 +231,18 @@ async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
         )
 
     if name == "pressKey":
-        return await pw.press_key(page, args.get("key", "Enter") or "Enter")
+        return await pw.press_key(active_page, args.get("key", "Enter") or "Enter")
 
     if name == "selectSmart":
         return await pw.select_smart(
-            page,
+            active_page,
             args.get("target") or {},
             args.get("optionText", "") or "",
         )
 
     if name == "selectSearchSmart":
         return await pw.select_search_smart(
-            page,
+            active_page,
             args.get("target") or {},
             args.get("query", "") or "",
             args.get("optionText", "") or "",
@@ -239,7 +250,7 @@ async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
     
     
     if name == "verifyUrl":
-        current = page.url
+        current = active_page.url
         expected = args.get("contains", "")
         if expected not in current:
             raise ClientError(f"URL verification failed: '{expected}' not in '{current}'")
@@ -250,35 +261,35 @@ async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
     # ================================================
     if name == "typeById":
         return await pw.type_by_id(
-            page,
+            active_page,
             args.get("id", ""),
             args.get("text", ""),
         )
 
     if name == "typeByName":
         return await pw.type_by_name(
-            page,
+            active_page,
             args.get("name", ""),
             args.get("text", ""),
         )
 
     if name == "typeByCSS":
         return await pw.type_by_css(
-            page,
+            active_page,
             args.get("css", ""),
             args.get("text", ""),
         )
 
     if name == "typeByXPath":
         return await pw.type_by_xpath(
-            page,
+            active_page,
             args.get("xpath", ""),
             args.get("text", ""),
         )
 
     if name == "typeByAriaLabel":
         return await pw.type_by_aria_label(
-            page,
+            active_page,
             args.get("aria_label", ""),
             args.get("text", ""),
         )
@@ -288,36 +299,36 @@ async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
     # ================================================
     if name == "typeWithFallback":
         return await pw.type_with_fallback(
-            page,
+            active_page,
             args.get("locators", []),
             args.get("text", ""),
         )
 
     if name == "clickWithFallback":
         return await pw.click_with_fallback(
-            page,
+            active_page,
             args.get("locators", []),
         )
 
     if name == "request_human_intervention":
         from .plugins.hitl_plugin import HITLPlugin
         hitl_plugin = None
-        if hasattr(page, "__recorder__") and hasattr(page.__recorder__, "plugins"):
-            for p in page.__recorder__.plugins:
+        if hasattr(active_page, "__recorder__") and hasattr(active_page.__recorder__, "plugins"):
+            for p in active_page.__recorder__.plugins:
                 if isinstance(p, HITLPlugin):
                     hitl_plugin = p
                     break
         if hitl_plugin is None:
             hitl_plugin = HITLPlugin()
 
-        if hasattr(page, "__recorder__"):
-            page.__recorder__.emit("human_intervention_required", None, args)
+        if hasattr(active_page, "__recorder__"):
+            active_page.__recorder__.emit("human_intervention_required", None, args)
 
-        return await hitl_plugin.trigger_intervention(page, args)
+        return await hitl_plugin.trigger_intervention(active_page, args)
 
     if name == "validatePage":
         return await pw.validate_page(
-            page,
+            active_page,
             args.get("expected_url", ""),
             int(args.get("timeout_ms", 10000)),
         )
@@ -340,16 +351,16 @@ async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
         print(f"   Trying {len(locators)} locator(s)...")
         
         value = await extract_with_fallback(
-            page, locators, extract_type, attribute_name
+            active_page, locators, extract_type, attribute_name
         )
         
         # Store in session
-        if not hasattr(page, '__extracted_data__'):
-            page.__extracted_data__ = {}
-        page.__extracted_data__[key] = value
+        if not hasattr(active_page, '__extracted_data__'):
+            active_page.__extracted_data__ = {}
+        active_page.__extracted_data__[key] = value
         
         print(f"\n[{timestamp}]  EXTRACTED: {key} = '{value[:100] if len(value) > 100 else value}'")
-        print(f"   Stored in page.__extracted_data__['{key}']\n")
+        print(f"   Stored in active_page.__extracted_data__['{key}']\n")
         
         return True
 
@@ -374,7 +385,7 @@ async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
         print(f"   Wait: {wait_per_page}s, Timeout: {page_timeout}s, Retries: {retry_attempts}")
         
         result = await extract_table_data(
-            page, table_selector, column_indices, columns, max_pages,
+            active_page, table_selector, column_indices, columns, max_pages,
             wait_per_page, page_timeout, retry_attempts
         )
         
@@ -428,7 +439,10 @@ async def ai(task: Union[str, Sequence[str]], *, page: Page, options: Optional[D
         msg_type = message.get("type")
         if msg_type == "command-request":
             idx = int(message.get("index", 0))
-            result = await _execute_command(page, message)
+            try:
+                result = await _execute_command(page, message)
+            except Exception as e:
+                result = {"error": str(e), "success": False}
             await _send_command_response(idx, task_id, result)
             return False
         if msg_type == "task-complete":

@@ -1,2 +1,1 @@
-Execute the recorded automation 'flipkart1' step by step.
 Finish with done only after verification.
