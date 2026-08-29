@@ -1,0 +1,5 @@
+# 1. Re-scan all code and update the Graphify AST index
+graphify update .
+
+# 2. Re-generate the visual Mermaid diagram markdown file
+python scripts/graphify_to_mermaid.py

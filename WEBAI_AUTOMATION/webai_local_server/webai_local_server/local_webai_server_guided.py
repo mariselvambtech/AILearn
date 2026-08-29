@@ -285,6 +285,7 @@ BASE_PROMPT = (
     "Do NOT guess selectors. Do NOT invent elements.\n"
     "Do NOT output done until you have taken actions and verified success.\n"
     "Never use wait_text for URL verification. Use verify_url for URL checks.\n"
+    "Do not attempt to click 'Login' or 'Sign in' unless explicitly instructed. Search for and select products as a guest.\n"
 )
 
 SUBGOALS = ("navigate", "act", "verify")
@@ -987,9 +988,24 @@ async def handle_client(ws: Any):
                 result = resp.get("result")
                 if result and result != "null":
                     try:
-                        return json.loads(result)
+                        parsed = json.loads(result)
                     except Exception:
-                        return result
+                        parsed = result
+
+                    if isinstance(parsed, dict):
+                        if parsed.get("error"):
+                            err_msg = parsed.get("error")
+                            print(f"{log_prefix} ❌ Action failed: {err_msg}")
+                            raise RuntimeError(f"Command '{name}' failed: {err_msg}")
+                        if parsed.get("success") is False:
+                            err_msg = parsed.get("error") or f"Command '{name}' returned success=False"
+                            print(f"{log_prefix} ❌ Action failed: {err_msg}")
+                            raise RuntimeError(f"Command '{name}' failed: {err_msg}")
+                    return parsed
+                if resp.get("error"):
+                    err_msg = resp.get("error")
+                    print(f"{log_prefix} ❌ Action failed: {err_msg}")
+                    raise RuntimeError(f"Command '{name}' failed: {err_msg}")
                 return None
 
 
@@ -1552,7 +1568,7 @@ async def handle_client(ws: Any):
         max_actions_per_round = int(_env("MAX_ACTIONS_PER_ROUND", "6"))
         max_failures = int(_env("MAX_FAILURES", "10"))
         MAX_CONSECUTIVE_FAILURES = int(_env("MAX_CONSECUTIVE_FAILURES", "2"))
-        consecutive_failures = 0
+        consecutive_action_failures = 0
 
         replay_enabled = False  # cache/replay disabled by design
         record_enabled = False  # cache/record disabled by design
@@ -1735,7 +1751,31 @@ async def handle_client(ws: Any):
                     # Execute planned actions
                     for a in planned:
                         a = normalize_action(a)
-                        await exec_action(a)
+                        try:
+                            await exec_action(a)
+                            consecutive_action_failures = 0
+                        except Exception as e:
+                            consecutive_action_failures += 1
+                            failures += 1
+                            last_errors.append(str(e))
+
+                            if consecutive_action_failures >= MAX_CONSECUTIVE_FAILURES:
+                                print(f"{log_prefix} 🚨 [HITL] Consecutive action failures ({consecutive_action_failures}) threshold reached in guided mode. Requesting human intervention...")
+                                try:
+                                    hitl_res = await send_command("request_human_intervention", {
+                                        "reason": "consecutive_action_failures",
+                                        "last_error": str(e)
+                                    })
+                                    print(f"{log_prefix} 🤝 [HITL] Received resolution payload: {hitl_res}")
+                                    consecutive_action_failures = 0
+                                    if isinstance(hitl_res, dict):
+                                        click_info = hitl_res.get("click", {})
+                                        voice_info = hitl_res.get("audio_transcription", "")
+                                        task_text += f"\n\n[HUMAN INTERVENTION UPDATE]: The user clicked target element '{click_info.get('targetTag')}' (id='{click_info.get('targetId')}') at coordinates ({click_info.get('x')}, {click_info.get('y')}) and said: '{voice_info}'. Update spatial mapping and proceed."
+                                        system = build_system_prompt(task_text, expect)
+                                        break
+                                except Exception as hitl_err:
+                                    print(f"{log_prefix} ⚠️ [HITL] Human intervention handler error: {hitl_err}")
 
                     continue
 
@@ -1850,21 +1890,21 @@ async def handle_client(ws: Any):
                 a = normalize_action(a)
                 try:
                     await exec_action(a)
-                    consecutive_failures = 0
+                    consecutive_action_failures = 0
                 except Exception as e:
-                    consecutive_failures += 1
+                    consecutive_action_failures += 1
                     failures += 1
                     last_errors.append(str(e))
 
-                    if consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
-                        print(f"{log_prefix} 🚨 [HITL] Consecutive failures ({consecutive_failures}) threshold reached. Requesting human intervention...")
+                    if consecutive_action_failures >= MAX_CONSECUTIVE_FAILURES:
+                        print(f"{log_prefix} 🚨 [HITL] Consecutive action failures ({consecutive_action_failures}) threshold reached. Requesting human intervention...")
                         try:
                             hitl_res = await send_command("request_human_intervention", {
-                                "reason": "consecutive_spatial_mapping_failures",
+                                "reason": "consecutive_action_failures",
                                 "last_error": str(e)
                             })
                             print(f"{log_prefix} 🤝 [HITL] Received resolution payload: {hitl_res}")
-                            consecutive_failures = 0
+                            consecutive_action_failures = 0
                             if isinstance(hitl_res, dict):
                                 click_info = hitl_res.get("click", {})
                                 voice_info = hitl_res.get("audio_transcription", "")

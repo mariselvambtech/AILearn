@@ -1,16 +1,16 @@
 # Graph Report - AILearn  (2026-08-29)
 
 ## Corpus Check
-- 256 files · ~256,191 words
+- 259 files · ~256,461 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1059 nodes · 1511 edges · 81 communities (71 shown, 10 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 23 edges (avg confidence: 0.63)
+- 1128 nodes · 1701 edges · 79 communities (70 shown, 9 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 23 edges (avg confidence: 0.63)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `706e87c0`
+- Built from commit: `1dabf7d6`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -91,39 +91,37 @@
 - test_phase8_autonomous_handoff.py
 - test_run_hybrid.py
 - MockPage
-- run_hybrid.py
-- MockLocator
 - Any
 - Page
 
 ## God Nodes (most connected - your core abstractions)
-1. `WebRecorder` - 30 edges
-2. `handle_client()` - 25 edges
-3. `Step` - 25 edges
-4. `Recent Work Completed` - 20 edges
-5. `Decision Log — WebAI Platform` - 19 edges
-6. `bindEvents()` - 17 edges
-7. `SkillExecutor` - 16 edges
-8. `api()` - 15 edges
-9. `HITLPlugin` - 14 edges
-10. `SkillSynthesizer` - 13 edges
+1. `_execute_command()` - 36 edges
+2. `WebRecorder` - 30 edges
+3. `handle_client()` - 25 edges
+4. `Step` - 25 edges
+5. `Recent Work Completed` - 20 edges
+6. `click()` - 19 edges
+7. `Decision Log — WebAI Platform` - 19 edges
+8. `_post_action_wait()` - 17 edges
+9. `bindEvents()` - 17 edges
+10. `SkillExecutor` - 16 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `MockKeyboard` --uses--> `SkillExecutor`  [INFERRED]
-  WEBAI_AUTOMATION/scratch/test_run_hybrid.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/skill_executor.py
-- `MockLocator` --uses--> `SkillExecutor`  [INFERRED]
-  WEBAI_AUTOMATION/scratch/test_run_hybrid.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/skill_executor.py
-- `MockPage` --uses--> `SkillExecutor`  [INFERRED]
-  WEBAI_AUTOMATION/scratch/test_run_hybrid.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/skill_executor.py
-- `MockKeyboard` --uses--> `SkillExecutor`  [INFERRED]
-  WEBAI_AUTOMATION/scratch/test_browser_handoff.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/skill_executor.py
-- `MockPage` --uses--> `SkillExecutor`  [INFERRED]
-  WEBAI_AUTOMATION/scratch/test_browser_handoff.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/skill_executor.py
+- `test_action_listener_loop_mock()` --calls--> `_send_command_response()`  [INFERRED]
+  WEBAI_AUTOMATION/scratch/test_run_hybrid.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/ai.py
+- `test_action_listener_loop_mock()` --calls--> `_execute_command()`  [INFERRED]
+  WEBAI_AUTOMATION/scratch/test_run_hybrid.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/ai.py
+- `test_build_spatial_prompt()` --calls--> `_build_spatial_prompt()`  [EXTRACTED]
+  WEBAI_AUTOMATION/scratch/test_phase8_autonomous_handoff.py → WEBAI_AUTOMATION/webai_local_server/webai_local_server/local_webai_server_guided.py
+- `test_extract_coords_json()` --calls--> `_extract_coords()`  [EXTRACTED]
+  WEBAI_AUTOMATION/scratch/test_phase8_autonomous_handoff.py → WEBAI_AUTOMATION/webai_local_server/webai_local_server/local_webai_server_guided.py
+- `parse_llm_plan()` --calls--> `_extract_json_array()`  [EXTRACTED]
+  WEBAI_AUTOMATION/scratch/test_phase8_autonomous_handoff.py → WEBAI_AUTOMATION/webai_local_server/webai_local_server/local_webai_server_guided.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (81 total, 10 thin omitted)
+## Communities (79 total, 9 thin omitted)
 
 ### Community 0 - "Recent Work Completed"
 Cohesion: 0.05
@@ -134,8 +132,8 @@ Cohesion: 0.07
 Nodes (28): Active Context  WebAI Platform, Active Context  WebAI Platform, Active Context  WebAI Platform, Current Session (2026-07-29), Current Session (2026-07-29), Current Session (2026-08-29), Dashboard Enhancements & Performance Optimization, Dashboard Enhancements & Performance Optimization (+20 more)
 
 ### Community 2 - "Open Questions / Decisions Pending"
-Cohesion: 0.15
-Nodes (11): DataExtractionPlugin, Any, Plugin that listens to data extraction events ('extract' and 'extract_table'), Attach plugin to WebRecorder instance by subscribing to event bus., Handle standard text/attribute extraction event., Handle table extraction event., Save single extraction to files immediately., Save extraction to Excel file. (+3 more)
+Cohesion: 0.12
+Nodes (19): Phase 1 Test Suite: test_event_bus_core.py  Tests the WebRecorder Event Bus pub/, Tests that WebRecorder correctly broadcasts click and type events     with full, Tests that if a subscriber plugin raises an exception during execution,     the, Tests that DataExtractionPlugin subscribes to extract channel and safely handles, test_data_extraction_plugin_subscription(), test_event_bus_click_and_type_events(), test_plugin_exception_isolation(), DataExtractionPlugin (+11 more)
 
 ### Community 3 - "Immediate Next Steps (If User Requests)"
 Cohesion: 0.13
@@ -190,8 +188,8 @@ Cohesion: 0.14
 Nodes (13): 10. Strict Prompting Contracts, 11. Autonomous E2E Validation Loop (Self-Healing), 1. Documentation & Code Synchronization, 2. Memory Bank Maintenance, 3. Code Quality & Style, 4. Testing & Verification, 5. Dependency Management, 6. Safety & Permissions (+5 more)
 
 ### Community 21 - "Page"
-Cohesion: 0.07
-Nodes (23): TDVC Test Harness for AudioAligner Temporal Alignment Logic. Verifies time windo, test_audio_alignment_math(), TDVC Test Harness for SkillSynthesizer. Verifies Ollama synthesis, JSON parsing,, test_skill_synthesis(), ask_yes_no(), main(), AudioAligner, Any (+15 more)
+Cohesion: 0.09
+Nodes (20): TDVC Test Harness for AudioAligner Temporal Alignment Logic. Verifies time windo, test_audio_alignment_math(), ask_yes_no(), main(), AudioAligner, Any, Audio Aligner Utility for WebAI Playwright Recorder.  Transcribes recorded sessi, Utility class for transcribing audio and aligning voice context with recorded st (+12 more)
 
 ### Community 22 - "crud.py"
 Cohesion: 0.06
@@ -210,20 +208,20 @@ Cohesion: 0.09
 Nodes (17): Popen, PlaybackProcessManager, PlaybackRun, Path, Playback subprocess lifecycle manager for the WebAI dashboard server.  The das, Return True while at least one playback subprocess is still alive., Return execution IDs of all currently-running playback subprocesses., Mark orphan RUNNING executions as FAILED.          Historical executions stay (+9 more)
 
 ### Community 26 - "Any"
-Cohesion: 0.21
-Nodes (12): get_automation(), get_execution_logs(), list_automations(), list_executions(), _proxy_get(), Validate that the caller supplied an X-API-Key header.      Args:         x_a, Proxy an authenticated GET request to the API server.      Args:         path, List the caller's automations (dashboard card grid data source). (+4 more)
+Cohesion: 0.20
+Nodes (15): get_automation(), get_execution_logs(), list_automations(), list_executions(), list_skills(), _proxy_get(), Any, Validate that the caller supplied an X-API-Key header.      Args:         x_a (+7 more)
 
 ### Community 27 - "run_automation_endpoint"
-Cohesion: 0.16
-Nodes (14): BaseModel, execute_skill_endpoint(), Path, Result of a successfully dispatched automation run., Payload for triggering dynamic execution of a synthesized AI skill., Choose the Python interpreter for the playback subprocess.      Prefers the Pl, Execute a synthesized AI Skill asynchronously via SkillExecutor in Playwright ve, Trigger browser playback of a database-backed automation.      Replaces the in (+6 more)
+Cohesion: 0.25
+Nodes (9): BaseModel, LoginPayload, Result of a successfully dispatched automation run., Trigger browser playback of a database-backed automation.      Replaces the in, Credentials forwarded to the API server's /auth/login endpoint., Payload for triggering an automation run from the dashboard., run_automation_endpoint(), RunRequest (+1 more)
 
 ### Community 28 - "dashboard_server.py"
-Cohesion: 0.18
-Nodes (13): dashboard_health(), _probe_http(), _probe_tcp(), _probe_ws(), WebAI Dashboard Server — web UI + orchestration API.  This FastAPI server is t, Return True when a TCP connection to host:port succeeds., Probe a WebSocket server by sending a minimal HTTP request.      Unlike a raw, Return True when an HTTP GET to url returns any non-server-error status. (+5 more)
+Cohesion: 0.14
+Nodes (17): dashboard_health(), _flush_orchestration_logs(), list_runs(), _probe_http(), _probe_tcp(), _probe_ws(), WebAI Dashboard Server — web UI + orchestration API.  This FastAPI server is t, Payload for starting a new interactive recording session from the dashboard. (+9 more)
 
 ### Community 29 - "MonkeyPatch"
-Cohesion: 0.05
-Nodes (27): MonkeyPatch, _api_server_online(), FakeResponse, Any, QA suite for the WebAI Dashboard Server (webai_dashboard).  Covers two layers:, generated_task.txt content generation for guided playback., X-API-Key header enforcement on protected endpoints., Health endpoint always reports dashboard status plus dependency probes. (+19 more)
+Cohesion: 0.06
+Nodes (23): MonkeyPatch, _api_server_online(), FakeResponse, Any, QA suite for the WebAI Dashboard Server (webai_dashboard).  Covers two layers:, generated_task.txt content generation for guided playback., X-API-Key header enforcement on protected endpoints., Health endpoint always reports dashboard status plus dependency probes. (+15 more)
 
 ### Community 30 - "test_dashboard_enhancements.py"
 Cohesion: 0.23
@@ -234,8 +232,8 @@ Cohesion: 0.24
 Nodes (11): bare_tcp_probe(), garbage_probe(), http_get_probe(), main(), E2E verification for the WebSocket probe-tolerance fix in webai_local_server/lo, Connect and close without sending a single byte (old _probe_tcp)., Send a plain HTTP/1.1 GET (dashboard _probe_ws) and return the response., Send non-HTTP garbage bytes (genuine malformed request). (+3 more)
 
 ### Community 32 - ".json"
-Cohesion: 0.21
-Nodes (9): Headless E2E Test for SkillExecutor Playwright Execution. Verifies loading synth, test_e2e_skill_playback(), TDVC Test Harness for SkillExecutor Parameter Injection & Schema Resolution. Ver, test_skill_executor_resolution(), main(), CLI Runner for Executing Synthesized AI Skills.  Loads synthesized_skill.json, p, Skill Executor Utility for WebAI Playwright Recorder.  Parses synthesized skills, Executes synthesized AI skill recipes with dynamic runtime parameter injection. (+1 more)
+Cohesion: 0.05
+Nodes (23): Path, MockKeyboard, MockPage, TDVC Test Suite for Phase 7: The Browser Handoff Engine (Rule 7) Verifies: 1. Br, test_browser_handoff_lifecycle(), Headless E2E Test for SkillExecutor Playwright Execution. Verifies loading synth, test_e2e_skill_playback(), MockKeyboard (+15 more)
 
 ### Community 33 - "Implementation Plan — WebAI Front-End Automation Dashboard"
 Cohesion: 0.18
@@ -246,8 +244,8 @@ Cohesion: 0.28
 Nodes (8): _api_online(), main(), Any, Benchmark: Modal rendering response time.  Measures the latency of the endpoin, Return the response time in milliseconds for a GET request., Check if the API server is reachable., Run the benchmark and print results., _time_get()
 
 ### Community 35 - "_safe_detail"
-Cohesion: 0.20
-Nodes (10): Response, UploadFile, import_automation(), login(), LoginPayload, Extract an error detail payload from an upstream API response.      Args:, Proxy login to the API server and return the user's API key.      The front-en, Import a recorded_steps.json file as a new database automation.      Replaces (+2 more)
+Cohesion: 0.25
+Nodes (8): Response, UploadFile, import_automation(), login(), Extract an error detail payload from an upstream API response.      Args:, Proxy login to the API server and return the user's API key.      The front-en, Import a recorded_steps.json file as a new database automation.      Replaces, _safe_detail()
 
 ### Community 36 - "test_dashboard_recording.py"
 Cohesion: 0.36
@@ -258,8 +256,8 @@ Cohesion: 0.15
 Nodes (12): TDVC Test Suite for Phase 6: Semantic Intent Router & Agentic Handoff Engine (Ru, test_intent_routing_and_variable_extraction(), test_no_matching_skill_fallback(), IntentRouter, Any, Semantic Intent Router & Agentic Handoff Module for WebAI Local AI Server.  Anal, Extracts and binds JSON classification output from Ollama to full skill dict., Deterministic rule-based intent router when Ollama is offline or in test mode. (+4 more)
 
 ### Community 38 - "validate_steps_payload"
-Cohesion: 0.25
-Nodes (9): _buffer_log(), delete_automation(), list_runs(), list_skills(), Any, Append one orchestration log entry to the buffer (source='api')., List all synthesized AI skills available in the client directory., Delete an automation and its dependent records via the API server.      Proxie (+1 more)
+Cohesion: 0.50
+Nodes (4): _buffer_log(), delete_automation(), Append one orchestration log entry to the buffer (source='api')., Delete an automation and its dependent records via the API server.      Proxie
 
 ### Community 39 - "Decision Log — WebAI Platform"
 Cohesion: 0.18
@@ -330,16 +328,16 @@ Cohesion: 0.33
 Nodes (6): Alternatives Considered, Context, Decision, Decision 3: Local Ollama vs Cloud LLM API, Impact, Rationale
 
 ### Community 56 - "build_task_text"
-Cohesion: 0.33
-Nodes (6): _flush_orchestration_logs(), Payload for starting a new interactive recording session from the dashboard., Best-effort batch upload of dashboard orchestration logs to the API server., Launch an interactive browser session to record a new automation.      Spawns, record_automation_endpoint(), RecordRequest
+Cohesion: 0.09
+Nodes (63): ElementHandle, Locator, ScrollType, test_execute_command_fallback_single_page(), test_execute_command_uses_active_page_from_context(), _execute_command(), Execute a single AI command against the active Playwright page.      Dynamical, cdp_element_to_playwright_handle() (+55 more)
 
 ### Community 58 - "Decision 18: Probe-Tolerant WebSocket Server (process_request + logging filter)"
 Cohesion: 0.40
 Nodes (5): Alternatives Considered, Context, Decision 18: Probe-Tolerant WebSocket Server (process_request + logging filter), Decision, Impact
 
 ### Community 59 - "TestImportValidation"
-Cohesion: 0.29
-Nodes (5): Path, Any, Page, Injects runtime parameters (or schema defaults) into step template placeholders, Replays resolved skill steps sequentially in Playwright with multi-locator fallb
+Cohesion: 0.36
+Nodes (4): Step-payload validation for the import endpoint., TestValidateStepsPayload, Validate an uploaded recording payload.      Args:         steps: Parsed JSON, validate_steps_payload()
 
 ### Community 60 - "test_dashboard_ui.py"
 Cohesion: 0.67
@@ -350,24 +348,24 @@ Cohesion: 0.50
 Nodes (3): migrate_indexes(), Database Migration: Add performance indexes for modal rendering.  Creates explic, Create missing performance indexes on execution_logs and execution_history.
 
 ### Community 63 - "Page"
-Cohesion: 0.13
-Nodes (10): Any, Page, Event Bus Core Engine for Browser Recording.     Intercepts raw CDP user interac, Start recording session and broadcast recording_started event to plugins., Register and attach a plugin to this recorder event bus., Subscribe a listener callback to a specific event or '*' for all events., Unsubscribe a listener callback., Broadcast recorded step to all registered subscribers. (+2 more)
+Cohesion: 0.12
+Nodes (11): Attach plugin to WebRecorder instance by subscribing to event bus., Any, Page, Event Bus Core Engine for Browser Recording.     Intercepts raw CDP user interac, Start recording session and broadcast recording_started event to plugins., Register and attach a plugin to this recorder event bus., Subscribe a listener callback to a specific event or '*' for all events., Unsubscribe a listener callback. (+3 more)
 
 ### Community 65 - "HITLPlugin"
 Cohesion: 0.13
 Nodes (12): main(), HITLPlugin, Any, Page, Human-in-the-Loop (HITL) Interactive Learning Plugin for WebAI Playwright Record, Transcribe PCM WAV audio using faster-whisper., Main entrypoint called when human intervention is required.         1. Speaks TT, Plugin that manages Human-in-the-Loop (HITL) fallback interventions. (+4 more)
 
 ### Community 66 - "Step"
-Cohesion: 0.15
-Nodes (14): TDVC Test Harness for AudioCapturePlugin & WebRecorder Synchronization. Verifies, test_audio_plugin_synchronization(), Phase 1 Test Suite: test_event_bus_core.py  Tests the WebRecorder Event Bus pub/, Tests that WebRecorder correctly broadcasts click and type events     with full, Tests that if a subscriber plugin raises an exception during execution,     the, Tests that DataExtractionPlugin subscribes to extract channel and safely handles, test_data_extraction_plugin_subscription(), test_event_bus_click_and_type_events() (+6 more)
+Cohesion: 0.13
+Nodes (10): TDVC Test Harness for AudioCapturePlugin & WebRecorder Synchronization. Verifies, test_audio_plugin_synchronization(), TDVC Test Harness for SkillSynthesizer. Verifies Ollama synthesis, JSON parsing,, test_skill_synthesis(), fetch_steps_from_api(), main(), Audio Capture Plugin for WebAI Playwright Recorder.  Provides background audio r, Human-in-the-Loop (HITL) Interactive Learning Plugin for WebAI Playwright Record (+2 more)
 
 ### Community 67 - "handle_client"
 Cohesion: 0.11
 Nodes (19): RuntimeError, build_subgoal_prompt(), _extract_json_array(), extract_primary_open_url(), _format_last_errors(), get_query_param(), handle_client(), _has_progress() (+11 more)
 
 ### Community 68 - "ai.py"
-Cohesion: 0.23
-Nodes (14): test_action_listener_loop_mock(), ai(), ai_sync(), ClientError, _execute_command(), _make_error_message(), Any, Page (+6 more)
+Cohesion: 0.14
+Nodes (19): action_listener_loop(), load_local_skills(), main(), Any, End-to-End Hybrid Test Orchestrator for WebAI Platform.  1. Accepts hardcoded pr, Listens for incoming AI action commands (command-request) from local_webai_serve, Discovers and loads synthesized skills from JSON files in the workspace., ai() (+11 more)
 
 ### Community 69 - "HITLPlugin"
 Cohesion: 0.16
@@ -394,36 +392,32 @@ Cohesion: 0.22
 Nodes (10): parse_llm_plan(), TDVC Test Suite for Phase 8: Autonomous Continuation & Spatial Graph Routing (Ru, Helper function matching the server's new multi-format plan parser., test_build_spatial_prompt(), test_extract_coords_json(), test_multi_format_plan_parsing(), _build_spatial_prompt(), _extract_coords() (+2 more)
 
 ### Community 75 - "test_run_hybrid.py"
-Cohesion: 0.20
-Nodes (3): MockKeyboard, MockPage, TDVC Test Suite for run_hybrid.py & TaskId Handoff Fix (Rule 7) Verifies: 1. tas
+Cohesion: 0.29
+Nodes (7): execute_skill_endpoint(), Path, Payload for triggering dynamic execution of a synthesized AI skill., Choose the Python interpreter for the playback subprocess.      Prefers the Pl, Execute a synthesized AI Skill asynchronously via SkillExecutor in Playwright ve, _select_playback_python(), SkillExecutePayload
 
 ### Community 76 - "MockPage"
-Cohesion: 0.24
-Nodes (4): MockKeyboard, MockPage, TDVC Test Suite for Phase 7: The Browser Handoff Engine (Rule 7) Verifies: 1. Br, test_browser_handoff_lifecycle()
-
-### Community 77 - "run_hybrid.py"
-Cohesion: 0.36
-Nodes (7): action_listener_loop(), load_local_skills(), main(), Any, End-to-End Hybrid Test Orchestrator for WebAI Platform.  1. Accepts hardcoded pr, Listens for incoming AI action commands (command-request) from local_webai_serve, Discovers and loads synthesized skills from JSON files in the workspace.
+Cohesion: 0.50
+Nodes (4): Proxy user registration to the API server., Registration details forwarded to the API server's /auth/register endpoint., register(), RegisterPayload
 
 ## Knowledge Gaps
-- **244 isolated node(s):** `Phase 10: Human-in-the-Loop (HITL) Interactive Learning ✅`, `Hybrid E2E Test Orchestrator (`run_hybrid.py`) & Handoff Fix ✅`, `Phase 8: Autonomous Continuation & Spatial Graph Routing ✅`, `Phase 7: The Browser Handoff Engine (The Bridge) ✅`, `Phase 6: Semantic Intent Router & Agentic Handoff Engine ✅` (+239 more)
+- **244 isolated node(s):** `Phase 10: Human-in-the-Loop (HITL) Interactive Learning & Execution Fixes ✅`, `Hybrid E2E Test Orchestrator (`run_hybrid.py`) & Handoff Fix ✅`, `Phase 8: Autonomous Continuation & Spatial Graph Routing ✅`, `Phase 7: The Browser Handoff Engine (The Bridge) ✅`, `Phase 6: Semantic Intent Router & Agentic Handoff Engine ✅` (+239 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **10 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **9 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `handle_client()` connect `handle_client` to `fallback_helpers.py`, `test_phase8_autonomous_handoff.py`, `Any`, `_compact_context`?**
+  _High betweenness centrality (0.039) - this node is a cross-community bridge._
+- **Why does `ClientError` connect `ai.py` to `build_task_text`, `handle_client`?**
+  _High betweenness centrality (0.038) - this node is a cross-community bridge._
+- **Why does `Step` connect `Open Questions / Decisions Pending` to `HITLPlugin`, `Step`, `HITLPlugin`, `AudioCapturePlugin`, `Page`, `Page`?**
   _High betweenness centrality (0.034) - this node is a cross-community bridge._
-- **Why does `ClientError` connect `ai.py` to `handle_client`?**
-  _High betweenness centrality (0.032) - this node is a cross-community bridge._
-- **Why does `SkillExecutor` connect `.json` to `test_run_hybrid.py`, `MockPage`, `run_hybrid.py`, `MockLocator`, `TestImportValidation`?**
-  _High betweenness centrality (0.020) - this node is a cross-community bridge._
-- **What connects `Phase 10: Human-in-the-Loop (HITL) Interactive Learning ✅`, `Hybrid E2E Test Orchestrator (`run_hybrid.py`) & Handoff Fix ✅`, `Phase 8: Autonomous Continuation & Spatial Graph Routing ✅` to the rest of the system?**
+- **What connects `Phase 10: Human-in-the-Loop (HITL) Interactive Learning & Execution Fixes ✅`, `Hybrid E2E Test Orchestrator (`run_hybrid.py`) & Handoff Fix ✅`, `Phase 8: Autonomous Continuation & Spatial Graph Routing ✅` to the rest of the system?**
   _244 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Recent Work Completed` be split into smaller, more focused modules?**
   _Cohesion score 0.05 - nodes in this community are weakly interconnected._
 - **Should `Active Context — WebAI Platform` be split into smaller, more focused modules?**
   _Cohesion score 0.06896551724137931 - nodes in this community are weakly interconnected._
 - **Should `Open Questions / Decisions Pending` be split into smaller, more focused modules?**
-  _Cohesion score 0.14619883040935672 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.12433862433862433 - nodes in this community are weakly interconnected._

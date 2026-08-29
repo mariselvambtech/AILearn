@@ -1,392 +1,63 @@
 [
   {
     "action": "open",
-    "url": "https://www.flipkart.com/",
+    "url": "https://www.flipkart.com",
     "name": null,
     "value": null,
-    "key": null,
-    "ts": 1787911753.1391068,
+    "ts": 1787910000.0,
     "locators": null,
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null,
-    "timestamp_ms": 26396.83723449707,
-    "voice_context": "So, I am just closing it, I do not want to log in, so I am closing it."
+    "timestamp_ms": 1000.0,
+    "voice_context": "Navigate to Flipkart homepage"
+  },
+  {
+    "action": "type",
+    "url": "https://www.flipkart.com",
+    "name": "q",
+    "value": "red shirt",
+    "ts": 1787910003.0,
+    "locators": [
+      {
+        "type": "name",
+        "value": "q"
+      },
+      {
+        "type": "placeholder",
+        "value": "Search for Products, Brands and More"
+      },
+      {
+        "type": "css",
+        "value": "input._3704LK"
+      },
+      {
+        "type": "xpath",
+        "value": "//input[@name='q']"
+      }
+    ],
+    "timestamp_ms": 3000.0,
+    "voice_context": "Search for red shirt on Flipkart"
   },
   {
     "action": "click",
-    "url": "https://www.flipkart.com/",
-    "name": "\u2715",
+    "url": "https://www.flipkart.com",
+    "name": "Search",
     "value": null,
-    "key": null,
-    "ts": 1787911753.1391068,
+    "ts": 1787910005.0,
     "locators": [
-      {
-        "type": "css",
-        "value": "span.b3wTlE"
-      },
-      {
-        "type": "text",
-        "value": "\u2715"
-      },
       {
         "type": "role",
         "value": "button",
-        "name": "\u2715"
-      },
-      {
-        "type": "xpath",
-        "value": "//div[5]/div/span"
-      }
-    ],
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null,
-    "timestamp_ms": 26396.83723449707,
-    "voice_context": "So, I am just closing it, I do not want to log in, so I am closing it."
-  },
-  {
-    "action": "click",
-    "url": "https://www.flipkart.com/",
-    "name": "Men\u2019s Casual Shoes Min. 70% Off",
-    "value": null,
-    "key": null,
-    "ts": 1787911797.4930038,
-    "locators": [
-      {
-        "type": "href",
-        "value": "https://www.flipkart.com/all/~cs-28462d7669ffdf82990baaadbb6225e0/pr?sid=osp,cil,e1f&marketplace=FLIPKART&restrictLocale=true&BU=Mixed"
+        "name": "Search"
       },
       {
         "type": "css",
-        "value": "a._3n8fna1co._3n8fna10j:nth-child(1)"
+        "value": "button.L0Z3Pu"
       },
       {
         "type": "text",
-        "value": "Men\u2019s Casual Shoes Min. 70% Off"
-      },
-      {
-        "type": "role",
-        "value": "link",
-        "name": "Men\u2019s Casual Shoes Min. 70% Off"
-      },
-      {
-        "type": "xpath",
-        "value": "//div[1]/div/div/div/a"
+        "value": "Search"
       }
     ],
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null,
-    "timestamp_ms": 70750.73432922363,
-    "voice_context": "So, the first bean is the casual shoots, I am just clicking on it."
-  },
-  {
-    "action": "navigate",
-    "url": "https://www.flipkart.com/all/~cs-28462d7669ffdf82990baaadbb6225e0/pr?sid=osp,cil,e1f&marketplace=FLIPKART&restrictLocale=true&BU=Mixed",
-    "name": null,
-    "value": null,
-    "key": null,
-    "ts": 1787911817.3921,
-    "locators": null,
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null,
-    "timestamp_ms": 90649.83057975769,
-    "voice_context": "a filter categories when gender color types are chosen, so I am selecting the gender filter category, I am selecting the main, okay, so now the page loaded with a source for men's"
-  },
-  {
-    "action": "click",
-    "url": "https://www.flipkart.com/all/~cs-28462d7669ffdf82990baaadbb6225e0/pr?sid=osp,cil,e1f&marketplace=FLIPKART&restrictLocale=true&BU=Mixed",
-    "name": "GENDER",
-    "value": null,
-    "key": null,
-    "ts": 1787911817.3921,
-    "locators": [
-      {
-        "type": "css",
-        "value": "div._6odwB.UHMz4K:nth-child(1)"
-      },
-      {
-        "type": "text",
-        "value": "GENDER"
-      },
-      {
-        "type": "xpath",
-        "value": "//div/div/section[3]/div/div"
-      }
-    ],
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null,
-    "timestamp_ms": 90649.83057975769,
-    "voice_context": "a filter categories when gender color types are chosen, so I am selecting the gender filter category, I am selecting the main, okay, so now the page loaded with a source for men's"
-  },
-  {
-    "action": "click",
-    "url": "https://www.flipkart.com/all/~cs-28462d7669ffdf82990baaadbb6225e0/pr?sid=osp,cil,e1f&marketplace=FLIPKART&restrictLocale=true&BU=Mixed",
-    "name": "Men",
-    "value": null,
-    "key": null,
-    "ts": 1787911820.3342707,
-    "locators": [
-      {
-        "type": "css",
-        "value": "div.buvtMR:nth-child(2)"
-      },
-      {
-        "type": "text",
-        "value": "Men"
-      },
-      {
-        "type": "xpath",
-        "value": "//div/div[1]/div/label/div[2]"
-      }
-    ],
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null,
-    "timestamp_ms": 93592.00119972229,
-    "voice_context": "category, I am selecting the main, okay, so now the page loaded with a source for men's"
-  },
-  {
-    "action": "navigate",
-    "url": "https://www.flipkart.com/all/~cs-28462d7669ffdf82990baaadbb6225e0/pr?sid=osp%2Ccil%2Ce1f&marketplace=FLIPKART&restrictLocale=true&BU=Mixed&p%5B%5D=facets.ideal_for%255B%255D%3DMen",
-    "name": null,
-    "value": null,
-    "key": null,
-    "ts": 1787911865.8489995,
-    "locators": null,
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null,
-    "timestamp_ms": 139106.72998428345,
-    "voice_context": "at the first percent, okay, so I am just clicking on the speakers, okay, now I would like"
-  },
-  {
-    "action": "click",
-    "url": "https://www.flipkart.com/all/~cs-28462d7669ffdf82990baaadbb6225e0/pr?sid=osp%2Ccil%2Ce1f&marketplace=FLIPKART&restrictLocale=true&BU=Mixed&p%5B%5D=facets.ideal_for%255B%255D%3DMen",
-    "name": "Link",
-    "value": null,
-    "key": null,
-    "ts": 1787911865.8489995,
-    "locators": [
-      {
-        "type": "href",
-        "value": "/echor-sneakers-men/p/itma21e408aa03a9?pid=SHOHMQP7W5KWF74F&lid=LSTSHOHMQP7W5KWF74F0AZ3UJ&marketplace=FLIPKART&store=osp%2Fcil%2Fe1f&srno=b_1_4&otracker=browse&fm=organic&iid=18a54d84-df4a-4a21-b622-f7d55d9f0e17.SHOHMQP7W5KWF74F.SEARCH&ppt=browse&ppn=browse&ssid=6i2r9tg61c0000001787911798186&ov_redirect=true"
-      },
-      {
-        "type": "css",
-        "value": "a.CIaYa1:nth-child(1)"
-      },
-      {
-        "type": "role",
-        "value": "link",
-        "name": null
-      },
-      {
-        "type": "xpath",
-        "value": "//div[2]/div/div[4]/div/a"
-      }
-    ],
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null,
-    "timestamp_ms": 139106.72998428345,
-    "voice_context": "at the first percent, okay, so I am just clicking on the speakers, okay, now I would like"
-  },
-  {
-    "action": "navigate",
-    "url": "https://www.flipkart.com/echor-sneakers-men/p/itma21e408aa03a9?pid=SHOHMQP7W5KWF74F&lid=LSTSHOHMQP7W5KWF74F0AZ3UJ&marketplace=FLIPKART&store=osp%2Fcil%2Fe1f&srno=b_1_4&otracker=browse&fm=organic&iid=18a54d84-df4a-4a21-b622-f7d55d9f0e17.SHOHMQP7W5KWF74F.SEARCH&ppt=browse&ppn=browse&ssid=6i2r9tg61c0000001787911798186&ov_redirect=true",
-    "name": null,
-    "value": null,
-    "key": null,
-    "ts": 1787911871.3423884,
-    "locators": null,
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null,
-    "timestamp_ms": 144600.11887550354,
-    "voice_context": "at the first percent, okay, so I am just clicking on the speakers, okay, now I would like to extract the ammo for the speakers shoot, okay, so once I click that the ammo section,"
-  },
-  {
-    "action": "click",
-    "url": "https://www.flipkart.com/echor-sneakers-men/p/itma21e408aa03a9?pid=SHOHMQP7W5KWF74F&lid=LSTSHOHMQP7W5KWF74F0AZ3UJ&marketplace=FLIPKART&store=osp%2Fcil%2Fe1f&srno=b_1_4&otracker=browse&fm=organic&iid=18a54d84-df4a-4a21-b622-f7d55d9f0e17.SHOHMQP7W5KWF74F.SEARCH&ppt=browse&ppn=browse&ssid=6i2r9tg61c0000001787911798186&ov_redirect=true",
-    "name": "78% 1,999 \u20b9444",
-    "value": null,
-    "key": null,
-    "ts": 1787911871.3423884,
-    "locators": [
-      {
-        "type": "css",
-        "value": "a._1psv1zeb9._1o6mltljs:nth-child(1)"
-      },
-      {
-        "type": "text",
-        "value": "78% 1,999 \u20b9444"
-      },
-      {
-        "type": "role",
-        "value": "link",
-        "name": "78% 1,999 \u20b9444"
-      },
-      {
-        "type": "xpath",
-        "value": "//div/div/div/div/a"
-      }
-    ],
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null,
-    "timestamp_ms": 144600.11887550354,
-    "voice_context": "at the first percent, okay, so I am just clicking on the speakers, okay, now I would like to extract the ammo for the speakers shoot, okay, so once I click that the ammo section,"
-  },
-  {
-    "action": "click",
-    "url": "https://www.flipkart.com/echor-sneakers-men/p/itma21e408aa03a9?pid=SHOHMQP7W5KWF74F&lid=LSTSHOHMQP7W5KWF74F0AZ3UJ&marketplace=FLIPKART&store=osp%2Fcil%2Fe1f&srno=b_1_4&otracker=browse&fm=organic&iid=18a54d84-df4a-4a21-b622-f7d55d9f0e17.SHOHMQP7W5KWF74F.SEARCH&ppt=browse&ppn=browse&ssid=6i2r9tg61c0000001787911798186&ov_redirect=true",
-    "name": "Link",
-    "value": null,
-    "key": null,
-    "ts": 1787911878.3313859,
-    "locators": [
-      {
-        "type": "css",
-        "value": "a._1psv1zeb9._1o6mltljs:nth-child(1)"
-      },
-      {
-        "type": "role",
-        "value": "link",
-        "name": null
-      },
-      {
-        "type": "xpath",
-        "value": "//div/div/div/div[1]/a"
-      }
-    ],
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null,
-    "timestamp_ms": 151589.11633491516,
-    "voice_context": "to extract the ammo for the speakers shoot, okay, so once I click that the ammo section,"
-  },
-  {
-    "action": "click",
-    "url": "https://www.flipkart.com/echor-sneakers-men/p/itma21e408aa03a9?pid=SHOHMQP7W5KWF74F&lid=LSTSHOHMQP7W5KWF74F0AZ3UJ&marketplace=FLIPKART&store=osp%2Fcil%2Fe1f&srno=b_1_4&otracker=browse&fm=organic&iid=18a54d84-df4a-4a21-b622-f7d55d9f0e17.SHOHMQP7W5KWF74F.SEARCH&ppt=browse&ppn=browse&ssid=6i2r9tg61c0000001787911798186&ov_redirect=true",
-    "name": "78% 1,999 \u20b9444",
-    "value": null,
-    "key": null,
-    "ts": 1787911884.9320147,
-    "locators": [
-      {
-        "type": "css",
-        "value": "a._1psv1zeb9._1o6mltljs:nth-child(1)"
-      },
-      {
-        "type": "text",
-        "value": "78% 1,999 \u20b9444"
-      },
-      {
-        "type": "role",
-        "value": "link",
-        "name": "78% 1,999 \u20b9444"
-      },
-      {
-        "type": "xpath",
-        "value": "//div/div/div/div/a"
-      }
-    ],
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null,
-    "timestamp_ms": 158189.7451877594,
-    "voice_context": "to extract the ammo for the speakers shoot, okay, so once I click that the ammo section, fourth, fourth, fourth, fourth, it is showing the price details, okay, so I would like to extract"
-  },
-  {
-    "action": "extract",
-    "url": "https://www.flipkart.com/echor-sneakers-men/p/itma21e408aa03a9?pid=SHOHMQP7W5KWF74F&lid=LSTSHOHMQP7W5KWF74F0AZ3UJ&marketplace=FLIPKART&store=osp%2Fcil%2Fe1f&srno=b_1_4&otracker=browse&fm=organic&iid=18a54d84-df4a-4a21-b622-f7d55d9f0e17.SHOHMQP7W5KWF74F.SEARCH&ppt=browse&ppn=browse&ssid=6i2r9tg61c0000001787911798186&ov_redirect=true",
-    "name": "extracted_value",
-    "value": "\u20b91,999",
-    "key": null,
-    "ts": 1787911947.7973125,
-    "locators": [
-      {
-        "type": "css",
-        "value": "div.v1zwn21m.v1zwn25:nth-child(2)"
-      },
-      {
-        "type": "text",
-        "value": "\u20b91,999"
-      },
-      {
-        "type": "xpath",
-        "value": "//div/div/div[2]/div[1]/div[2]"
-      }
-    ],
-    "extract_type": "text",
-    "attribute_name": null,
-    "save_options": {
-      "formats": {
-        "excel": false,
-        "word": false,
-        "txt": true
-      },
-      "folder": "D:\\AI\\AILearn\\WEBAI_AUTOMATION",
-      "filename": "extracted_data",
-      "mode": "new"
-    },
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null,
-    "timestamp_ms": 221055.04298210144,
-    "voice_context": "okay, so I am seeing the extracted value, the note pack to my decoder, and then I am stopping"
+    "timestamp_ms": 5000.0,
+    "voice_context": "Click search button"
   }
 ]

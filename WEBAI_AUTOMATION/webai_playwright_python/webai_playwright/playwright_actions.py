@@ -240,14 +240,40 @@ async def get_interactive_elements(page: Page) -> List[Dict[str, Any]]:
 
 async def click_by_role(page: Page, role: str, name: str, exact: bool = False) -> bool:
     loc = page.get_by_role(role, name=name, exact=exact)
-    await loc.first.click(timeout=DEFAULT_ACTION_TIMEOUT_MS)
+    try:
+        await loc.first.click(timeout=DEFAULT_ACTION_TIMEOUT_MS)
+    except Exception as e:
+        err_msg = str(e).lower()
+        if any(term in err_msg for term in ["intercepts pointer events", "is receiving the click", "overlay", "covered"]):
+            print(f"[playwright_actions] Pointer interception detected for click_by_role('{role}', '{name}'). Pressing Escape and retrying with force=True...")
+            try:
+                await page.keyboard.press("Escape")
+                await asyncio.sleep(0.3)
+            except Exception:
+                pass
+            await loc.first.click(timeout=DEFAULT_ACTION_TIMEOUT_MS, force=True)
+        else:
+            raise
     await _post_action_wait(page)
     return True
 
 
 async def click_by_text(page: Page, text: str, exact: bool = False) -> bool:
     loc = page.get_by_text(text, exact=exact)
-    await loc.first.click(timeout=DEFAULT_ACTION_TIMEOUT_MS)
+    try:
+        await loc.first.click(timeout=DEFAULT_ACTION_TIMEOUT_MS)
+    except Exception as e:
+        err_msg = str(e).lower()
+        if any(term in err_msg for term in ["intercepts pointer events", "is receiving the click", "overlay", "covered"]):
+            print(f"[playwright_actions] Pointer interception detected for click_by_text('{text}'). Pressing Escape and retrying with force=True...")
+            try:
+                await page.keyboard.press("Escape")
+                await asyncio.sleep(0.3)
+            except Exception:
+                pass
+            await loc.first.click(timeout=DEFAULT_ACTION_TIMEOUT_MS, force=True)
+        else:
+            raise
     await _post_action_wait(page)
     return True
 
