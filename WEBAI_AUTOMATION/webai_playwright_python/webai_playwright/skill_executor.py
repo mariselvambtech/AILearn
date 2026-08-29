@@ -158,6 +158,7 @@ class SkillExecutor:
                 from .websocket_client import send_message
                 payload = {
                     "type": "task-start",
+                    "taskId": "handoff_session",
                     "task": handoff_intent,
                     "url": page.url,
                     "options": {

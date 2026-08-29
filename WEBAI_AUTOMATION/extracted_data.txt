@@ -1,0 +1,10 @@
+=== Extracted Data Log ===
+Started: 2026-08-28 15:42:27
+
+────────────────────────────────────────────────────────────
+Variable: extracted_value
+Value: ₹1,999
+Type: text
+URL: https://www.flipkart.com/echor-sneakers-men/p/itma21e408aa03a9?pid=SHOHMQP7W5KWF74F&lid=LSTSHOHMQP7W5KWF74F0AZ3UJ&marketplace=FLIPKART&store=osp%2Fcil%2Fe1f&srno=b_1_4&otracker=browse&fm=organic&iid=18a54d84-df4a-4a21-b622-f7d55d9f0e17.SHOHMQP7W5KWF74F.SEARCH&ppt=browse&ppn=browse&ssid=6i2r9tg61c0000001787911798186&ov_redirect=true
+Time: 2026-08-28 15:42:27
+
