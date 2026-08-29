@@ -63,5 +63,21 @@
   "61": "migrate_indexes.py",
   "62": "test_dashboard_visual.py",
   "63": "Page",
-  "64": "Path"
+  "64": "Path",
+  "65": "HITLPlugin",
+  "66": "Step",
+  "67": "handle_client",
+  "68": "ai.py",
+  "69": "HITLPlugin",
+  "70": "Any",
+  "71": "_compact_context",
+  "72": "AudioCapturePlugin",
+  "73": "test_hitl_plugin.py",
+  "74": "test_phase8_autonomous_handoff.py",
+  "75": "test_run_hybrid.py",
+  "76": "MockPage",
+  "77": "run_hybrid.py",
+  "78": "MockLocator",
+  "79": "Any",
+  "80": "Page"
 }
