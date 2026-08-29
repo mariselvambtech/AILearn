@@ -299,6 +299,22 @@ async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
             args.get("locators", []),
         )
 
+    if name == "request_human_intervention":
+        from .plugins.hitl_plugin import HITLPlugin
+        hitl_plugin = None
+        if hasattr(page, "__recorder__") and hasattr(page.__recorder__, "plugins"):
+            for p in page.__recorder__.plugins:
+                if isinstance(p, HITLPlugin):
+                    hitl_plugin = p
+                    break
+        if hitl_plugin is None:
+            hitl_plugin = HITLPlugin()
+
+        if hasattr(page, "__recorder__"):
+            page.__recorder__.emit("human_intervention_required", None, args)
+
+        return await hitl_plugin.trigger_intervention(page, args)
+
     if name == "validatePage":
         return await pw.validate_page(
             page,

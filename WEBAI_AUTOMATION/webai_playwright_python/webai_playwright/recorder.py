@@ -756,6 +756,13 @@ class WebRecorder:
         except Exception as e:
             print(f" [WARN] [WebRecorder] AudioCapturePlugin auto-attachment skipped: {e}")
 
+        # Register default HITLPlugin safely
+        try:
+            from .plugins.hitl_plugin import HITLPlugin
+            self.register_plugin(HITLPlugin())
+        except Exception as e:
+            print(f" [WARN] [WebRecorder] HITLPlugin auto-attachment skipped: {e}")
+
     def start_recording(self) -> None:
         """Start recording session and broadcast recording_started event to plugins."""
         self.master_start_epoch = time.time()

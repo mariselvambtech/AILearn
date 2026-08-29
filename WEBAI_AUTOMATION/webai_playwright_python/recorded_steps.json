@@ -5,7 +5,7 @@
     "name": null,
     "value": null,
     "key": null,
-    "ts": 1787898969.8007438,
+    "ts": 1787911753.1391068,
     "locators": null,
     "extract_type": null,
     "attribute_name": null,
@@ -14,8 +14,8 @@
     "page_summary": null,
     "element_intent": null,
     "fingerprint": null,
-    "timestamp_ms": 33129.69613075256,
-    "voice_context": "So, I am just closing that pop up, ok, the pop up close close."
+    "timestamp_ms": 26396.83723449707,
+    "voice_context": "So, I am just closing it, I do not want to log in, so I am closing it."
   },
   {
     "action": "click",
@@ -23,7 +23,7 @@
     "name": "\u2715",
     "value": null,
     "key": null,
-    "ts": 1787898969.8007438,
+    "ts": 1787911753.1391068,
     "locators": [
       {
         "type": "css",
@@ -50,37 +50,37 @@
     "page_summary": null,
     "element_intent": null,
     "fingerprint": null,
-    "timestamp_ms": 33129.69613075256,
-    "voice_context": "So, I am just closing that pop up, ok, the pop up close close."
+    "timestamp_ms": 26396.83723449707,
+    "voice_context": "So, I am just closing it, I do not want to log in, so I am closing it."
   },
   {
     "action": "click",
     "url": "https://www.flipkart.com/",
-    "name": "Fashion",
+    "name": "Men\u2019s Casual Shoes Min. 70% Off",
     "value": null,
     "key": null,
-    "ts": 1787898985.6981878,
+    "ts": 1787911797.4930038,
     "locators": [
       {
         "type": "href",
-        "value": "/ss-26-base-inline-at-store"
+        "value": "https://www.flipkart.com/all/~cs-28462d7669ffdf82990baaadbb6225e0/pr?sid=osp,cil,e1f&marketplace=FLIPKART&restrictLocale=true&BU=Mixed"
       },
       {
         "type": "css",
-        "value": "a:nth-child(1)"
+        "value": "a._3n8fna1co._3n8fna10j:nth-child(1)"
       },
       {
         "type": "text",
-        "value": "Fashion"
+        "value": "Men\u2019s Casual Shoes Min. 70% Off"
       },
       {
         "type": "role",
         "value": "link",
-        "name": "Fashion"
+        "name": "Men\u2019s Casual Shoes Min. 70% Off"
       },
       {
         "type": "xpath",
-        "value": "//div[2]/div/div/div/a"
+        "value": "//div[1]/div/div/div/a"
       }
     ],
     "extract_type": null,
@@ -90,16 +90,16 @@
     "page_summary": null,
     "element_intent": null,
     "fingerprint": null,
-    "timestamp_ms": 49027.14014053345,
-    "voice_context": "Now I am seeing an icons or various categories, I am going to click a fashion icon."
+    "timestamp_ms": 70750.73432922363,
+    "voice_context": "So, the first bean is the casual shoots, I am just clicking on it."
   },
   {
     "action": "navigate",
-    "url": "https://www.flipkart.com/ss-26-base-inline-at-store?pageUID=1787898937224",
+    "url": "https://www.flipkart.com/all/~cs-28462d7669ffdf82990baaadbb6225e0/pr?sid=osp,cil,e1f&marketplace=FLIPKART&restrictLocale=true&BU=Mixed",
     "name": null,
     "value": null,
     "key": null,
-    "ts": 1787899012.2519832,
+    "ts": 1787911817.3921,
     "locators": null,
     "extract_type": null,
     "attribute_name": null,
@@ -108,74 +108,16 @@
     "page_summary": null,
     "element_intent": null,
     "fingerprint": null,
-    "timestamp_ms": 75580.93547821045,
-    "voice_context": "So, I am going to click that shelf section, shelves. So, it is just a manual to the next page, ok, the page part loader and I am, the left"
+    "timestamp_ms": 90649.83057975769,
+    "voice_context": "a filter categories when gender color types are chosen, so I am selecting the gender filter category, I am selecting the main, okay, so now the page loaded with a source for men's"
   },
   {
     "action": "click",
-    "url": "https://www.flipkart.com/ss-26-base-inline-at-store?pageUID=1787898937224",
-    "name": "Shirts",
+    "url": "https://www.flipkart.com/all/~cs-28462d7669ffdf82990baaadbb6225e0/pr?sid=osp,cil,e1f&marketplace=FLIPKART&restrictLocale=true&BU=Mixed",
+    "name": "GENDER",
     "value": null,
     "key": null,
-    "ts": 1787899012.2519832,
-    "locators": [
-      {
-        "type": "href",
-        "value": "/clothing-and-accessories/topwear/shirts/~cs-tj1hs5ycq5/pr?sid=clo%2Cash%2Caxc&offer=nb%3Amp%3A027182f627&ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIlNoaXJ0cyJdLCJ2YWx1ZVR5cGUiOiJNVUxUSV9WQUxVRUQifX19fX0%3D"
-      },
-      {
-        "type": "css",
-        "value": "a:nth-child(1)"
-      },
-      {
-        "type": "text",
-        "value": "Shirts"
-      },
-      {
-        "type": "role",
-        "value": "link",
-        "name": "Shirts"
-      },
-      {
-        "type": "xpath",
-        "value": "//div/div/div/div/a"
-      }
-    ],
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null,
-    "timestamp_ms": 75580.93547821045,
-    "voice_context": "So, I am going to click that shelf section, shelves. So, it is just a manual to the next page, ok, the page part loader and I am, the left"
-  },
-  {
-    "action": "navigate",
-    "url": "https://www.flipkart.com/clothing-and-accessories/topwear/shirts/~cs-tj1hs5ycq5/pr?sid=clo%2Cash%2Caxc&offer=nb%3Amp%3A027182f627&ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIlNoaXJ0cyJdLCJ2YWx1ZVR5cGUiOiJNVUxUSV9WQUxVRUQifX19fX0%3D",
-    "name": null,
-    "value": null,
-    "key": null,
-    "ts": 1787899029.613012,
-    "locators": null,
-    "extract_type": null,
-    "attribute_name": null,
-    "save_options": null,
-    "table_config": null,
-    "page_summary": null,
-    "element_intent": null,
-    "fingerprint": null,
-    "timestamp_ms": 92941.96438789368,
-    "voice_context": "thing, where are several sections, filtering sections, where I am choosing the color, color"
-  },
-  {
-    "action": "click",
-    "url": "https://www.flipkart.com/clothing-and-accessories/topwear/shirts/~cs-tj1hs5ycq5/pr?sid=clo%2Cash%2Caxc&offer=nb%3Amp%3A027182f627&ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIlNoaXJ0cyJdLCJ2YWx1ZVR5cGUiOiJNVUxUSV9WQUxVRUQifX19fX0%3D",
-    "name": "COLOR",
-    "value": null,
-    "key": null,
-    "ts": 1787899029.613012,
+    "ts": 1787911817.3921,
     "locators": [
       {
         "type": "css",
@@ -183,7 +125,7 @@
       },
       {
         "type": "text",
-        "value": "COLOR"
+        "value": "GENDER"
       },
       {
         "type": "xpath",
@@ -197,16 +139,47 @@
     "page_summary": null,
     "element_intent": null,
     "fingerprint": null,
-    "timestamp_ms": 92941.96438789368,
-    "voice_context": "thing, where are several sections, filtering sections, where I am choosing the color, color"
+    "timestamp_ms": 90649.83057975769,
+    "voice_context": "a filter categories when gender color types are chosen, so I am selecting the gender filter category, I am selecting the main, okay, so now the page loaded with a source for men's"
+  },
+  {
+    "action": "click",
+    "url": "https://www.flipkart.com/all/~cs-28462d7669ffdf82990baaadbb6225e0/pr?sid=osp,cil,e1f&marketplace=FLIPKART&restrictLocale=true&BU=Mixed",
+    "name": "Men",
+    "value": null,
+    "key": null,
+    "ts": 1787911820.3342707,
+    "locators": [
+      {
+        "type": "css",
+        "value": "div.buvtMR:nth-child(2)"
+      },
+      {
+        "type": "text",
+        "value": "Men"
+      },
+      {
+        "type": "xpath",
+        "value": "//div/div[1]/div/label/div[2]"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null,
+    "timestamp_ms": 93592.00119972229,
+    "voice_context": "category, I am selecting the main, okay, so now the page loaded with a source for men's"
   },
   {
     "action": "navigate",
-    "url": "https://www.flipkart.com/clothing-and-accessories/topwear/shirts/~cs-tj1hs5ycq5/pr?sid=clo%2Cash%2Caxc&offer=nb%3Amp%3A027182f627&ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIlNoaXJ0cyJdLCJ2YWx1ZVR5cGUiOiJNVUxUSV9WQUxVRUQifX19fX0%3D&p%5B%5D=facets.color%255B%255D%3DBlue",
+    "url": "https://www.flipkart.com/all/~cs-28462d7669ffdf82990baaadbb6225e0/pr?sid=osp%2Ccil%2Ce1f&marketplace=FLIPKART&restrictLocale=true&BU=Mixed&p%5B%5D=facets.ideal_for%255B%255D%3DMen",
     "name": null,
     "value": null,
     "key": null,
-    "ts": 1787899059.7272558,
+    "ts": 1787911865.8489995,
     "locators": null,
     "extract_type": null,
     "attribute_name": null,
@@ -215,20 +188,20 @@
     "page_summary": null,
     "element_intent": null,
     "fingerprint": null,
-    "timestamp_ms": 123056.20813369751,
-    "voice_context": "image of the very first row, I am just clicking it, ok, ok, I am getting the price of"
+    "timestamp_ms": 139106.72998428345,
+    "voice_context": "at the first percent, okay, so I am just clicking on the speakers, okay, now I would like"
   },
   {
     "action": "click",
-    "url": "https://www.flipkart.com/clothing-and-accessories/topwear/shirts/~cs-tj1hs5ycq5/pr?sid=clo%2Cash%2Caxc&offer=nb%3Amp%3A027182f627&ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIlNoaXJ0cyJdLCJ2YWx1ZVR5cGUiOiJNVUxUSV9WQUxVRUQifX19fX0%3D&p%5B%5D=facets.color%255B%255D%3DBlue",
+    "url": "https://www.flipkart.com/all/~cs-28462d7669ffdf82990baaadbb6225e0/pr?sid=osp%2Ccil%2Ce1f&marketplace=FLIPKART&restrictLocale=true&BU=Mixed&p%5B%5D=facets.ideal_for%255B%255D%3DMen",
     "name": "Link",
     "value": null,
     "key": null,
-    "ts": 1787899059.7272558,
+    "ts": 1787911865.8489995,
     "locators": [
       {
         "type": "href",
-        "value": "/allen-solly-men-solid-casual-blue-shirt/p/itm08aa396b04e9c?pid=SHTHD2KKM7VFWPGC&lid=LSTSHTHD2KKM7VFWPGCYKO34I&marketplace=FLIPKART&store=clo%2Fash%2Faxc&srno=b_1_4&otracker=browse&fm=organic&iid=3ea0591f-90ac-48ac-81d5-5304dffa1703.SHTHD2KKM7VFWPGC.SEARCH&ppt=browse&ppn=browse&ssid=wgejub10lc0000001787899012993&ov_redirect=true"
+        "value": "/echor-sneakers-men/p/itma21e408aa03a9?pid=SHOHMQP7W5KWF74F&lid=LSTSHOHMQP7W5KWF74F0AZ3UJ&marketplace=FLIPKART&store=osp%2Fcil%2Fe1f&srno=b_1_4&otracker=browse&fm=organic&iid=18a54d84-df4a-4a21-b622-f7d55d9f0e17.SHOHMQP7W5KWF74F.SEARCH&ppt=browse&ppn=browse&ssid=6i2r9tg61c0000001787911798186&ov_redirect=true"
       },
       {
         "type": "css",
@@ -251,16 +224,16 @@
     "page_summary": null,
     "element_intent": null,
     "fingerprint": null,
-    "timestamp_ms": 123056.20813369751,
-    "voice_context": "image of the very first row, I am just clicking it, ok, ok, I am getting the price of"
+    "timestamp_ms": 139106.72998428345,
+    "voice_context": "at the first percent, okay, so I am just clicking on the speakers, okay, now I would like"
   },
   {
     "action": "navigate",
-    "url": "https://www.flipkart.com/allen-solly-men-solid-casual-blue-shirt/p/itm08aa396b04e9c?pid=SHTHD2KKM7VFWPGC&lid=LSTSHTHD2KKM7VFWPGCYKO34I&marketplace=FLIPKART&store=clo%2Fash%2Faxc&srno=b_1_4&otracker=browse&fm=organic&iid=3ea0591f-90ac-48ac-81d5-5304dffa1703.SHTHD2KKM7VFWPGC.SEARCH&ppt=browse&ppn=browse&ssid=wgejub10lc0000001787899012993&ov_redirect=true",
+    "url": "https://www.flipkart.com/echor-sneakers-men/p/itma21e408aa03a9?pid=SHOHMQP7W5KWF74F&lid=LSTSHOHMQP7W5KWF74F0AZ3UJ&marketplace=FLIPKART&store=osp%2Fcil%2Fe1f&srno=b_1_4&otracker=browse&fm=organic&iid=18a54d84-df4a-4a21-b622-f7d55d9f0e17.SHOHMQP7W5KWF74F.SEARCH&ppt=browse&ppn=browse&ssid=6i2r9tg61c0000001787911798186&ov_redirect=true",
     "name": null,
     "value": null,
     "key": null,
-    "ts": 1787899068.010388,
+    "ts": 1787911871.3423884,
     "locators": null,
     "extract_type": null,
     "attribute_name": null,
@@ -269,16 +242,16 @@
     "page_summary": null,
     "element_intent": null,
     "fingerprint": null,
-    "timestamp_ms": 131339.34020996094,
-    "voice_context": "image of the very first row, I am just clicking it, ok, ok, I am getting the price of the search app, ok, the zoom is 8.7, I am just clicking, I am just clicking, I am just"
+    "timestamp_ms": 144600.11887550354,
+    "voice_context": "at the first percent, okay, so I am just clicking on the speakers, okay, now I would like to extract the ammo for the speakers shoot, okay, so once I click that the ammo section,"
   },
   {
     "action": "click",
-    "url": "https://www.flipkart.com/allen-solly-men-solid-casual-blue-shirt/p/itm08aa396b04e9c?pid=SHTHD2KKM7VFWPGC&lid=LSTSHTHD2KKM7VFWPGCYKO34I&marketplace=FLIPKART&store=clo%2Fash%2Faxc&srno=b_1_4&otracker=browse&fm=organic&iid=3ea0591f-90ac-48ac-81d5-5304dffa1703.SHTHD2KKM7VFWPGC.SEARCH&ppt=browse&ppn=browse&ssid=wgejub10lc0000001787899012993&ov_redirect=true",
-    "name": "53% 1,749 \u20b9827",
+    "url": "https://www.flipkart.com/echor-sneakers-men/p/itma21e408aa03a9?pid=SHOHMQP7W5KWF74F&lid=LSTSHOHMQP7W5KWF74F0AZ3UJ&marketplace=FLIPKART&store=osp%2Fcil%2Fe1f&srno=b_1_4&otracker=browse&fm=organic&iid=18a54d84-df4a-4a21-b622-f7d55d9f0e17.SHOHMQP7W5KWF74F.SEARCH&ppt=browse&ppn=browse&ssid=6i2r9tg61c0000001787911798186&ov_redirect=true",
+    "name": "78% 1,999 \u20b9444",
     "value": null,
     "key": null,
-    "ts": 1787899068.010388,
+    "ts": 1787911871.3423884,
     "locators": [
       {
         "type": "css",
@@ -286,12 +259,12 @@
       },
       {
         "type": "text",
-        "value": "53% 1,749 \u20b9827"
+        "value": "78% 1,999 \u20b9444"
       },
       {
         "type": "role",
         "value": "link",
-        "name": "53% 1,749 \u20b9827"
+        "name": "78% 1,999 \u20b9444"
       },
       {
         "type": "xpath",
@@ -305,7 +278,115 @@
     "page_summary": null,
     "element_intent": null,
     "fingerprint": null,
-    "timestamp_ms": 131339.34020996094,
-    "voice_context": "image of the very first row, I am just clicking it, ok, ok, I am getting the price of the search app, ok, the zoom is 8.7, I am just clicking, I am just clicking, I am just"
+    "timestamp_ms": 144600.11887550354,
+    "voice_context": "at the first percent, okay, so I am just clicking on the speakers, okay, now I would like to extract the ammo for the speakers shoot, okay, so once I click that the ammo section,"
+  },
+  {
+    "action": "click",
+    "url": "https://www.flipkart.com/echor-sneakers-men/p/itma21e408aa03a9?pid=SHOHMQP7W5KWF74F&lid=LSTSHOHMQP7W5KWF74F0AZ3UJ&marketplace=FLIPKART&store=osp%2Fcil%2Fe1f&srno=b_1_4&otracker=browse&fm=organic&iid=18a54d84-df4a-4a21-b622-f7d55d9f0e17.SHOHMQP7W5KWF74F.SEARCH&ppt=browse&ppn=browse&ssid=6i2r9tg61c0000001787911798186&ov_redirect=true",
+    "name": "Link",
+    "value": null,
+    "key": null,
+    "ts": 1787911878.3313859,
+    "locators": [
+      {
+        "type": "css",
+        "value": "a._1psv1zeb9._1o6mltljs:nth-child(1)"
+      },
+      {
+        "type": "role",
+        "value": "link",
+        "name": null
+      },
+      {
+        "type": "xpath",
+        "value": "//div/div/div/div[1]/a"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null,
+    "timestamp_ms": 151589.11633491516,
+    "voice_context": "to extract the ammo for the speakers shoot, okay, so once I click that the ammo section,"
+  },
+  {
+    "action": "click",
+    "url": "https://www.flipkart.com/echor-sneakers-men/p/itma21e408aa03a9?pid=SHOHMQP7W5KWF74F&lid=LSTSHOHMQP7W5KWF74F0AZ3UJ&marketplace=FLIPKART&store=osp%2Fcil%2Fe1f&srno=b_1_4&otracker=browse&fm=organic&iid=18a54d84-df4a-4a21-b622-f7d55d9f0e17.SHOHMQP7W5KWF74F.SEARCH&ppt=browse&ppn=browse&ssid=6i2r9tg61c0000001787911798186&ov_redirect=true",
+    "name": "78% 1,999 \u20b9444",
+    "value": null,
+    "key": null,
+    "ts": 1787911884.9320147,
+    "locators": [
+      {
+        "type": "css",
+        "value": "a._1psv1zeb9._1o6mltljs:nth-child(1)"
+      },
+      {
+        "type": "text",
+        "value": "78% 1,999 \u20b9444"
+      },
+      {
+        "type": "role",
+        "value": "link",
+        "name": "78% 1,999 \u20b9444"
+      },
+      {
+        "type": "xpath",
+        "value": "//div/div/div/div/a"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null,
+    "timestamp_ms": 158189.7451877594,
+    "voice_context": "to extract the ammo for the speakers shoot, okay, so once I click that the ammo section, fourth, fourth, fourth, fourth, it is showing the price details, okay, so I would like to extract"
+  },
+  {
+    "action": "extract",
+    "url": "https://www.flipkart.com/echor-sneakers-men/p/itma21e408aa03a9?pid=SHOHMQP7W5KWF74F&lid=LSTSHOHMQP7W5KWF74F0AZ3UJ&marketplace=FLIPKART&store=osp%2Fcil%2Fe1f&srno=b_1_4&otracker=browse&fm=organic&iid=18a54d84-df4a-4a21-b622-f7d55d9f0e17.SHOHMQP7W5KWF74F.SEARCH&ppt=browse&ppn=browse&ssid=6i2r9tg61c0000001787911798186&ov_redirect=true",
+    "name": "extracted_value",
+    "value": "\u20b91,999",
+    "key": null,
+    "ts": 1787911947.7973125,
+    "locators": [
+      {
+        "type": "css",
+        "value": "div.v1zwn21m.v1zwn25:nth-child(2)"
+      },
+      {
+        "type": "text",
+        "value": "\u20b91,999"
+      },
+      {
+        "type": "xpath",
+        "value": "//div/div/div[2]/div[1]/div[2]"
+      }
+    ],
+    "extract_type": "text",
+    "attribute_name": null,
+    "save_options": {
+      "formats": {
+        "excel": false,
+        "word": false,
+        "txt": true
+      },
+      "folder": "D:\\AI\\AILearn\\WEBAI_AUTOMATION",
+      "filename": "extracted_data",
+      "mode": "new"
+    },
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null,
+    "timestamp_ms": 221055.04298210144,
+    "voice_context": "okay, so I am seeing the extracted value, the note pack to my decoder, and then I am stopping"
   }
 ]

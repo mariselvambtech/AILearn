@@ -14,6 +14,9 @@
 | **Dashboard Skill UI & Management** | ✅ Working | Phase 5 Audio | Web Dashboard port 8080 (`GET /api/skills`, `POST /api/skills/execute`, dynamic parameter forms in SPA) |
 | **Semantic Intent Router & Handoff** | ✅ Working | Phase 6 AI | `IntentRouter` (`webai_local_server/intent_router.py` + Ollama hermes3 + parameter extraction + gap handoff analysis) |
 | **Browser Handoff Engine (Bridge)** | ✅ Working | Phase 7 Bridge | `SkillExecutor` (`keep_alive=True` teardown bypass + WebSocket `task-start` handoff dispatch to AI Brain) |
+| **Autonomous Continuation & Spatial Graph** | ✅ Working | Phase 8 Spatial | `local_webai_server_guided.py` (`handle_client()` handoff detection + `_build_spatial_prompt()` + `_extract_coords()` + `clickLocation` dispatch) |
+| **Human-in-the-Loop (HITL) Interactive Learning** | ✅ Working | Phase 10 HITL | Event-driven pause/resume, `MAX_CONSECUTIVE_FAILURES = 2`, `HITLPlugin`, non-blocking `pyttsx3` TTS cue, `faster-whisper` voice capture, JS click interception |
+| **Hybrid E2E Test Orchestrator** | ✅ Working | E2E Orchestrator | `run_hybrid.py` (IntentRouter + SkillExecutor + headed Playwright + keep-alive WebSocket handoff to port 8765) |
 | **Web UI Automation Dashboard** | ✅ Working | Frontend Fleet | `webai_dashboard/` port 8080 — run/import/monitor without terminal |
 | Dashboard orchestration API | ✅ Working | Frontend Fleet | `dashboard_server.py` (proxies API server, spawns playback) |
 | Playback process watcher | ✅ Working | Frontend Fleet | `process_manager.py` — finalizes execution status on exit |

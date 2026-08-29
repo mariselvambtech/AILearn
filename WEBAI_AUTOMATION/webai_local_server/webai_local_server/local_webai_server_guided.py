@@ -201,6 +201,77 @@ class TaskDone(Exception):
     """
     pass
 
+
+def _build_spatial_prompt(task_text: str, url: str, title: str, elements: List[Dict[str, Any]]) -> str:
+    """
+    Builds a spatial graph context prompt embedding element bounding boxes, centers, and interactive roles.
+    """
+    lines = [
+        "=== SPATIAL DOM GRAPH CONTEXT ===",
+        f"URL: {url}",
+        f"Title: {title}",
+        "Interactive Elements (with Bounding Boxes [x, y, w, h] / Center [x, y]):"
+    ]
+
+    for idx, el in enumerate(elements, 1):
+        tag = el.get("tagName", "ELEMENT")
+        role = el.get("role") or tag.lower()
+        text = (el.get("text") or el.get("name") or el.get("value") or "").strip()
+        bbox = el.get("bbox") or []
+        center = el.get("center") or []
+        
+        if not center and len(bbox) == 4:
+            center = [(bbox[0] + bbox[2]) // 2, (bbox[1] + bbox[3]) // 2]
+
+        el_str = f"  [{idx}] <{tag}> role='{role}' text='{text}'"
+        if bbox:
+            el_str += f" bbox={bbox}"
+        if center:
+            el_str += f" center={center}"
+        lines.append(el_str)
+
+    lines.append("\nTASK GOAL:")
+    lines.append(task_text)
+    lines.append("\nINSTRUCTIONS:")
+    lines.append("Analyze the spatial elements above and return a JSON action array.")
+    lines.append("To click an element by coordinates, return: [{\"action\": \"clickLocation\", \"x\": <x>, \"y\": <y>}]")
+
+    return "\n".join(lines)
+
+
+def _extract_coords(llm_out: str) -> Optional[Dict[str, int]]:
+    """
+    Extracts {x, y} coordinate dict from raw JSON or markdown text returned by LLM.
+    """
+    if not llm_out or not isinstance(llm_out, str):
+        return None
+
+    content = llm_out.strip()
+    if "```" in content:
+        match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", content, re.DOTALL)
+        if match:
+            content = match.group(1)
+        else:
+            content = re.sub(r"```(?:json)?|```", "", content).strip()
+
+    # Try parsing direct JSON or array JSON
+    try:
+        parsed = json.loads(content)
+        if isinstance(parsed, list) and len(parsed) > 0:
+            parsed = parsed[0]
+        if isinstance(parsed, dict):
+            if "x" in parsed and "y" in parsed:
+                return {"x": int(parsed["x"]), "y": int(parsed["y"])}
+    except Exception:
+        pass
+
+    # Fallback regex search for {"x": 123, "y": 456} or {x: 123, y: 456}
+    match = re.search(r'\{\s*"?x"?\s*:\s*(\d+)\s*,\s*"?y"?\s*:\s*(\d+)\s*\}', content)
+    if match:
+        return {"x": int(match.group(1)), "y": int(match.group(2))}
+
+    return None
+
 BASE_PROMPT = (
     "You are a careful browser automation planner.\n"
     "You MUST follow the allowed action schema exactly.\n"
@@ -299,6 +370,7 @@ async def ollama_chat(system: str, user: str) -> str:
     payload = {
         "model": model,
         "stream": False,
+        "format": "json",
         "messages": [
             {"role": "system", "content": system},
             {"role": "user", "content": user},
@@ -1006,6 +1078,15 @@ async def handle_client(ws: Any):
             did_any_action = True
             return
 
+        if kind in ("clicklocation", "click_location"):
+            x = int(act.get("x", 0))
+            y = int(act.get("y", 0))
+            print(f"{log_prefix} 🎯 Clicking at coordinates: ({x}, {y})")
+            await send_command("clickLocation", {"x": x, "y": y})
+            print(f"{log_prefix} ✅ Click successful")
+            did_any_action = True
+            return
+
         if kind == "scroll_page":
             direction = act.get("target", "down")
             print(f"{log_prefix} \u21d5\ufe0f  Scrolling page: {direction}")
@@ -1438,7 +1519,7 @@ async def handle_client(ws: Any):
             })
             return
 
-        task_id = start_msg["taskId"]
+        task_id = start_msg.get("taskId") or start_msg.get("task_id") or "handoff_session"
         raw_task_text = start_msg.get("task", "")
         if _env("TASK_NORMALIZATION", "1") == "1":
             task_text = normalize_task(raw_task_text)
@@ -1458,6 +1539,9 @@ async def handle_client(ws: Any):
         else:
             print(f"{log_prefix} 📝 freeform-mode (no recorded_steps in options)")
 
+        if options.get("keep_alive") or options.get("from_skill"):
+            print(f"{log_prefix} 🤝 [Handoff Engine] Autonomous continuation active for task: '{raw_task_text}'")
+
 
         expect = extract_success_expectations(task_text)
         print("🎯 Success expectations:", expect)
@@ -1467,6 +1551,8 @@ async def handle_client(ws: Any):
         max_rounds = int(_env("MAX_ROUNDS", "12"))
         max_actions_per_round = int(_env("MAX_ACTIONS_PER_ROUND", "6"))
         max_failures = int(_env("MAX_FAILURES", "10"))
+        MAX_CONSECUTIVE_FAILURES = int(_env("MAX_CONSECUTIVE_FAILURES", "2"))
+        consecutive_failures = 0
 
         replay_enabled = False  # cache/replay disabled by design
         record_enabled = False  # cache/record disabled by design
@@ -1723,9 +1809,35 @@ async def handle_client(ws: Any):
 
 
             # ---- LLM planning (single round for simplicity) ----
-            user_prompt = build_subgoal_prompt("act", system) + "\n\n" + context + "\n\nTASK:\n" + task_text
+            if options.get("keep_alive") or options.get("from_skill"):
+                user_prompt = _build_spatial_prompt(task_text, url, title, elements)
+            else:
+                user_prompt = build_subgoal_prompt("act", system) + "\n\n" + context + "\n\nTASK:\n" + task_text
+
             llm_out = await ollama_chat(system, user_prompt)
-            plan = _extract_json_array(llm_out)
+            print(f"{log_prefix} 🤖 Raw LLM Output: {llm_out}")
+
+            plan = []
+            try:
+                parsed = json.loads(llm_out.strip().replace("```json", "").replace("```", ""))
+                if isinstance(parsed, list):
+                    plan = parsed
+                elif isinstance(parsed, dict):
+                    if "plan" in parsed and isinstance(parsed["plan"], list):
+                        plan = parsed["plan"]
+                    elif "action" in parsed:
+                        plan = [parsed]
+                    elif "x" in parsed and "y" in parsed:
+                        plan = [{"action": "clickLocation", "x": parsed["x"], "y": parsed["y"]}]
+            except Exception:
+                coords = _extract_coords(llm_out)
+                if coords:
+                    plan = [{"action": "clickLocation", "x": coords["x"], "y": coords["y"]}]
+                else:
+                    try:
+                        plan = _extract_json_array(llm_out)
+                    except Exception:
+                        plan = []
 
             if record_enabled:
                 recorded_plan.extend(plan)
@@ -1738,9 +1850,30 @@ async def handle_client(ws: Any):
                 a = normalize_action(a)
                 try:
                     await exec_action(a)
+                    consecutive_failures = 0
                 except Exception as e:
+                    consecutive_failures += 1
                     failures += 1
                     last_errors.append(str(e))
+
+                    if consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
+                        print(f"{log_prefix} 🚨 [HITL] Consecutive failures ({consecutive_failures}) threshold reached. Requesting human intervention...")
+                        try:
+                            hitl_res = await send_command("request_human_intervention", {
+                                "reason": "consecutive_spatial_mapping_failures",
+                                "last_error": str(e)
+                            })
+                            print(f"{log_prefix} 🤝 [HITL] Received resolution payload: {hitl_res}")
+                            consecutive_failures = 0
+                            if isinstance(hitl_res, dict):
+                                click_info = hitl_res.get("click", {})
+                                voice_info = hitl_res.get("audio_transcription", "")
+                                task_text += f"\n\n[HUMAN INTERVENTION UPDATE]: The user clicked target element '{click_info.get('targetTag')}' (id='{click_info.get('targetId')}') at coordinates ({click_info.get('x')}, {click_info.get('y')}) and said: '{voice_info}'. Update spatial mapping and proceed."
+                                system = build_system_prompt(task_text, expect)
+                                break
+                        except Exception as hitl_err:
+                            print(f"{log_prefix} ⚠️ [HITL] Human intervention handler error: {hitl_err}")
+
                     if failures >= max_failures:
                         await send_json({
                             "type": "task-complete",
