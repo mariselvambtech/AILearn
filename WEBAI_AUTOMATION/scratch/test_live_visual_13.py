@@ -59,7 +59,7 @@ async def main():
         title_clicked = await page.locator("#btn-title.clicked").count() > 0
 
         assert alt_clicked and aria_clicked and title_clicked, "One or more locator types failed to trigger the click!"
-        print("\n✅ All 3 new locator types clicked successfully in a live browser session!")
+        print("\n[OK] All 3 new locator types clicked successfully in a live browser session!")
 
         await page.wait_for_timeout(1500)
         await browser.close()

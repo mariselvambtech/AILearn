@@ -109,83 +109,182 @@ class HITLPlugin:
             pass  # Already exposed
 
         js_inject_code = """() => {
-            if (document.getElementById('webai-hitl-observer-panel')) return;
-
-            const panel = document.createElement('div');
-            panel.id = 'webai-hitl-observer-panel';
-            panel.style.cssText = `
-                position: fixed;
-                bottom: 24px;
-                right: 24px;
-                z-index: 2147483647;
-                background: #1e1e2e;
-                color: #cdd6f4;
-                padding: 16px 20px;
-                border-radius: 12px;
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-                min-width: 260px;
-                max-width: 340px;
-                font-size: 13px;
-                border: 2px solid #89b4fa;
-                line-height: 1.4;
-                user-select: none;
-            `;
-
-            panel.innerHTML = `
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <span style="font-weight: 700; color: #89b4fa; font-size: 14px;">[HITL] Observer Mode Active</span>
-                    <span style="background: #a6e3a1; color: #11111b; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px;">LIVE</span>
-                </div>
-                <div style="color: #a6adc8;">
-                    Please interact with the page to complete your action (login, form fill, etc.).
-                </div>
-                <button id="webai-hitl-resume-btn" style="
-                    background: #89b4fa;
-                    color: #11111b;
-                    font-weight: 700;
+            if (!document.getElementById('webai-hitl-observer-panel')) {
+                const panel = document.createElement('div');
+                panel.id = 'webai-hitl-observer-panel';
+                panel.style.cssText = `
+                    position: fixed;
+                    bottom: 24px;
+                    right: 24px;
+                    z-index: 2147483647;
+                    background: #1e1e2e;
+                    color: #cdd6f4;
+                    padding: 16px 20px;
+                    border-radius: 12px;
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    min-width: 260px;
+                    max-width: 340px;
                     font-size: 13px;
-                    border: none;
-                    padding: 10px 14px;
-                    border-radius: 8px;
-                    cursor: pointer;
-                    text-align: center;
-                    transition: background 0.2s ease;
-                    margin-top: 4px;
-                ">Resume AI</button>
-            `;
+                    border: 2px solid #89b4fa;
+                    line-height: 1.4;
+                    user-select: none;
+                `;
 
-            document.body.appendChild(panel);
+                panel.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-weight: 700; color: #89b4fa; font-size: 14px;">[HITL] Observer Mode Active</span>
+                        <span style="background: #a6e3a1; color: #11111b; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px;">LIVE</span>
+                    </div>
+                    <div style="color: #a6adc8;">
+                        Please interact with the page to complete your action (login, form fill, etc.).
+                    </div>
+                    <button id="webai-hitl-resume-btn" style="
+                        background: #89b4fa;
+                        color: #11111b;
+                        font-weight: 700;
+                        font-size: 13px;
+                        border: none;
+                        padding: 10px 14px;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        text-align: center;
+                        transition: background 0.2s ease;
+                        margin-top: 4px;
+                    ">Resume AI</button>
+                `;
 
-            const btn = document.getElementById('webai-hitl-resume-btn');
-            if (btn) {
-                btn.addEventListener('mouseenter', () => { btn.style.background = '#b4befe'; });
-                btn.addEventListener('mouseleave', () => { btn.style.background = '#89b4fa'; });
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (window.resumeWebAI) {
-                        window.resumeWebAI({
-                            status: "resolved",
-                            action: "observer_mode_complete",
-                            x: e.clientX,
-                            y: e.clientY,
-                            targetTag: "RESUME_AI",
-                            targetId: "webai-hitl-resume-btn",
-                            textContent: "Resume AI",
-                            timestamp: Date.now()
-                        });
+                document.body.appendChild(panel);
+
+                const btn = document.getElementById('webai-hitl-resume-btn');
+                if (btn) {
+                    btn.addEventListener('mouseenter', () => { btn.style.background = '#b4befe'; });
+                    btn.addEventListener('mouseleave', () => { btn.style.background = '#89b4fa'; });
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (window.resumeWebAI) {
+                            window.resumeWebAI({
+                                status: "resolved",
+                                action: "observer_mode_complete",
+                                x: e.clientX,
+                                y: e.clientY,
+                                targetTag: "RESUME_AI",
+                                targetId: "webai-hitl-resume-btn",
+                                textContent: "Resume AI",
+                                telemetry: window.__webai_telemetry || [],
+                                timestamp: Date.now()
+                            });
+                        }
+                    });
+                }
+            }
+
+            // Initialize global telemetry store & handler
+            window.__webai_telemetry = window.__webai_telemetry || [];
+
+            if (!window.__webai_telemetry_handler) {
+                window.__webai_telemetry_handler = function(e) {
+                    // Ignore clicks originating inside the Observer Mode Panel
+                    if (e.target.closest('#webai-hitl-observer-panel')) return;
+
+                    const target = e.target;
+                    const tag = (target.tagName || '').toLowerCase();
+                    const isRootContainer = tag === 'body' || tag === 'html';
+
+                    const text = isRootContainer ? '' : (
+                        target.innerText ||
+                        target.getAttribute('aria-label') ||
+                        target.getAttribute('alt') ||
+                        target.getAttribute('placeholder') ||
+                        target.getAttribute('title') ||
+                        target.value ||
+                        ''
+                    ).trim();
+
+                    const isInteractiveTag = [
+                        'a', 'button', 'input', 'select', 'textarea', 'option', 'label', 'summary'
+                    ].includes(tag);
+
+                    const hasInteractiveRole = Boolean(
+                        target.closest('[role="button"], [role="link"], [role="option"], [role="checkbox"], [role="menuitem"], [role="tab"], [role="combobox"]') ||
+                        target.hasAttribute('onclick') ||
+                        target.getAttribute('role')
+                    );
+
+                    const hasText = text.length > 0;
+
+                    // SMART SEMANTIC FILTERING: Discard click if non-interactive tag AND no interactive role AND no text
+                    if (!isInteractiveTag && !hasInteractiveRole && !hasText) {
+                        return;
                     }
-                });
+
+                    let css = tag;
+                    if (target.id) {
+                        css += '#' + target.id;
+                    } else if (target.className && typeof target.className === 'string') {
+                        const classes = target.className.trim().split(/\\s+/).filter(Boolean).slice(0, 2).join('.');
+                        if (classes) css += '.' + classes;
+                    }
+
+                    const telemetryEvent = {
+                        tag: tag,
+                        text: text.substring(0, 100),
+                        css: css,
+                        timestamp: Date.now()
+                    };
+
+                    // --- SHIELD 2: DOM Mutation & URL State Verification ---
+                    const initialUrl = window.location.href;
+                    let stateChanged = false;
+
+                    let observer = null;
+                    try {
+                        observer = new MutationObserver(function(mutations) {
+                            for (const mutation of mutations) {
+                                // Ignore mutations occurring inside the Observer Panel itself
+                                if (mutation.target && mutation.target.closest && mutation.target.closest('#webai-hitl-observer-panel')) {
+                                    continue;
+                                }
+                                stateChanged = true;
+                                if (observer) observer.disconnect();
+                                break;
+                            }
+                        });
+                        observer.observe(document.body || document.documentElement, {
+                            childList: true,
+                            subtree: true,
+                            attributes: true,
+                            characterData: true
+                        });
+                    } catch (err) {
+                        stateChanged = true; // Fallback if observer cannot attach
+                    }
+
+                    setTimeout(function() {
+                        if (observer) observer.disconnect();
+                        const urlChanged = window.location.href !== initialUrl;
+
+                        if (stateChanged || urlChanged) {
+                            window.__webai_telemetry.push(telemetryEvent);
+                        }
+                    }, 800);
+                };
+
+                document.addEventListener('click', window.__webai_telemetry_handler, true);
             }
         }"""
 
         js_remove_code = """() => {
             const panel = document.getElementById('webai-hitl-observer-panel');
             if (panel) { panel.remove(); }
+            if (window.__webai_telemetry_handler) {
+                document.removeEventListener('click', window.__webai_telemetry_handler, true);
+                delete window.__webai_telemetry_handler;
+            }
         }"""
 
         # Helper to safely inject UI onto any page with URL check
