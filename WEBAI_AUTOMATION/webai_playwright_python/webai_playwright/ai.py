@@ -310,7 +310,7 @@ async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
             args.get("locators", []),
         )
 
-    if name == "request_human_intervention":
+    if name in ("request_human_intervention", "request_help"):
         from .plugins.hitl_plugin import HITLPlugin
         hitl_plugin = None
         if hasattr(active_page, "__recorder__") and hasattr(active_page.__recorder__, "plugins"):
@@ -323,6 +323,10 @@ async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
 
         if hasattr(active_page, "__recorder__"):
             active_page.__recorder__.emit("human_intervention_required", None, args)
+
+        msg = args.get("message") or args.get("reason") or "Human intervention required"
+        args["message"] = msg
+        args["reason"] = msg
 
         return await hitl_plugin.trigger_intervention(active_page, args)
 

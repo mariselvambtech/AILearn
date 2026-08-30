@@ -80,9 +80,9 @@ flowchart TB
 **Problem:** Single selectors break when websites change.
 **Solution:** Capture 10+ locators per element, try in priority order until one works.
 
-**Locator Priority Order — ⚠️ TWO DIFFERENT VERSIONS IN CODE:**
+**Locator Priority Order — Unified Client & Server (13 Strategies):**
 
-**Server-side** (`local_webai_server_guided.py` lines 1347-1351) — 13 locator types:
+Server-side (`local_webai_server_guided.py`) and Client-side (`fallback_helpers.py`) use the exact same 13-key 0-indexed priority dictionary:
 ```python
 LOCATOR_PRIORITY = {
     "test-id": 0, "id": 1, "name": 2, "href": 3,
@@ -91,16 +91,7 @@ LOCATOR_PRIORITY = {
 }
 ```
 
-**Client-side** (`fallback_helpers.py` lines 8-18) — only 9 locator types:
-```python
-LOCATOR_PRIORITY = {
-    "test-id": 1, "id": 2, "name": 3,
-    "placeholder": 4, "role": 5, "label": 6,
-    "href": 7, "css": 8, "xpath": 9
-}
-```
-
-> ⚠️ **KNOWN INCONSISTENCY:** The client is missing `alt`, `aria-label`, and `title` locator types, and has different priority ordering (e.g., `role` is 5 on client but 10 on server; `href` is 7 on client but 3 on server). The server may send locator types the client doesn't handle. See `progress.md` known issues.
+> ✅ **UNIFIED:** Both client (`fallback_helpers.py`) and server (`local_webai_server_guided.py`) strictly align on all 13 locator types including `alt`, `aria-label`, and `title`. Resolution handlers across `_create_locator_obj`, `type_with_fallback`, and `extract_with_fallback` fully support all 13 strategies.
 
 **Implementation:**
 - **Recording:** `recorder.py` → `getLocatorCandidates(el)` collects all available locators (up to 13 types)

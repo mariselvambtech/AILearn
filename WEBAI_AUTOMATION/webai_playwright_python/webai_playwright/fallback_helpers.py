@@ -9,19 +9,20 @@ UI changes without immediately throwing an error back to the AI Brain.
 
 from typing import List, Dict
 
-# Locator priority: prefer stable selectors
+# Locator priority: prefer stable selectors (unified 13 strategies matching server)
 LOCATOR_PRIORITY = {
-    "test-id": 1,
-    "id": 2,
-    "name": 3,
+    "test-id": 0,
+    "id": 1,
+    "name": 2,
+    "href": 3,
     "placeholder": 4,
-    "role": 5,
-    "label": 6,
-    "text": 7,
-    "title": 8,
-    "alt": 9,
-    "href": 10,
-    "css": 11,
+    "alt": 5,
+    "aria-label": 6,
+    "title": 7,
+    "label": 8,
+    "css": 9,
+    "role": 10,
+    "text": 11,
     "xpath": 12
 }
 
@@ -39,7 +40,7 @@ def _get_active_page(page):
 
 
 async def _create_locator_obj(target_page, loc: Dict):
-    """Create locator object supporting all semantic and frame targets."""
+    """Create locator object supporting all 13 locator strategy types across main page and frames."""
     loc_type = loc.get("type")
     loc_value = loc.get("value", "")
 
@@ -53,19 +54,21 @@ async def _create_locator_obj(target_page, loc: Dict):
         return target_page.locator(f"[href='{loc_value}']")
     elif loc_type == "placeholder":
         return target_page.get_by_placeholder(loc_value)
+    elif loc_type == "alt":
+        return target_page.get_by_alt_text(loc_value, exact=True).or_(target_page.locator(f"[alt='{loc_value}']"))
+    elif loc_type == "aria-label":
+        return target_page.get_by_label(loc_value, exact=True).or_(target_page.locator(f"[aria-label='{loc_value}']"))
+    elif loc_type == "title":
+        return target_page.get_by_title(loc_value, exact=True).or_(target_page.locator(f"[title='{loc_value}']"))
+    elif loc_type == "label":
+        return target_page.get_by_label(loc_value).or_(target_page.locator(f"label:has-text('{loc_value}')"))
+    elif loc_type == "css":
+        return target_page.locator(loc_value)
     elif loc_type == "role":
         role_name = loc.get("name")
         return target_page.get_by_role(loc_value, name=role_name) if role_name else target_page.get_by_role(loc_value)
-    elif loc_type == "label":
-        return target_page.get_by_label(loc_value).or_(target_page.locator(f"label:has-text('{loc_value}')"))
     elif loc_type == "text":
         return target_page.get_by_text(loc_value)
-    elif loc_type == "title":
-        return target_page.get_by_title(loc_value)
-    elif loc_type == "alt":
-        return target_page.get_by_alt_text(loc_value)
-    elif loc_type == "css":
-        return target_page.locator(loc_value)
     elif loc_type == "xpath":
         return target_page.locator(f"xpath={loc_value}")
     return None
@@ -212,36 +215,9 @@ async def type_with_fallback(page, locators: List[Dict], text: str) -> bool:
         try:
             print(f"  Attempt {i+1}/{len(sorted_locators)}: {loc_type}='{loc_value[:50]}'")
             
-            # Create locator (same as click_with_fallback)
-            if loc_type == "test-id":
-                loc_obj = target_page.get_by_test_id(loc_value)
-            elif loc_type == "id":
-                loc_obj = target_page.locator(f"#{loc_value}")
-            elif loc_type == "name":
-                loc_obj = target_page.locator(f"[name='{loc_value}']")
-            elif loc_type == "href":
-                loc_obj = target_page.locator(f"[href='{loc_value}']")
-            elif loc_type == "placeholder":
-                loc_obj = target_page.get_by_placeholder(loc_value)
-            elif loc_type == "role":
-                role_name = loc.get("name")
-                if role_name:
-                    loc_obj = target_page.get_by_role(loc_value, name=role_name)
-                else:
-                    loc_obj = target_page.get_by_role(loc_value)
-            elif loc_type == "label":
-                loc_obj = target_page.get_by_label(loc_value).or_(target_page.locator(f"label:has-text('{loc_value}')"))
-            elif loc_type == "text":
-                loc_obj = target_page.get_by_text(loc_value)
-            elif loc_type == "title":
-                loc_obj = target_page.get_by_title(loc_value)
-            elif loc_type == "alt":
-                loc_obj = target_page.get_by_alt_text(loc_value)
-            elif loc_type == "css":
-                loc_obj = target_page.locator(loc_value)
-            elif loc_type == "xpath":
-                loc_obj = target_page.locator(f"xpath={loc_value}")
-            else:
+            # Create locator (reuse _create_locator_obj for all 13 strategies)
+            loc_obj = await _create_locator_obj(target_page, loc)
+            if not loc_obj:
                 errors.append(f"{loc_type}: Unknown locator type")
                 continue
             
@@ -394,30 +370,9 @@ async def extract_with_fallback(page, locators: List[Dict], extract_type: str,
         try:
             print(f"  Attempt {i+1}/{len(sorted_locators)}: {loc_type}='{loc_value[:50]}'")
             
-            # Create locator (reuse logic from click_with_fallback)
-            if loc_type == "test-id":
-                loc_obj = page.get_by_test_id(loc_value)
-            elif loc_type == "id":
-                loc_obj = page.locator(f"#{loc_value}")
-            elif loc_type == "name":
-                loc_obj = page.locator(f"[name='{loc_value}']")
-            elif loc_type == "href":
-                loc_obj = page.locator(f"[href='{loc_value}']")
-            elif loc_type == "placeholder":
-                loc_obj = page.get_by_placeholder(loc_value)
-            elif loc_type == "role":
-                role_name = loc.get("name")
-                if role_name:
-                    loc_obj = page.get_by_role(loc_value, name=role_name)
-                else:
-                    loc_obj = page.get_by_role(loc_value)
-            elif loc_type == "label":
-                loc_obj = page.get_by_label(loc_value)
-            elif loc_type == "css":
-                loc_obj = page.locator(loc_value)
-            elif loc_type == "xpath":
-                loc_obj = page.locator(f"xpath={loc_value}")
-            else:
+            # Create locator (reuse _create_locator_obj for all 13 strategies)
+            loc_obj = await _create_locator_obj(page, loc)
+            if not loc_obj:
                 errors.append(f"{loc_type}: Unknown locator type")
                 continue
             

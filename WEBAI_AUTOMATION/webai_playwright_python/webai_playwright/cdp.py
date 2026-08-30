@@ -296,7 +296,19 @@ async def get_interactive_elements(page: Page) -> List[Dict[str, Any]]:
         const style = window.getComputedStyle(el);
         if (style.visibility === 'hidden' || style.display === 'none' || style.opacity === '0') continue;
         
+        let container = 'body';
+        let parent = el.parentElement;
+        while (parent && parent !== document.body) {
+          const pTag = parent.tagName.toLowerCase();
+          if (['header', 'nav', 'main', 'form', 'footer', 'aside'].includes(pTag)) {
+            container = pTag;
+            break;
+          }
+          parent = parent.parentElement;
+        }
+
         elements.push({
+          container: container,
           tag: el.tagName.toLowerCase(),
           type: el.type || '',
           role: el.getAttribute('role') || el.getAttribute('aria-role') || '',

@@ -7,6 +7,7 @@ integration, CDP accessibility tree extraction, and AI command execution.
 import base64
 import json
 import importlib
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -237,3 +238,34 @@ async def test_set_window_state_invalid():
     page = FakePageForWindow()
     with pytest.raises(ValueError):
         await pw.set_window_state(page, "banana")
+
+
+@pytest.mark.asyncio
+async def test_click_by_role_element_fallback(monkeypatch):
+    called = []
+    async def mock_click_by_text(page, text, exact=False):
+        called.append((text, exact))
+        return True
+    monkeypatch.setattr(pw, "click_by_text", mock_click_by_text)
+
+    mock_page = MagicMock()
+    ok = await pw.click_by_role(mock_page, "element", "Men's Shirts")
+    assert ok is True
+    assert called == [("Men's Shirts", False)]
+
+
+@pytest.mark.asyncio
+async def test_get_interactive_elements_container_tagging():
+    mock_page = MagicMock()
+    async def mock_eval(script):
+        return [
+            {"container": "main", "tag": "button", "text": "Add to Cart"},
+            {"container": "header", "tag": "a", "text": "Cart"}
+        ]
+    mock_page.evaluate = mock_eval
+
+    from webai_playwright import cdp
+    elems = await cdp.get_interactive_elements(mock_page)
+    assert len(elems) == 2
+    assert elems[0]["container"] == "main"
+    assert elems[1]["container"] == "header"

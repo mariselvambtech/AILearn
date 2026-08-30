@@ -1,8 +1,8 @@
 """
-TDVC Test Harness for HITLPlugin & Event Bus Interception (Phase 10).
+TDVC Test Harness for HITLPlugin & Event Bus Interception (Phase 10 & 11).
 Verifies:
 1. HITLPlugin attachment to WebRecorder Event Bus.
-2. Async trigger_intervention handling Playwright DOM click interception.
+2. Async trigger_intervention handling Continuous Observer Mode UI injection & Resume AI promise resolution.
 3. Mocked TTS cue and faster-whisper transcription payload packaging.
 4. Graceful error handling when audio/whisper drivers encounter exceptions.
 """
@@ -21,25 +21,26 @@ from webai_playwright.recorder import WebRecorder
 
 
 def create_mock_page(mock_click_data: Dict[str, Any] | None = None) -> MagicMock:
-    """Create a mocked Playwright Page object simulating DOM click interception."""
+    """Create a mocked Playwright Page object simulating Observer Mode resolution."""
     if mock_click_data is None:
         mock_click_data = {
+            "status": "resolved",
+            "action": "observer_mode_complete",
             "x": 150,
             "y": 300,
-            "targetTag": "BUTTON",
-            "targetId": "submit-btn",
-            "textContent": "Submit Order",
+            "targetTag": "RESUME_AI",
+            "targetId": "webai-hitl-resume-btn",
+            "textContent": "Resume AI",
         }
 
     page = MagicMock()
-    # Mock page.evaluate to simulate waiting for window.__hitl_click__ JS property
     page.evaluate = AsyncMock(return_value=mock_click_data)
     page.add_init_script = AsyncMock()
     return page
 
 
 def test_hitl_plugin_successful_resolution():
-    """Assert HITLPlugin packages mocked click coordinates and transcribed voice into payload."""
+    """Assert HITLPlugin packages observer resolution data and transcribed voice into payload."""
     from webai_playwright.plugins.hitl_plugin import HITLPlugin
 
     mock_page = create_mock_page()
@@ -47,22 +48,23 @@ def test_hitl_plugin_successful_resolution():
 
     # Mock pyttsx3 and faster-whisper calls inside plugin
     with patch.object(plugin, "_speak_tts_cue_async") as mock_tts, \
-         patch.object(plugin, "_transcribe_vocal_explanation", return_value="Mocked vocal explanation: click the submit order button") as mock_whisper:
+         patch.object(plugin, "_transcribe_vocal_explanation", return_value="Mocked vocal explanation: completed login form") as mock_whisper:
 
         resolution = asyncio.run(plugin.trigger_intervention(mock_page, {"reason": "consecutive_spatial_mapping_failures"}))
 
         # Assertions
         assert resolution is not None, "Resolution payload should not be None"
         assert resolution.get("status") == "resolved", f"Expected status 'resolved', got {resolution.get('status')}"
+        assert resolution.get("action") == "observer_mode_complete", f"Expected action 'observer_mode_complete', got {resolution.get('action')}"
         
         click_data = resolution.get("click", {})
         assert click_data.get("x") == 150, f"Expected x=150, got {click_data.get('x')}"
         assert click_data.get("y") == 300, f"Expected y=300, got {click_data.get('y')}"
-        assert click_data.get("targetId") == "submit-btn", f"Expected targetId='submit-btn', got {click_data.get('targetId')}"
-        assert click_data.get("targetTag") == "BUTTON", f"Expected targetTag='BUTTON', got {click_data.get('targetTag')}"
+        assert click_data.get("targetId") == "webai-hitl-resume-btn", f"Expected targetId='webai-hitl-resume-btn', got {click_data.get('targetId')}"
+        assert click_data.get("targetTag") == "RESUME_AI", f"Expected targetTag='RESUME_AI', got {click_data.get('targetTag')}"
         
         transcription = resolution.get("audio_transcription")
-        assert transcription == "Mocked vocal explanation: click the submit order button", f"Unexpected transcription: {transcription}"
+        assert transcription == "Mocked vocal explanation: completed login form", f"Unexpected transcription: {transcription}"
         
         mock_tts.assert_called_once()
         print(" [PASS] test_hitl_plugin_successful_resolution")
@@ -84,6 +86,7 @@ def test_hitl_plugin_graceful_degradation():
 
         assert resolution is not None
         assert resolution.get("status") == "resolved"
+        assert resolution.get("action") == "observer_mode_complete"
         assert resolution.get("click", {}).get("x") == 150
         # Transcription should gracefully degrade to fallback string or empty message
         transcription = resolution.get("audio_transcription", "")

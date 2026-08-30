@@ -42,6 +42,28 @@ async def _post_action_wait(page: Page, settle_ms: int = 250) -> None:
     await asyncio.sleep(max(0, settle_ms) / 1000.0)
 
 
+
+async def hydrate_page_dom(page: Page) -> None:
+    """
+    Scrolls down slightly and back up to trigger lazy-loaded React/Vue components 
+    (such as product variant selectors and checkout buttons) without losing scroll position.
+    """
+    try:
+        scroll_script = """
+        () => {
+            const initialY = window.scrollY;
+            window.scrollBy({ top: 350, behavior: 'instant' });
+            setTimeout(() => {
+                window.scrollTo({ top: initialY, behavior: 'instant' });
+            }, 150);
+        }
+        """
+        await page.evaluate(scroll_script)
+        await asyncio.sleep(0.2)
+    except Exception:
+        pass
+
+
 async def hover_cdp_element(page: Page, element_id: str) -> bool:
     coords = await cdp._get_content_quads(page, int(element_id))
     await page.mouse.move(coords["centerX"], coords["centerY"])
@@ -125,16 +147,21 @@ async def navigate(page: Page, url: str) -> bool:
 
     try:
         await page.goto(url, wait_until="domcontentloaded", timeout=DEFAULT_NAV_TIMEOUT_MS)
+        
         # Best-effort stabilization: networkidle may timeout on pages with long polling
         try:
-            await page.wait_for_load_state("networkidle", timeout=8000)
+            await page.wait_for_load_state("networkidle", timeout=4000)
         except Exception:
             pass
-        await asyncio.sleep(0.4)
+
+        # Trigger hydration scroll to expose dynamic buttons/variant selectors
+        await hydrate_page_dom(page)
+        await asyncio.sleep(0.3)
         return True
     except Exception as e:
         print(f"[WARN] Navigation failed for url='{url}': {e}")
         return False
+
 
 
 async def scroll_page_script(page: Page, target: ScrollType) -> Any:
@@ -228,9 +255,33 @@ async def get_element_at_location(page: Page, x: float, y: float) -> Optional[Di
     return await cdp.get_element_at_point(page, x, y)
 
 
+VALID_WINDOW_STATES = {"normal", "minimized", "maximized", "fullscreen"}
+
 async def set_window_state(page: Page, state: str) -> bool:
-    # state: normal|minimized|maximized|fullscreen
-    await cdp.set_window_state(page, state)
+    """
+    Sets the browser window state.
+    Allowed states: normal, minimized, maximized, fullscreen.
+    """
+    state_clean = (state or "").strip().lower()
+    if state_clean not in VALID_WINDOW_STATES:
+        raise ValueError(f"Invalid window state: '{state}'. Allowed states: {VALID_WINDOW_STATES}")
+
+    if hasattr(cdp, "set_window_state"):
+        await cdp.set_window_state(page, state_clean)
+        return True
+
+    # Fallback to direct CDP session
+    try:
+        session = await page.context.new_cdp_session(page)
+        win = await session.send("Browser.getWindowForTarget")
+        window_id = win.get("windowId")
+        if window_id is not None:
+            await session.send("Browser.setWindowBounds", {
+                "windowId": window_id,
+                "bounds": {"windowState": state_clean}
+            })
+    except Exception:
+        pass
     return True
 
 
@@ -239,23 +290,35 @@ async def get_interactive_elements(page: Page) -> List[Dict[str, Any]]:
 
 
 async def click_by_role(page: Page, role: str, name: str, exact: bool = False) -> bool:
-    loc = page.get_by_role(role, name=name, exact=exact)
+    clean_role = (role or "").strip().lower()
+    if clean_role == "element" or not clean_role:
+        print(f"[playwright_actions] Invalid ARIA role '{role}'. Falling back directly to click_by_text(name='{name}').")
+        return await click_by_text(page, name, exact=exact)
+
     try:
-        await loc.first.click(timeout=DEFAULT_ACTION_TIMEOUT_MS)
-    except Exception as e:
-        err_msg = str(e).lower()
-        if any(term in err_msg for term in ["intercepts pointer events", "is receiving the click", "overlay", "covered"]):
-            print(f"[playwright_actions] Pointer interception detected for click_by_role('{role}', '{name}'). Pressing Escape and retrying with force=True...")
-            try:
-                await page.keyboard.press("Escape")
-                await asyncio.sleep(0.3)
-            except Exception:
-                pass
-            await loc.first.click(timeout=DEFAULT_ACTION_TIMEOUT_MS, force=True)
-        else:
-            raise
-    await _post_action_wait(page)
-    return True
+        loc = page.get_by_role(role, name=name, exact=exact)
+        try:
+            await loc.first.click(timeout=DEFAULT_ACTION_TIMEOUT_MS)
+        except Exception as e:
+            err_msg = str(e).lower()
+            if any(term in err_msg for term in ["intercepts pointer events", "is receiving the click", "overlay", "covered"]):
+                print(f"[playwright_actions] Pointer interception detected for click_by_role('{role}', '{name}'). Pressing Escape and retrying with force=True...")
+                try:
+                    await page.keyboard.press("Escape")
+                    await asyncio.sleep(0.3)
+                except Exception:
+                    pass
+                await loc.first.click(timeout=DEFAULT_ACTION_TIMEOUT_MS, force=True)
+            else:
+                raise
+        await _post_action_wait(page)
+        return True
+    except Exception as exc:
+        print(f"[playwright_actions] click_by_role('{role}', '{name}') failed: {exc}. Retrying fallback click_by_text(name='{name}')...")
+        try:
+            return await click_by_text(page, name, exact=False)
+        except Exception:
+            raise exc
 
 
 async def click_by_text(page: Page, text: str, exact: bool = False) -> bool:
@@ -467,21 +530,52 @@ async def get_snapshot(page: Page) -> Dict[str, Any]:
         "pixelRatio": <float>,
         "viewportWidth": <int>,
         "viewportHeight": <int>,
+        "layoutMetrics": <layout_metrics>,
       }
     """
     # DOM snapshot
-    dom = await get_dom_snapshot(page)
+    dom_payload = await get_dom_snapshot(page)
+    if isinstance(dom_payload, dict):
+        dom_string = dom_payload.get("dom") if "dom" in dom_payload else json.dumps(dom_payload)
+    else:
+        dom_string = str(dom_payload or "")
 
     # Smaller screenshot to avoid websocket payload bloat
     screenshot_bytes = await page.screenshot(type="jpeg", quality=45, scale="css")
+    if not isinstance(screenshot_bytes, (bytes, bytearray)):
+        screenshot_bytes = str(screenshot_bytes or "").encode("utf-8")
 
-    # Viewport info (your file already has get_viewport_metadata in most versions)
-    vp = await get_viewport_metadata(page)
+    # Layout metrics (if supported by cdp)
+    layout_metrics = None
+    if hasattr(cdp, "get_layout_metrics"):
+        try:
+            layout_metrics = await cdp.get_layout_metrics(page)
+        except Exception:
+            pass
 
-    return {
-        "dom": dom,
+    # Viewport info via page evaluation
+    vp = {}
+    try:
+        vp_eval = await page.evaluate("() => ({ viewportWidth: window.innerWidth, viewportHeight: window.innerHeight, pixelRatio: window.devicePixelRatio })")
+        if isinstance(vp_eval, dict):
+            vp.update(vp_eval)
+    except Exception:
+        pass
+
+    if layout_metrics and isinstance(layout_metrics, dict):
+        cs = layout_metrics.get("contentSize") or layout_metrics.get("cssContentSize") or {}
+        if cs.get("width") and not vp.get("viewportWidth"):
+            vp["viewportWidth"] = cs.get("width")
+        if cs.get("height") and not vp.get("viewportHeight"):
+            vp["viewportHeight"] = cs.get("height")
+
+    res = {
+        "dom": dom_string,
         "screenshot": base64.b64encode(screenshot_bytes).decode("utf-8"),
         "pixelRatio": vp.get("pixelRatio", 1),
         "viewportWidth": vp.get("viewportWidth", 0),
         "viewportHeight": vp.get("viewportHeight", 0),
     }
+    if layout_metrics is not None:
+        res["layoutMetrics"] = layout_metrics
+    return res
