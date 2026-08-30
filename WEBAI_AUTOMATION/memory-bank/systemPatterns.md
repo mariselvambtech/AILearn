@@ -324,6 +324,30 @@ Playback:
   → If save_options: save to Excel/CSV/TXT via pandas
 ```
 
+### Path 5: Continuous Observer Mode & JS Telemetry Injection
+```
+Observer Mode Trigger:
+  AI Server detects consecutive_action_failures >= 2 or explicit human request
+  → Emits "human_intervention_required" event
+  → HITLPlugin._on_human_intervention_required()
+  → Spawns pyttsx3 daemon TTS audio cue
+  → Injects floating Observer UI panel (#webai-hitl-observer-panel) across all context tabs
+  → Injects capture-phase ('click', handler, true) JS Telemetry Listener
+
+User Interaction & Smart Filtering (Shield 1 & Shield 2):
+  User clicks elements on page
+  → JS listener intercepts event during capture phase
+  → SHIELD 1: Evaluates tag, text (excluding body/html root containers), aria-label/alt/title/placeholder, and interactive roles. Filters out dead/empty element clicks.
+  → SHIELD 2: Attaches a MutationObserver on document.body for 800ms post-click (excluding observer panel mutations). Verifies that a DOM mutation or URL navigation occurs. Discards unresponsive/dead buttons.
+  → Pushes verified events to window.__webai_telemetry
+
+Resume & Telemetry Transport:
+  User clicks "Resume AI" button (#webai-hitl-resume-btn)
+  → Calls window.resumeWebAI({ ..., telemetry: window.__webai_telemetry })
+  → HITLPlugin removes UI panel and detaches click listener across all tabs
+  → Returns resolution payload with captured telemetry to caller
+```
+
 ## Database Schema
 
 ```mermaid
