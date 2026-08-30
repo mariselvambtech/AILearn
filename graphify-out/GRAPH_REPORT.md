@@ -1,16 +1,16 @@
 # Graph Report - AILearn  (2026-08-30)
 
 ## Corpus Check
-- 262 files · ~259,561 words
+- 266 files · ~262,067 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1222 nodes · 1910 edges · 81 communities (71 shown, 10 thin omitted)
+- 1236 nodes · 1923 edges · 83 communities (73 shown, 10 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 29 edges (avg confidence: 0.67)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `60be88c6`
+- Built from commit: `bcc1cc85`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -103,10 +103,10 @@
 4. `Step` - 23 edges
 5. `get_cdp()` - 21 edges
 6. `Recent Work Completed` - 20 edges
-7. `click()` - 19 edges
-8. `Decision Log — WebAI Platform` - 19 edges
-9. `_post_action_wait()` - 17 edges
-10. `HITLPlugin` - 17 edges
+7. `HITLPlugin` - 19 edges
+8. `click()` - 19 edges
+9. `Decision Log — WebAI Platform` - 19 edges
+10. `_post_action_wait()` - 17 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `test_click_by_role_element_fallback()` --calls--> `click_by_role()`  [EXTRACTED]
@@ -117,13 +117,13 @@
   WEBAI_AUTOMATION/scratch/test_run_hybrid.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/ai.py
 - `test_action_listener_loop_mock()` --calls--> `_execute_command()`  [INFERRED]
   WEBAI_AUTOMATION/scratch/test_run_hybrid.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/ai.py
-- `test_hitl_plugin_successful_resolution()` --calls--> `HITLPlugin`  [INFERRED]
+- `test_hitl_plugin_event_bus_attach()` --calls--> `HITLPlugin`  [INFERRED]
   WEBAI_AUTOMATION/scratch/test_hitl_plugin.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/plugins/hitl_plugin.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (81 total, 10 thin omitted)
+## Communities (83 total, 10 thin omitted)
 
 ### Community 0 - "Recent Work Completed"
 Cohesion: 0.05
@@ -131,15 +131,15 @@ Nodes (40): 1. Conditional Branching (Future Enhancement), 2. Variable Storage f
 
 ### Community 1 - "Active Context — WebAI Platform"
 Cohesion: 0.06
-Nodes (31): Active Context  WebAI Platform, Active Context  WebAI Platform, Active Context  WebAI Platform, Client & Server Multi-Locator Priority Unification (13 Strategies) ✅, Current Session (2026-07-29), Current Session (2026-07-29), Current Session (2026-08-30), Dashboard Enhancements & Performance Optimization (+23 more)
+Nodes (32): Active Context  WebAI Platform, Active Context  WebAI Platform, Active Context  WebAI Platform, Client & Server Multi-Locator Priority Unification (13 Strategies) ✅, Current Session (2026-07-29), Current Session (2026-07-29), Current Session (2026-08-30), Dashboard Enhancements & Performance Optimization (+24 more)
 
 ### Community 2 - "Open Questions / Decisions Pending"
 Cohesion: 0.17
 Nodes (12): DataExtractionPlugin, Any, Data Extraction Plugin for WebAI Playwright Recorder.  Handles data extraction U, Plugin that listens to data extraction events ('extract' and 'extract_table'), Handle standard text/attribute extraction event., Handle table extraction event., Save single extraction to files immediately., Save extraction to Excel file. (+4 more)
 
 ### Community 3 - "Immediate Next Steps (If User Requests)"
-Cohesion: 0.09
-Nodes (30): Exception, main(), Test suite for verifying all 13 locator strategies in fallback_helpers.py.  This, Verify _create_locator_obj constructs valid locators for all 13 types., Verify click_with_fallback works with all 13 locator types including alt, aria-l, Verify type_with_fallback works with input locators including aria-label, title,, Verify extract_with_fallback extracts text/attribute for aria-label, alt, title,, Verify LOCATOR_PRIORITY is exact 13-key 0-indexed dict matching server. (+22 more)
+Cohesion: 0.06
+Nodes (43): Exception, Test suite for verifying all 13 locator strategies in fallback_helpers.py.  This, Verify _create_locator_obj constructs valid locators for all 13 types., Verify click_with_fallback works with all 13 locator types including alt, aria-l, Verify type_with_fallback works with input locators including aria-label, title,, Verify extract_with_fallback extracts text/attribute for aria-label, alt, title,, Verify LOCATOR_PRIORITY is exact 13-key 0-indexed dict matching server., test_click_with_fallback_all_13_types() (+35 more)
 
 ### Community 4 - "Current Session (2026-07-18)"
 Cohesion: 0.18
@@ -175,7 +175,7 @@ Nodes (35): 1. Plan Caching Disabled, 2. No Explicit Navigation Validation, 3. V
 
 ### Community 17 - "Design Patterns"
 Cohesion: 0.07
-Nodes (27): 1. Browser Robot ↔ AI Brain (WebSocket), 2. Browser Robot ↔ API Server (HTTP REST), 3. AI Brain ↔ API Server (HTTP REST), 4. AI Brain ↔ Ollama (HTTP), Component Relationships, Critical Implementation Paths, Database Schema, Design Patterns (+19 more)
+Nodes (28): 1. Browser Robot ↔ AI Brain (WebSocket), 2. Browser Robot ↔ API Server (HTTP REST), 3. AI Brain ↔ API Server (HTTP REST), 4. AI Brain ↔ Ollama (HTTP), Component Relationships, Critical Implementation Paths, Database Schema, Design Patterns (+20 more)
 
 ### Community 18 - "graphify_to_mermaid.py"
 Cohesion: 0.27
@@ -330,8 +330,8 @@ Cohesion: 0.33
 Nodes (6): Alternatives Considered, Context, Decision, Decision 3: Local Ollama vs Cloud LLM API, Impact, Rationale
 
 ### Community 56 - "build_task_text"
-Cohesion: 0.06
-Nodes (78): ElementHandle, Locator, ScrollType, test_execute_command_fallback_single_page(), test_execute_command_uses_active_page_from_context(), ai(), ai_sync(), ClientError (+70 more)
+Cohesion: 0.08
+Nodes (64): ElementHandle, Locator, ScrollType, test_execute_command_fallback_single_page(), test_execute_command_uses_active_page_from_context(), _execute_command(), Execute a single AI command against the active Playwright page.      Dynamical, cdp_element_to_playwright_handle() (+56 more)
 
 ### Community 58 - "Decision 18: Probe-Tolerant WebSocket Server (process_request + logging filter)"
 Cohesion: 0.40
@@ -354,8 +354,8 @@ Cohesion: 0.12
 Nodes (11): Attach plugin to WebRecorder instance by subscribing to event bus., Any, Page, Event Bus Core Engine for Browser Recording.     Intercepts raw CDP user interac, Start recording session and broadcast recording_started event to plugins., Register and attach a plugin to this recorder event bus., Subscribe a listener callback to a specific event or '*' for all events., Unsubscribe a listener callback. (+3 more)
 
 ### Community 65 - "HITLPlugin"
-Cohesion: 0.08
-Nodes (24): Step, create_mock_page(), Any, TDVC Test Harness for HITLPlugin & Event Bus Interception (Phase 10 & 11). Verif, Create a mocked Playwright Page object simulating Observer Mode resolution., Assert HITLPlugin packages observer resolution data and transcribed voice into p, Assert HITLPlugin handles hardware/audio transcription failures gracefully witho, Assert HITLPlugin registers correctly with WebRecorder Event Bus. (+16 more)
+Cohesion: 0.06
+Nodes (30): Any, Page, Step, create_mock_page(), Any, TDVC Test Harness for HITLPlugin & Event Bus Interception (Phase 10 & 11). Verif, Create a mocked Playwright Page object simulating Observer Mode resolution., Assert HITLPlugin packages observer resolution data and transcribed voice into p (+22 more)
 
 ### Community 66 - "Step"
 Cohesion: 0.11
@@ -406,24 +406,24 @@ Cohesion: 0.40
 Nodes (5): _compact_context(), jdump(), ollama_chat(), Calls local Ollama chat API.     Default endpoint: http://localhost:11434/api/c, Compact “UI inventory” to reduce hallucinations.
 
 ## Knowledge Gaps
-- **246 isolated node(s):** `Client & Server Multi-Locator Priority Unification (13 Strategies) ✅`, `Phase 11: Continuous Observer Mode & Advanced HITL Control ✅`, `Phase 10: Human-in-the-Loop (HITL) Interactive Learning & Execution Fixes ✅`, `Hybrid E2E Test Orchestrator (`run_hybrid.py`) & Handoff Fix ✅`, `Phase 8: Autonomous Continuation & Spatial Graph Routing ✅` (+241 more)
+- **248 isolated node(s):** `Phase 12: JS Telemetry Injector (Shield 1: Smart Filtering & Shield 2: Mutation Verification) ✅`, `Client & Server Multi-Locator Priority Unification (13 Strategies) ✅`, `Phase 11: Continuous Observer Mode & Advanced HITL Control ✅`, `Phase 10: Human-in-the-Loop (HITL) Interactive Learning & Execution Fixes ✅`, `Hybrid E2E Test Orchestrator (`run_hybrid.py`) & Handoff Fix ✅` (+243 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **10 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `HITLPlugin` connect `HITLPlugin` to `build_task_text`, `recorder.py`, `Page`?**
-  _High betweenness centrality (0.043) - this node is a cross-community bridge._
+- **Why does `HITLPlugin` connect `HITLPlugin` to `build_task_text`, `Immediate Next Steps (If User Requests)`, `recorder.py`, `Page`?**
+  _High betweenness centrality (0.060) - this node is a cross-community bridge._
 - **Why does `_execute_command()` connect `build_task_text` to `.json`, `HITLPlugin`, `Immediate Next Steps (If User Requests)`, `ai.py`, `TestImportValidation`?**
-  _High betweenness centrality (0.040) - this node is a cross-community bridge._
-- **Why does `handle_client()` connect `handle_client` to `ai.py`, `Any`, `_compact_context`, `fallback_helpers.py`, `test_phase8_autonomous_handoff.py`, `_compact_context`?**
-  _High betweenness centrality (0.034) - this node is a cross-community bridge._
-- **What connects `Client & Server Multi-Locator Priority Unification (13 Strategies) ✅`, `Phase 11: Continuous Observer Mode & Advanced HITL Control ✅`, `Phase 10: Human-in-the-Loop (HITL) Interactive Learning & Execution Fixes ✅` to the rest of the system?**
-  _246 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _High betweenness centrality (0.056) - this node is a cross-community bridge._
+- **What connects `Phase 12: JS Telemetry Injector (Shield 1: Smart Filtering & Shield 2: Mutation Verification) ✅`, `Client & Server Multi-Locator Priority Unification (13 Strategies) ✅`, `Phase 11: Continuous Observer Mode & Advanced HITL Control ✅` to the rest of the system?**
+  _248 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Recent Work Completed` be split into smaller, more focused modules?**
   _Cohesion score 0.05 - nodes in this community are weakly interconnected._
 - **Should `Active Context — WebAI Platform` be split into smaller, more focused modules?**
-  _Cohesion score 0.0625 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06060606060606061 - nodes in this community are weakly interconnected._
 - **Should `Immediate Next Steps (If User Requests)` be split into smaller, more focused modules?**
-  _Cohesion score 0.08712121212121213 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.060408163265306125 - nodes in this community are weakly interconnected._
+- **Should `fallback_helpers.py` be split into smaller, more focused modules?**
+  _Cohesion score 0.13970588235294118 - nodes in this community are weakly interconnected._
