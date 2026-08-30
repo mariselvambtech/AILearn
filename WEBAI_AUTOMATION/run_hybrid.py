@@ -145,8 +145,14 @@ async def action_listener_loop(page: Any, task_id: str = "handoff_session") -> N
 
 
 async def main() -> None:
-    # Requirement 1: Hardcoded default prompt
-    prompt = sys.argv[1] if len(sys.argv) > 1 else "Buy a red shirt on Flipkart"
+    if len(sys.argv) > 1:
+        prompt = sys.argv[1]
+    else:
+        try:
+            user_input = input("Enter task (default: Buy a red shirt on Flipkart): ").strip()
+            prompt = user_input if user_input else "Buy a red shirt on Flipkart"
+        except (EOFError, KeyboardInterrupt):
+            prompt = "Buy a red shirt on Flipkart"
 
     print("\n==================================================")
     print(" WebAI Hybrid E2E Test Orchestrator")

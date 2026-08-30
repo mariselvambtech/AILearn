@@ -285,7 +285,13 @@ BASE_PROMPT = (
     "Do NOT guess selectors. Do NOT invent elements.\n"
     "Do NOT output done until you have taken actions and verified success.\n"
     "Never use wait_text for URL verification. Use verify_url for URL checks.\n"
-    "Do not attempt to click 'Login' or 'Sign in' unless explicitly instructed. Search for and select products as a guest.\n"
+    "STRICT RULE: NEVER click 'Sign in', 'Login', or attempt account authorization unless the user prompt explicitly contains the word 'login'. If product choices or variants exist, use the 'request_help' action to ask the user which one they prefer.\n"
+    "STRICT ARIA RULE: In clickByRole, 'role' MUST be a standard role like 'button' or 'link'. NEVER output 'role': 'element'.\n"
+    "UNIVERSAL WEB SEMANTICS:\n"
+    "1. VERBS VS. NOUNS: Navigation links in headers/nav (e.g., 'Cart', 'Menu', 'Login') are NOUNS used for viewing pages. Call-to-action buttons (e.g., 'Add to Cart', 'Buy Now', 'Submit') are VERBS used to execute actions.\n"
+    "2. CONTEXT AWARENESS: If the user's intent is to perform an action on a specific item (e.g., purchasing, submitting), prioritize elements located in the 'main' or 'form' containers over elements in 'header' or 'nav'.\n"
+    "3. EXACT MATCHING: Do not click a header link just because it shares a word with your goal. If your goal is to add an item to a cart, look for the exact verb phrase 'Add to Cart' in the main content area.\n"
+    "If you cannot decide which item to pick, or if you encounter a login, CAPTCHA, or verification screen, output the request_help action with a clear, conversational message asking the human for help.\n"
 )
 
 SUBGOALS = ("navigate", "act", "verify")
@@ -419,6 +425,7 @@ Allowed actions (use targets; do NOT use CSS selectors):
 14) {"action":"done","summary":"..."}
 15) {"action":"verify_url","contains":"contact-us"}
 16) {"action":"verify_element","target":{"by":"text","text":"Get in touch","exact":false},"timeout_ms":10000}
+17) {"action":"request_help","message":"Conversational question asking the human for assistance"}
 
 """.strip()
 
@@ -427,7 +434,9 @@ def _compact_context(url: str, title: str, elements: List[Dict[str, Any]]) -> st
     """Compact “UI inventory” to reduce hallucinations."""
     lines = [f"URL: {url}", f"TITLE: {title}", "VISIBLE INTERACTIVE ELEMENTS (partial):"]
     for i, el in enumerate((elements or [])[:60]):
+        container = (el.get("container") or "body").upper()
         desc = {
+            "container": container,
             "tag": el.get("tag", ""),
             "role": el.get("role", ""),
             "type": el.get("type", ""),
@@ -436,7 +445,7 @@ def _compact_context(url: str, title: str, elements: List[Dict[str, Any]]) -> st
             "ariaLabel": el.get("ariaLabel", ""),
             "text": el.get("text", ""),
         }
-        lines.append(f"{i+1}. {jdump(desc)}")
+        lines.append(f"{i+1}. [{container}] {jdump(desc)}")
     return "\n".join(lines)
 
 
@@ -1514,6 +1523,14 @@ async def handle_client(ws: Any):
                 print(f"{log_prefix} ⚠️ Invalid wait value: {seconds}")
                 return
 
+        if kind == "request_help":
+            msg = act.get("message") or act.get("reason") or "Human assistance requested"
+            print(f"\n{log_prefix} 🆘 [request_help] Requesting human assistance: '{msg}'")
+            hitl_res = await send_command("request_help", {"message": msg, "reason": msg})
+            print(f"{log_prefix} 🤝 [HITL] Received resolution payload: {hitl_res}")
+            did_any_action = True
+            return hitl_res
+
         if kind == "done":
             # Only accept done if we actually executed something.
             if not did_any_action:
@@ -1768,12 +1785,22 @@ async def handle_client(ws: Any):
                                     })
                                     print(f"{log_prefix} 🤝 [HITL] Received resolution payload: {hitl_res}")
                                     consecutive_action_failures = 0
+                                   
                                     if isinstance(hitl_res, dict):
                                         click_info = hitl_res.get("click", {})
                                         voice_info = hitl_res.get("audio_transcription", "")
-                                        task_text += f"\n\n[HUMAN INTERVENTION UPDATE]: The user clicked target element '{click_info.get('targetTag')}' (id='{click_info.get('targetId')}') at coordinates ({click_info.get('x')}, {click_info.get('y')}) and said: '{voice_info}'. Update spatial mapping and proceed."
+                                        
+                                        # --- START HITL STATE & PROMPT RESET FIX ---
+                                        task_text += (
+                                            f"\n\n[HUMAN INTERVENTION COMPLETE]: The user successfully resolved the blocker by acting on '{click_info.get('targetTag')}'. "
+                                            f"(Voice instruction: '{voice_info}'). "
+                                            f"\nCRITICAL RESTRICTION: The page state has changed. DO NOT repeat the user's action or coordinates. "
+                                            f"You must evaluate the new visible DOM elements below and plan the NEXT logical step."
+                                        )
                                         system = build_system_prompt(task_text, expect)
-                                        break
+                                        break # This break safely flushes the remaining stale actions in the current plan queue
+                                        # --- END HITL FIX ---
+
                                 except Exception as hitl_err:
                                     print(f"{log_prefix} ⚠️ [HITL] Human intervention handler error: {hitl_err}")
 
@@ -1889,8 +1916,26 @@ async def handle_client(ws: Any):
             for a in plan[:max_actions_per_round]:
                 a = normalize_action(a)
                 try:
-                    await exec_action(a)
+                    res = await exec_action(a)
                     consecutive_action_failures = 0
+
+                    if isinstance(res, dict) and (res.get("action") == "observer_mode_complete" or res.get("status") == "resolved" or res.get("click", {}).get("action") == "observer_mode_complete"):
+                        transcription = (res.get("audio_transcription") or "").strip()
+                        if not transcription or transcription.startswith("User completed actions"):
+                            transcription = "None"
+
+                        print(f"\n{log_prefix} 🧹 [Post-HITL Memory Wipe] Resetting LLM context and wiping action history.")
+                        override_prompt = (
+                            f"\n\nSYSTEM OVERRIDE: The human user has manually intervened, navigated the browser, and handed control back to you. "
+                            f"Their spoken instructions during handoff were: '{transcription}'. "
+                            f"You are now on a new page. DO NOT repeat past actions or attempt to navigate back. "
+                            f"Analyze the CURRENT DOM below and take the next logical step to complete the original task."
+                        )
+                        task_text = raw_task_text + override_prompt
+                        system = build_system_prompt(task_text, expect)
+                        failures = 0
+                        last_errors = []
+                        break
                 except Exception as e:
                     consecutive_action_failures += 1
                     failures += 1
@@ -1905,12 +1950,24 @@ async def handle_client(ws: Any):
                             })
                             print(f"{log_prefix} 🤝 [HITL] Received resolution payload: {hitl_res}")
                             consecutive_action_failures = 0
+
                             if isinstance(hitl_res, dict):
-                                click_info = hitl_res.get("click", {})
-                                voice_info = hitl_res.get("audio_transcription", "")
-                                task_text += f"\n\n[HUMAN INTERVENTION UPDATE]: The user clicked target element '{click_info.get('targetTag')}' (id='{click_info.get('targetId')}') at coordinates ({click_info.get('x')}, {click_info.get('y')}) and said: '{voice_info}'. Update spatial mapping and proceed."
+                                transcription = (hitl_res.get("audio_transcription") or "").strip()
+                                if not transcription or transcription.startswith("User completed actions"):
+                                    transcription = "None"
+
+                                print(f"\n{log_prefix} 🧹 [Post-HITL Memory Wipe] Resetting LLM context and wiping action history.")
+                                override_prompt = (
+                                    f"\n\nSYSTEM OVERRIDE: The human user has manually intervened, navigated the browser, and handed control back to you. "
+                                    f"Their spoken instructions during handoff were: '{transcription}'. "
+                                    f"You are now on a new page. DO NOT repeat past actions or attempt to navigate back. "
+                                    f"Analyze the CURRENT DOM below and take the next logical step to complete the original task."
+                                )
+                                task_text = raw_task_text + override_prompt
                                 system = build_system_prompt(task_text, expect)
-                                break
+                                failures = 0
+                                last_errors = []
+                                break # Safely flushes remaining stale actions in current plan
                         except Exception as hitl_err:
                             print(f"{log_prefix} ⚠️ [HITL] Human intervention handler error: {hitl_err}")
 
