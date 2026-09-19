@@ -1,4 +1,1 @@
-Open https://www.wikipedia.org/
-Type "tamilnadu" into "search"
-Click "Search"
-Finish with done only after verification.
+Go to amazon.in, search for red shirts, and pause to ask me which one to click.

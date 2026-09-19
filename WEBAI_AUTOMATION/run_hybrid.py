@@ -38,45 +38,7 @@ from webai_playwright.ai import _execute_command, _send_command_response
 from webai_playwright.websocket_client import listen
 
 # Default local skill recipe fallback for Flipkart Search
-DEFAULT_SKILLS: List[Dict[str, Any]] = [
-    {
-        "skill_name": "Flipkart Search",
-        "description": "Searches for clothing, shirts, and products on Flipkart with color and category filters.",
-        "trigger_phrases": [
-            "Search for products on Flipkart",
-            "Flipkart item search",
-            "Find shirts on Flipkart",
-            "Search shirts on Flipkart"
-        ],
-        "parameters_schema": {
-            "search_query": {
-                "type": "string",
-                "description": "Product search item name",
-                "default": "shirt"
-            },
-            "color_filter": {
-                "type": "string",
-                "description": "Color filter for the product",
-                "default": "red"
-            }
-        },
-        "parameterized_steps": [
-            {"action": "goto", "url": "https://www.flipkart.com"},
-            {
-                "action": "type",
-                "name": "search_input",
-                "value": "{{color_filter}} {{search_query}}",
-                "locators": [
-                    {"type": "css", "value": "input[name='q']"},
-                    {"type": "css", "value": "input[type='text']"},
-                    {"type": "placeholder", "value": "Search for Products, Brands and More"}
-                ]
-            },
-            {"action": "press_key", "key": "Enter"},
-            {"action": "wait", "value": "3"}
-        ]
-    }
-]
+DEFAULT_SKILLS: List[Dict[str, Any]] = []
 
 
 def load_local_skills() -> List[Dict[str, Any]]:
