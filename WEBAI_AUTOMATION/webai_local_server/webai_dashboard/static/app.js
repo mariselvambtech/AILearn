@@ -15,6 +15,7 @@ const state = {
     apiKey: localStorage.getItem("webai_api_key") || null,
     username: localStorage.getItem("webai_username") || null,
     automations: [],
+    skills: [],                // all loaded synthesized skills
     pendingRunId: null,        // automation id awaiting run confirmation
     pendingDeleteId: null,    // automation id awaiting delete confirmation
     executionsTimer: null,     // polling timer for executions table
@@ -191,26 +192,70 @@ function renderAutomations() {
         grid.innerHTML = `<div class="empty-state">No automations yet. Record one, then use “Import Recording”.</div>`;
         return;
     }
-    grid.innerHTML = state.automations.map((a) => `
-    <div class="card">
-      <div class="card-title">${escapeHtml(a.name)}</div>
-      <div class="card-desc">${escapeHtml(a.description || "No description")}</div>
-      <div class="card-meta">
-        <span class="card-id">ID ${a.id}</span>
-        ${a.base_url ? `<span>${escapeHtml(safeHostname(a.base_url))}</span>` : ""}
+    grid.innerHTML = state.automations.map((a) => {
+        const matchingSkills = (state.skills || []).filter((s) => s.source_automation_id === a.id);
+        const nestedSkillsHtml = matchingSkills.length ? `
+          <div class="nested-skills-container">
+            <div class="nested-skills-header">
+              <span>⚡ Synthesized Skills</span>
+              <span class="badge badge-accent">${matchingSkills.length}</span>
+            </div>
+            <div class="nested-skills-list">
+              ${matchingSkills.map((s) => {
+                const params = s.parameters_schema || {};
+                const paramFields = Object.keys(params).map((pKey) => {
+                    const pInfo = params[pKey] || {};
+                    const desc = typeof pInfo === 'object' ? (pInfo.description || pKey) : pKey;
+                    const defVal = typeof pInfo === 'object' ? (pInfo.default || '') : pInfo;
+                    return `
+                      <div class="form-group" style="margin-top: 4px;">
+                        <label style="font-size: 0.75rem; color: var(--text-muted);">${escapeHtml(desc)}</label>
+                        <input type="text" class="input skill-param-input" data-skill-id="${escapeHtml(s.id)}" data-param-key="${escapeHtml(pKey)}" value="${escapeHtml(defVal)}" placeholder="${escapeHtml(defVal)}" style="padding: 4px 8px; font-size: 0.8rem;" />
+                      </div>
+                    `;
+                }).join("");
+                return `
+                  <div class="nested-skill-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <strong style="font-size: 0.88rem; color: var(--text);">⚡ ${escapeHtml(s.skill_name)}</strong>
+                      <span class="badge" style="font-size: 0.7rem;">${s.step_count} steps</span>
+                    </div>
+                    ${s.description ? `<p style="font-size: 0.78rem; color: var(--text-muted); margin: 4px 0;">${escapeHtml(s.description)}</p>` : ""}
+                    <form onsubmit="handleSkillExecute(event, '${escapeHtml(s.id)}', '${escapeHtml(s.filename)}')">
+                      ${paramFields}
+                      <button type="submit" class="btn btn-accent btn-sm" style="width: 100%; margin-top: 6px; padding: 4px 8px; font-size: 0.8rem;">▶ Run Skill</button>
+                    </form>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        ` : "";
 
-        <span>${a.created_at ? new Date(a.created_at).toLocaleDateString() : ""}</span>
-      </div>
-      <div class="card-actions">
-        <button class="btn btn-success btn-sm" data-run="${a.id}">▶ Run</button>
-        <button class="btn btn-ghost btn-sm" data-steps="${a.id}">View steps</button>
-        <button class="btn btn-danger btn-sm" data-delete="${a.id}" title="Delete automation">🗑 Delete</button>
-      </div>
-    </div>
-  `).join("");
+        return `
+        <div class="card">
+          <div class="card-title">${escapeHtml(a.name)}</div>
+          <div class="card-desc">${escapeHtml(a.description || "No description")}</div>
+          <div class="card-meta">
+            <span class="card-id">ID ${a.id}</span>
+            ${a.base_url ? `<span>${escapeHtml(safeHostname(a.base_url))}</span>` : ""}
+            <span>${a.created_at ? new Date(a.created_at).toLocaleDateString() : ""}</span>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-success btn-sm" data-run="${a.id}">▶ Run</button>
+            <button class="btn btn-accent btn-sm" data-synthesize="${a.id}" title="Synthesize AI Skill">⚡ Synthesize</button>
+            <button class="btn btn-ghost btn-sm" data-steps="${a.id}">View steps</button>
+            <button class="btn btn-danger btn-sm" data-delete="${a.id}" title="Delete automation">🗑 Delete</button>
+          </div>
+          ${nestedSkillsHtml}
+        </div>
+      `;
+    }).join("");
 
     grid.querySelectorAll("[data-run]").forEach((btn) =>
         btn.addEventListener("click", () => openRunModal(Number(btn.dataset.run))));
+    grid.querySelectorAll("[data-synthesize]").forEach((btn) =>
+        btn.addEventListener("click", () => handleSynthesize(Number(btn.dataset.synthesize))));
     grid.querySelectorAll("[data-steps]").forEach((btn) =>
         btn.addEventListener("click", () => openStepsModal(Number(btn.dataset.steps))));
     grid.querySelectorAll("[data-delete]").forEach((btn) =>
@@ -498,9 +543,34 @@ async function loadSkills() {
     if (!grid) return;
     try {
         const skills = await api("/api/skills");
+        state.skills = skills;
         renderSkills(skills);
+        if (state.automations && state.automations.length) {
+            renderAutomations();
+        }
     } catch (err) {
         grid.innerHTML = `<div class="empty-state">Failed to load AI skills: ${escapeHtml(err.message)}</div>`;
+    }
+}
+
+async function handleSynthesize(automationId) {
+    const btn = document.querySelector(`[data-synthesize="${automationId}"]`);
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = "⚡ Synthesizing…";
+    }
+    toast(`Synthesizing AI Skill for Automation #${automationId}…`, "info", 5000);
+    try {
+        await api(`/api/automations/${automationId}/synthesize`, { method: "POST" });
+        toast(`Skill synthesized successfully for Automation #${automationId}!`, "success", 5000);
+        await loadSkills();
+    } catch (err) {
+        toast(`Synthesis failed: ${err.message}`, "error", 6000);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = "⚡ Synthesize";
+        }
     }
 }
 
@@ -550,7 +620,8 @@ function renderSkills(skills) {
 
 async function handleSkillExecute(event, skillId, filename) {
     event.preventDefault();
-    const inputs = document.querySelectorAll(`.skill-param-input[data-skill-id="${skillId}"]`);
+    const form = event.target;
+    const inputs = form ? form.querySelectorAll(".skill-param-input") : document.querySelectorAll(`.skill-param-input[data-skill-id="${skillId}"]`);
     const parameters = {};
     inputs.forEach(input => {
         const key = input.dataset.paramKey;

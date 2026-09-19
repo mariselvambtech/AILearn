@@ -6,6 +6,11 @@
 
 | Feature | Status | Phase | Notes |
 |---------|--------|-------|-------|
+| **Windows Console UTF-8 & Subprocess Hardening** | ✅ Working | Phase 23 Execution | Global `safe_print` wrapper across `skill_executor.py`, native `PYTHONIOENCODING="utf-8:replace"`, `PYTHONUTF8="1"`, and 600s timeout in `dashboard_server.py` |
+| **Decoupled Skill Synthesis Subprocess** | ✅ Working | Phase 22 Execution | Dedicated `dash_synthesize.py` CLI executed via Playwright venv subprocess from `dashboard_server.py`, completely eliminating cross-venv import collisions |
+| **Automation-to-Skill Mapping & Nested UI** | ✅ Working | Phase 21 Mapping | `source_automation_id` injected in `SkillSynthesizer.synthesize()`, `POST /api/automations/{id}/synthesize` endpoint, and nested skills sub-divs in automation cards |
+| **Semantic Verification HITL Interception** | ✅ Working | Phase 20 (Decision 14) | `try...except SemanticVerificationError` in `SkillExecutor` triggering `HITLPlugin.trigger_intervention`, Observer UI injection, and safe loop continuation |
+| **New Tab Automatic Context Switching** | ✅ Working | Phase 19 Execution | Automatic tab count tracking, `page = context.pages[-1]` context rebinding, `bring_to_front()`, and DOM hydration wait in `SkillExecutor` |
 | **Semantic Verification & Conditional Assertions** | ✅ Working | Phase 18 (Decision 14) | Rich Element Snapshot evaluation, pre-click `expected_context` guard, and post-action `assert` action handler (`url_contains`, `title_contains`, `visible`, `not_visible`) |
 | **Multi-Skill Library Architecture** | ✅ Working | Phase 16 Library | Multi-file scanning in `skills/*.json`, pure `re.sub` slugification, dual-write backwards compatibility, deduplication, path traversal protection, SPA cards with filenames, and CLI runner argument resolution |
 | **Kimi K3 Provider & Multimodal Planning** | ✅ Working | Phase 15 AI | Modular `kimi_client.py` (`httpx.AsyncClient`) + `LLM_PROVIDER="kimi_k3"` + multimodal visual-DOM planning with screenshot payload + reasoning & tool-call envelope preservation |

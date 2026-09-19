@@ -64,23 +64,38 @@ class SkillSynthesizer:
 
         return str(slug_path)
 
-    def synthesize(self, steps: List[Union[Dict[str, Any], Any]]) -> Dict[str, Any]:
+    def synthesize(self, steps: List[Union[Dict[str, Any], Any]], source_automation_id: Optional[int] = None) -> Dict[str, Any]:
         """
         Main synthesis entry point. Passes steps to Ollama hermes3 or falls back if offline.
+
+        Args:
+            steps: List of Step dataclasses or raw step dictionaries.
+            source_automation_id: Optional database ID of the parent automation to link.
+
+        Returns:
+            The synthesized skill definition dictionary, containing source_automation_id if provided.
         """
         clean_steps = self._normalize_steps(steps)
         if not clean_steps:
-            return self._empty_skill()
+            skill = self._empty_skill()
+            if source_automation_id is not None:
+                skill["source_automation_id"] = source_automation_id
+            return skill
 
         try:
             skill = self._synthesize_with_ollama(clean_steps)
             if skill and "parameterized_steps" in skill and "skill_name" in skill:
                 print(f" [SkillSynthesizer] Synthesized skill '{skill.get('skill_name')}' via Ollama ({self.model})")
+                if source_automation_id is not None:
+                    skill["source_automation_id"] = source_automation_id
                 return skill
         except Exception as e:
             print(f" [WARN] [SkillSynthesizer] Ollama synthesis unavailable ({e}). Using rule-based fallback synthesizer.")
 
-        return self._fallback_synthesis(clean_steps)
+        skill = self._fallback_synthesis(clean_steps)
+        if source_automation_id is not None:
+            skill["source_automation_id"] = source_automation_id
+        return skill
 
     def _normalize_steps(self, steps: List[Union[Dict[str, Any], Any]]) -> List[Dict[str, Any]]:
         """Converts Step dataclasses or dicts into uniform dictionaries."""

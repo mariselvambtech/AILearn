@@ -5,7 +5,7 @@
     "name": null,
     "value": null,
     "key": null,
-    "ts": 1789801821.4966009,
+    "ts": 1789836801.6460114,
     "locators": null,
     "extract_type": null,
     "attribute_name": null,
@@ -14,8 +14,8 @@
     "page_summary": null,
     "element_intent": null,
     "fingerprint": null,
-    "timestamp_ms": 12964.183807373047,
-    "voice_context": "I launched the Flipcott website. So once I launched the Flipcott website, it asks for login. I don't want to login as a now. So I'm closing the login part of it. I'm clicking the fashion icon. I'm just scrolling down the browser a little bit. I'm choosing the jeans section, jeans pack section. Clicking the jeans. It loaded a new page with results showing the jeans. I'm selecting the filter as.",
+    "timestamp_ms": 16328.123807907104,
+    "voice_context": null,
     "expected_context": null,
     "target": null
   },
@@ -25,7 +25,7 @@
     "name": "\u2715",
     "value": null,
     "key": null,
-    "ts": 1789801821.4966009,
+    "ts": 1789836801.6460114,
     "locators": [
       {
         "type": "css",
@@ -52,8 +52,8 @@
     "page_summary": null,
     "element_intent": null,
     "fingerprint": null,
-    "timestamp_ms": 12964.183807373047,
-    "voice_context": "I launched the Flipcott website. So once I launched the Flipcott website, it asks for login. I don't want to login as a now. So I'm closing the login part of it. I'm clicking the fashion icon. I'm just scrolling down the browser a little bit. I'm choosing the jeans section, jeans pack section. Clicking the jeans. It loaded a new page with results showing the jeans. I'm selecting the filter as.",
+    "timestamp_ms": 16328.123807907104,
+    "voice_context": null,
     "expected_context": null,
     "target": null
   },
@@ -63,7 +63,7 @@
     "name": "Fashion",
     "value": null,
     "key": null,
-    "ts": 1789801829.5521235,
+    "ts": 1789836804.2257452,
     "locators": [
       {
         "type": "href",
@@ -94,18 +94,18 @@
     "page_summary": null,
     "element_intent": null,
     "fingerprint": null,
-    "timestamp_ms": 21019.70648765564,
-    "voice_context": "I launched the Flipcott website. So once I launched the Flipcott website, it asks for login. I don't want to login as a now. So I'm closing the login part of it. I'm clicking the fashion icon. I'm just scrolling down the browser a little bit. I'm choosing the jeans section, jeans pack section. Clicking the jeans. It loaded a new page with results showing the jeans. I'm selecting the filter as.",
+    "timestamp_ms": 18907.857656478882,
+    "voice_context": null,
     "expected_context": null,
     "target": null
   },
   {
     "action": "navigate",
-    "url": "https://www.flipkart.com/ss-26-base-inline-at-store?pageUID=1789801808912",
+    "url": "https://www.flipkart.com/ss-26-base-inline-at-store?pageUID=1789836786597",
     "name": null,
     "value": null,
     "key": null,
-    "ts": 1789801840.487064,
+    "ts": 1789836818.0659242,
     "locators": null,
     "extract_type": null,
     "attribute_name": null,
@@ -114,18 +114,18 @@
     "page_summary": null,
     "element_intent": null,
     "fingerprint": null,
-    "timestamp_ms": 31954.646825790405,
-    "voice_context": "I launched the Flipcott website. So once I launched the Flipcott website, it asks for login. I don't want to login as a now. So I'm closing the login part of it. I'm clicking the fashion icon. I'm just scrolling down the browser a little bit. I'm choosing the jeans section, jeans pack section. Clicking the jeans. It loaded a new page with results showing the jeans. I'm selecting the filter as.",
+    "timestamp_ms": 32748.0366230011,
+    "voice_context": null,
     "expected_context": null,
     "target": null
   },
   {
     "action": "click",
-    "url": "https://www.flipkart.com/ss-26-base-inline-at-store?pageUID=1789801808912",
+    "url": "https://www.flipkart.com/ss-26-base-inline-at-store?pageUID=1789836786597",
     "name": "Jeans",
     "value": null,
     "key": null,
-    "ts": 1789801840.487064,
+    "ts": 1789836818.0659242,
     "locators": [
       {
         "type": "href",
@@ -156,8 +156,8 @@
     "page_summary": null,
     "element_intent": null,
     "fingerprint": null,
-    "timestamp_ms": 31954.646825790405,
-    "voice_context": "I launched the Flipcott website. So once I launched the Flipcott website, it asks for login. I don't want to login as a now. So I'm closing the login part of it. I'm clicking the fashion icon. I'm just scrolling down the browser a little bit. I'm choosing the jeans section, jeans pack section. Clicking the jeans. It loaded a new page with results showing the jeans. I'm selecting the filter as.",
+    "timestamp_ms": 32748.0366230011,
+    "voice_context": null,
     "expected_context": null,
     "target": null
   },
@@ -167,7 +167,7 @@
     "name": null,
     "value": null,
     "key": null,
-    "ts": 1789801850.6887991,
+    "ts": 1789836832.6706984,
     "locators": null,
     "extract_type": null,
     "attribute_name": null,
@@ -176,8 +176,8 @@
     "page_summary": null,
     "element_intent": null,
     "fingerprint": null,
-    "timestamp_ms": 42156.38208389282,
-    "voice_context": "I launched the Flipcott website. So once I launched the Flipcott website, it asks for login. I don't want to login as a now. So I'm closing the login part of it. I'm clicking the fashion icon. I'm just scrolling down the browser a little bit. I'm choosing the jeans section, jeans pack section. Clicking the jeans. It loaded a new page with results showing the jeans. I'm selecting the filter as. Pepe Jeans brand. So there is a filter called us brand and selecting the Pepe Jeans filter.",
+    "timestamp_ms": 47352.810859680176,
+    "voice_context": null,
     "expected_context": null,
     "target": null
   },
@@ -187,7 +187,7 @@
     "name": "BRAND",
     "value": null,
     "key": null,
-    "ts": 1789801850.6887991,
+    "ts": 1789836832.6706984,
     "locators": [
       {
         "type": "css",
@@ -209,8 +209,8 @@
     "page_summary": null,
     "element_intent": null,
     "fingerprint": null,
-    "timestamp_ms": 42156.38208389282,
-    "voice_context": "I launched the Flipcott website. So once I launched the Flipcott website, it asks for login. I don't want to login as a now. So I'm closing the login part of it. I'm clicking the fashion icon. I'm just scrolling down the browser a little bit. I'm choosing the jeans section, jeans pack section. Clicking the jeans. It loaded a new page with results showing the jeans. I'm selecting the filter as. Pepe Jeans brand. So there is a filter called us brand and selecting the Pepe Jeans filter.",
+    "timestamp_ms": 47352.810859680176,
+    "voice_context": null,
     "expected_context": null,
     "target": null
   },
@@ -220,7 +220,7 @@
     "name": "Pepe Jeans",
     "value": null,
     "key": null,
-    "ts": 1789801858.2165265,
+    "ts": 1789836835.5862887,
     "locators": [
       {
         "type": "css",
@@ -242,8 +242,8 @@
     "page_summary": null,
     "element_intent": null,
     "fingerprint": null,
-    "timestamp_ms": 49684.1094493866,
-    "voice_context": "Pepe Jeans brand. So there is a filter called us brand and selecting the Pepe Jeans filter. Now the page loaded with the jeans with brand only Pepe Jeans, not any other thing.",
+    "timestamp_ms": 50268.40114593506,
+    "voice_context": null,
     "expected_context": null,
     "target": null
   },
@@ -253,7 +253,7 @@
     "name": null,
     "value": null,
     "key": null,
-    "ts": 1789801873.7364233,
+    "ts": 1789836848.4657779,
     "locators": null,
     "extract_type": null,
     "attribute_name": null,
@@ -262,8 +262,8 @@
     "page_summary": null,
     "element_intent": null,
     "fingerprint": null,
-    "timestamp_ms": 65204.00619506836,
-    "voice_context": "I am selecting a random Pepe Jeans fan and staffing the department.",
+    "timestamp_ms": 63147.89032936096,
+    "voice_context": null,
     "expected_context": null,
     "target": null
   },
@@ -273,11 +273,11 @@
     "name": "Link",
     "value": null,
     "key": null,
-    "ts": 1789801873.7364233,
+    "ts": 1789836848.4657779,
     "locators": [
       {
         "type": "href",
-        "value": "/pepe-jeans-slim-men-black/p/itmbf11df0c0d5c1?pid=JEAHE3FEHKRTSGDK&lid=LSTJEAHE3FEHKRTSGDKBC7FUF&marketplace=FLIPKART&store=clo%2Fvua&srno=b_1_7&otracker=browse&fm=neo%2Fmerchandising&iid=7dc4e0fe-8005-4771-a8c8-5746fc3b5368.JEAHE3FEHKRTSGDK.SEARCH&ppt=browse&ppn=browse&ssid=crnoe6489s0000001789801841074&ov_redirect=true"
+        "value": "/pepe-jeans-slim-men-black/p/itmbf11df0c0d5c1?pid=JEAHE3FEHKRTSGDK&lid=LSTJEAHE3FEHKRTSGDKBC7FUF&marketplace=FLIPKART&store=clo%2Fvua&srno=b_1_7&otracker=browse&fm=neo%2Fmerchandising&iid=3ca6f167-b569-41a6-82b3-0eeade2d76fe.JEAHE3FEHKRTSGDK.SEARCH&ppt=browse&ppn=browse&ssid=9yccd6wixs0000001789836818670&ov_redirect=true"
       },
       {
         "type": "css",
@@ -300,8 +300,66 @@
     "page_summary": null,
     "element_intent": null,
     "fingerprint": null,
-    "timestamp_ms": 65204.00619506836,
-    "voice_context": "I am selecting a random Pepe Jeans fan and staffing the department.",
+    "timestamp_ms": 63147.89032936096,
+    "voice_context": null,
+    "expected_context": null,
+    "target": null
+  },
+  {
+    "action": "navigate",
+    "url": "https://www.flipkart.com/pepe-jeans-slim-men-black/p/itmbf11df0c0d5c1?pid=JEAHE3FEHKRTSGDK&lid=LSTJEAHE3FEHKRTSGDKBC7FUF&marketplace=FLIPKART&store=clo%2Fvua&srno=b_1_7&otracker=browse&fm=neo%2Fmerchandising&iid=3ca6f167-b569-41a6-82b3-0eeade2d76fe.JEAHE3FEHKRTSGDK.SEARCH&ppt=browse&ppn=browse&ssid=9yccd6wixs0000001789836818670&ov_redirect=true",
+    "name": null,
+    "value": null,
+    "key": null,
+    "ts": 1789836856.292761,
+    "locators": null,
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null,
+    "timestamp_ms": 70974.87354278564,
+    "voice_context": null,
+    "expected_context": null,
+    "target": null
+  },
+  {
+    "action": "click",
+    "url": "https://www.flipkart.com/pepe-jeans-slim-men-black/p/itmbf11df0c0d5c1?pid=JEAHE3FEHKRTSGDK&lid=LSTJEAHE3FEHKRTSGDKBC7FUF&marketplace=FLIPKART&store=clo%2Fvua&srno=b_1_7&otracker=browse&fm=neo%2Fmerchandising&iid=3ca6f167-b569-41a6-82b3-0eeade2d76fe.JEAHE3FEHKRTSGDK.SEARCH&ppt=browse&ppn=browse&ssid=9yccd6wixs0000001789836818670&ov_redirect=true",
+    "name": "63% 2,999 \u20b91,099",
+    "value": null,
+    "key": null,
+    "ts": 1789836856.292761,
+    "locators": [
+      {
+        "type": "css",
+        "value": "a._1psv1zeb9._1o6mltlk4:nth-child(1)"
+      },
+      {
+        "type": "text",
+        "value": "63% 2,999 \u20b91,099"
+      },
+      {
+        "type": "role",
+        "value": "link",
+        "name": "63% 2,999 \u20b91,099"
+      },
+      {
+        "type": "xpath",
+        "value": "//div/div/div/div/a"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null,
+    "timestamp_ms": 70974.87354278564,
+    "voice_context": null,
     "expected_context": null,
     "target": null
   }

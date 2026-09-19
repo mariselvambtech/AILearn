@@ -1,0 +1,10 @@
+=== Extracted Data Log ===
+Started: 2026-09-19 17:03:50
+
+────────────────────────────────────────────────────────────
+Variable: extracted_value
+Value: ₹965
+Type: text
+URL: https://www.flipkart.com/arrow-formals-regular-fit-men-beige-trousers/p/itmadcc725e12bcc?pid=TROGXQDGRMJTX8HX&lid=LSTTROGXQDGRMJTX8HXHOWGLQ&marketplace=FLIPKART&store=clo%2Fvua&srno=b_1_2&otracker=browse&fm=neo%2Fmerchandising&iid=96b67384-0bed-43ee-8722-3282624ee0c5.TROGXQDGRMJTX8HX.SEARCH&ppt=browse&ppn=browse&ssid=5p0q6gav8w0000001789817558563&ov_redirect=true
+Time: 2026-09-19 17:03:50
+

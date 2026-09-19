@@ -8,14 +8,35 @@ Chromium using Playwright's multi-locator fallback engine.
 from __future__ import annotations
 
 import os
+import sys
 import json
 import re
 import asyncio
 import copy
+import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
+if sys.platform == "win32":
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8")
+
 from playwright.async_api import Page
+
+logger = logging.getLogger("SkillExecutor")
+
+
+def safe_print(*args: Any, **kwargs: Any) -> None:
+    """
+    Safely print to stdout, catching any encoding or I/O exceptions.
+    Prevents crashes on Windows when printing unencodable characters (e.g. ₹, emojis, ✕).
+    """
+    try:
+        print(*args, **kwargs)
+    except Exception:
+        pass
 
 from .fallback_helpers import (
     click_with_fallback,
@@ -93,7 +114,11 @@ class SkillExecutor:
     Executes synthesized AI skill recipes with dynamic runtime parameter injection.
     """
 
-    def __init__(self, skill_recipe: Union[Dict[str, Any], str, Path]) -> None:
+    def __init__(
+        self,
+        skill_recipe: Union[Dict[str, Any], str, Path],
+        hitl_plugin: Optional[Any] = None
+    ) -> None:
         if isinstance(skill_recipe, (str, Path)):
             recipe_path = Path(skill_recipe)
             if recipe_path.exists():
@@ -108,6 +133,7 @@ class SkillExecutor:
         self.trigger_phrases = self.recipe.get("trigger_phrases", [])
         self.parameters_schema = self.recipe.get("parameters_schema", {})
         self.parameterized_steps = self.recipe.get("parameterized_steps", [])
+        self.hitl_plugin = hitl_plugin
 
     def resolve_steps(self, runtime_params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """
@@ -154,7 +180,7 @@ class SkillExecutor:
         live page context to the AI Brain server via a WebSocket task-start message.
         """
         steps = self.resolve_steps(runtime_params)
-        print(f"\n=== Executing Skill: '{self.skill_name}' ({len(steps)} steps) ===")
+        safe_print(f"\n=== Executing Skill: '{self.skill_name}' ({len(steps)} steps) ===")
         
         executed_count = 0
         extracted_data: Dict[str, Any] = {}
@@ -166,110 +192,175 @@ class SkillExecutor:
             value = step.get("value")
             locators = step.get("locators") or []
 
-            print(f" [Step {idx}/{len(steps)}] {action.upper()}: name='{name}', val='{value or url or ''}'")
+            safe_print(f" [Step {idx}/{len(steps)}] {action.upper()}: name='{name}', val='{value or url or ''}'")
 
-            if action in ("goto", "open", "navigate"):
-                if url:
-                    await page.goto(url, wait_until="domcontentloaded")
-            
-            elif action == "click":
-                expected_ctx = step.get("expected_context")
-                success = await click_with_fallback(page, locators, expected_context=expected_ctx)
-                if not success:
-                    print(f" ⚠️ Step {idx} click failed for '{name}'")
+            # Capture open tab count before executing step action
+            current_page_count = (
+                len(page.context.pages)
+                if hasattr(page, "context") and page.context and hasattr(page.context, "pages")
+                else 1
+            )
 
-            elif action == "type":
-                typed_text = value or ""
-                success = await type_with_fallback(page, locators, typed_text)
-                if not success:
-                    print(f" ⚠️ Step {idx} type failed for '{name}'")
+            try:
+                if action in ("goto", "open", "navigate"):
+                    if url:
+                        await page.goto(url, wait_until="domcontentloaded")
+                
+                elif action == "click":
+                    expected_ctx = step.get("expected_context")
+                    success = await click_with_fallback(page, locators, expected_context=expected_ctx)
+                    if not success:
+                        safe_print(f" ⚠️ Step {idx} click failed for '{name}'")
 
-            elif action == "press_key":
-                key = step.get("key") or "Enter"
-                await page.keyboard.press(key)
+                elif action == "type":
+                    typed_text = value or ""
+                    success = await type_with_fallback(page, locators, typed_text)
+                    if not success:
+                        safe_print(f" ⚠️ Step {idx} type failed for '{name}'")
 
-            elif action == "wait":
-                try:
-                    delay_sec = float(value or 1.0)
-                    await asyncio.sleep(delay_sec)
-                except ValueError:
-                    await asyncio.sleep(1.0)
+                elif action == "press_key":
+                    key = step.get("key") or "Enter"
+                    await page.keyboard.press(key)
 
-            elif action in ("extract", "extract_table"):
-                val = await extract_with_fallback(page, locators, step)
-                if val is not None:
-                    extracted_data[name] = val
-                    print(f" Extracted data for '{name}': {val[:60] if isinstance(val, str) else val}")
+                elif action == "wait":
+                    try:
+                        delay_sec = float(value or 1.0)
+                        await asyncio.sleep(delay_sec)
+                    except ValueError:
+                        await asyncio.sleep(1.0)
 
-            elif action == "verify_text":
-                target_text = value or ""
-                content = await page.content()
-                assert target_text.lower() in content.lower(), f"Verification failed: '{target_text}' not in page"
+                elif action in ("extract", "extract_table"):
+                    val = await extract_with_fallback(page, locators, step)
+                    if val is not None:
+                        extracted_data[name] = val
+                        safe_print(f" Extracted data for '{name}': {val[:60] if isinstance(val, str) else val}")
 
-            elif action == "verify_visible":
-                target_text = value or ""
-                assert await page.get_by_text(target_text).first.is_visible(), f"Verification failed: '{target_text}' not visible"
+                elif action == "verify_text":
+                    target_text = value or ""
+                    content = await page.content()
+                    assert target_text.lower() in content.lower(), f"Verification failed: '{target_text}' not in page"
 
-            elif action == "assert":
-                target = step.get("target") or "url_contains"
-                expected_val = str(value or "")
-                print(f" [ASSERT] target='{target}', expected='{expected_val}'")
+                elif action == "verify_visible":
+                    target_text = value or ""
+                    assert await page.get_by_text(target_text).first.is_visible(), f"Verification failed: '{target_text}' not visible"
 
-                if target == "url_contains":
-                    current_url = page.url or ""
-                    assert expected_val.lower() in current_url.lower(), (
-                        f"Assertion failed: URL '{current_url}' does not contain expected '{expected_val}'"
-                    )
-                elif target == "url_equals":
-                    current_url = page.url or ""
-                    assert current_url == expected_val, (
-                        f"Assertion failed: URL '{current_url}' != '{expected_val}'"
-                    )
-                elif target == "title_contains":
-                    title = await page.title() if hasattr(page, "title") else ""
-                    assert expected_val.lower() in str(title).lower(), (
-                        f"Assertion failed: Page title '{title}' does not contain expected '{expected_val}'"
-                    )
-                elif target in ("visible", "element_visible", "text_visible"):
-                    is_vis = False
-                    if locators:
-                        from .fallback_helpers import _create_locator_obj
-                        loc_obj = await _create_locator_obj(page, locators[0])
-                        is_vis = await loc_obj.first.is_visible() if loc_obj and await loc_obj.count() > 0 else False
-                    elif expected_val and hasattr(page, "get_by_text"):
-                        loc_by_text = page.get_by_text(expected_val)
-                        is_vis = await loc_by_text.first.is_visible() if hasattr(loc_by_text, "first") else False
-                    assert is_vis, f"Assertion failed: Element with '{expected_val}' is not visible"
-                elif target in ("not_visible", "hidden"):
-                    is_vis = True
-                    if locators:
-                        from .fallback_helpers import _create_locator_obj
-                        loc_obj = await _create_locator_obj(page, locators[0])
-                        is_vis = await loc_obj.first.is_visible() if loc_obj and await loc_obj.count() > 0 else False
-                    elif expected_val and hasattr(page, "get_by_text"):
-                        loc_by_text = page.get_by_text(expected_val)
-                        is_vis = await loc_by_text.first.is_visible() if hasattr(loc_by_text, "first") else False
-                    assert not is_vis, f"Assertion failed: Element with '{expected_val}' is still visible"
-                else:
-                    # Fallback to general page text / URL check
-                    current_url = page.url or ""
-                    if expected_val.lower() in current_url.lower():
-                        pass
-                    elif hasattr(page, "content"):
-                        content = await page.content()
-                        assert expected_val.lower() in content.lower(), (
-                            f"Assertion failed: '{expected_val}' not found in URL or page content"
+                elif action == "assert":
+                    target = step.get("target") or "url_contains"
+                    expected_val = str(value or "")
+                    safe_print(f" [ASSERT] target='{target}', expected='{expected_val}'")
+
+                    if target == "url_contains":
+                        current_url = page.url or ""
+                        assert expected_val.lower() in current_url.lower(), (
+                            f"Assertion failed: URL '{current_url}' does not contain expected '{expected_val}'"
                         )
-                print(f"  [OK] Assertion PASSED for '{target}' -> '{expected_val}'")
+                    elif target == "url_equals":
+                        current_url = page.url or ""
+                        assert current_url == expected_val, (
+                            f"Assertion failed: URL '{current_url}' != '{expected_val}'"
+                        )
+                    elif target == "title_contains":
+                        title = await page.title() if hasattr(page, "title") else ""
+                        assert expected_val.lower() in str(title).lower(), (
+                            f"Assertion failed: Page title '{title}' does not contain expected '{expected_val}'"
+                        )
+                    elif target in ("visible", "element_visible", "text_visible"):
+                        is_vis = False
+                        if locators:
+                            from .fallback_helpers import _create_locator_obj
+                            loc_obj = await _create_locator_obj(page, locators[0])
+                            is_vis = await loc_obj.first.is_visible() if loc_obj and await loc_obj.count() > 0 else False
+                        elif expected_val and hasattr(page, "get_by_text"):
+                            loc_by_text = page.get_by_text(expected_val)
+                            is_vis = await loc_by_text.first.is_visible() if hasattr(loc_by_text, "first") else False
+                        assert is_vis, f"Assertion failed: Element with '{expected_val}' is not visible"
+                    elif target in ("not_visible", "hidden"):
+                        is_vis = True
+                        if locators:
+                            from .fallback_helpers import _create_locator_obj
+                            loc_obj = await _create_locator_obj(page, locators[0])
+                            is_vis = await loc_obj.first.is_visible() if loc_obj and await loc_obj.count() > 0 else False
+                        elif expected_val and hasattr(page, "get_by_text"):
+                            loc_by_text = page.get_by_text(expected_val)
+                            is_vis = await loc_by_text.first.is_visible() if hasattr(loc_by_text, "first") else False
+                        assert not is_vis, f"Assertion failed: Element with '{expected_val}' is still visible"
+                    else:
+                        # Fallback to general page text / URL check
+                        current_url = page.url or ""
+                        if expected_val.lower() in current_url.lower():
+                            pass
+                        elif hasattr(page, "content"):
+                            content = await page.content()
+                            assert expected_val.lower() in content.lower(), (
+                                f"Assertion failed: '{expected_val}' not found in URL or page content"
+                            )
+                    safe_print(f"  [OK] Assertion PASSED for '{target}' -> '{expected_val}'")
+
+            except SemanticVerificationError as e:
+                logger.warning(f"Semantic verification failed on step {idx} ('{name}'): {e}. Triggering HITL intervention.")
+                safe_print(f" ⚠️ [SkillExecutor] Semantic verification failed on step {idx} ('{name}'): {e}. Launching HITL Observer Mode...")
+                hitl = getattr(self, "hitl_plugin", None)
+                if not hitl:
+                    try:
+                        from .plugins.hitl_plugin import HITLPlugin
+                        hitl = HITLPlugin(
+                            tts_prompt=f"Semantic check failed for {name}. Please complete the action and click Resume AI."
+                        )
+                    except Exception as imp_err:
+                        logger.error(f"Failed to instantiate HITLPlugin: {imp_err}")
+                        hitl = None
+
+                if hitl and hasattr(hitl, "trigger_intervention"):
+                    try:
+                        payload = {
+                            "reason": f"Semantic verification failed: {e}",
+                            "message": f"Semantic verification failed for '{step.get('expected_context') or name}'. Please complete the action on your screen and click Resume AI.",
+                            "step": step,
+                            "step_index": idx
+                        }
+                        resolution = await hitl.trigger_intervention(page, payload=payload)
+                        logger.info(f"HITL intervention resolved: {resolution}")
+                        safe_print(f" [SkillExecutor] HITL intervention resolved: {resolution.get('action', 'complete')}. Continuing automation.")
+                    except Exception as hitl_err:
+                        logger.error(f"Error during HITL intervention: {hitl_err}")
+                        safe_print(f"  [WARN] [SkillExecutor] HITL intervention handling error: {hitl_err}")
+
+                # Check if a new tab was opened during manual intervention
+                if hasattr(page, "context") and page.context and hasattr(page.context, "pages"):
+                    try:
+                        if len(page.context.pages) > current_page_count:
+                            page = page.context.pages[-1]
+                            await page.bring_to_front()
+                            await page.wait_for_load_state("domcontentloaded")
+                            logger.info("New tab detected after HITL intervention. Switched active page context.")
+                            safe_print(f" [SkillExecutor] New tab detected after HITL. Switched active page context to '{page.url}'.")
+                    except Exception as tab_err:
+                        logger.warning(f"Error handling new tab context switch after HITL: {tab_err}")
+
+                executed_count += 1
+                continue
+
+            # Context Switching Logic for New Tabs
+            if hasattr(page, "context") and page.context and hasattr(page.context, "pages"):
+                try:
+                    if len(page.context.pages) > current_page_count:
+                        page = page.context.pages[-1]
+                        await page.bring_to_front()
+                        await page.wait_for_load_state("domcontentloaded")
+                        logger.info("New tab detected. Switched active page context.")
+                        safe_print(f" [SkillExecutor] New tab detected. Switched active page context to '{page.url}'.")
+                except Exception as tab_err:
+                    logger.warning(f"Error handling new tab context switch: {tab_err}")
+                    safe_print(f"  [WARN] [SkillExecutor] Error handling new tab context switch: {tab_err}")
 
             executed_count += 1
 
-        print(f"=== Skill Execution Finished Successfully ({executed_count}/{len(steps)} steps) ===\n")
+        safe_print(f"=== Skill Execution Finished Successfully ({executed_count}/{len(steps)} steps) ===\n")
 
         status = "success"
         if keep_alive and handoff_intent:
             status = "handoff"
-            print(f" [SkillExecutor] Handing off live browser session for task: '{handoff_intent}'")
+            safe_print(f" [SkillExecutor] Handing off live browser session for task: '{handoff_intent}'")
             try:
                 from .websocket_client import send_message
                 payload = {
@@ -283,9 +374,9 @@ class SkillExecutor:
                     }
                 }
                 await send_message(payload)
-                print(" [SkillExecutor] WebSocket 'task-start' message emitted successfully.")
+                safe_print(" [SkillExecutor] WebSocket 'task-start' message emitted successfully.")
             except Exception as e:
-                print(f" [WARN] [SkillExecutor] WebSocket handoff dispatch failed: {e}")
+                safe_print(f" [WARN] [SkillExecutor] WebSocket handoff dispatch failed: {e}")
 
         return {
             "status": status,

@@ -299,6 +299,43 @@ body {
     flex: 1;
 }
 
+/* ===== Nested Skills in Automation Cards ===== */
+.nested-skills-container {
+    margin-top: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.nested-skills-header {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nested-skills-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.nested-skill-card {
+    padding: 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-card);
+    transition: border-color 0.15s;
+}
+
+.nested-skill-card:hover {
+    border-color: var(--accent);
+}
+
 .empty-state {
     color: var(--text-muted);
     text-align: center;
