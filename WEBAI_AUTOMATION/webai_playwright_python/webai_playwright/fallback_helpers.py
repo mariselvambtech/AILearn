@@ -7,7 +7,7 @@ to locate elements when strict Playwright selectors fail. It's a critical part o
 UI changes without immediately throwing an error back to the AI Brain.
 """
 
-from typing import List, Dict
+from typing import List, Dict, Optional, Any
 
 # Locator priority: prefer stable selectors (unified 13 strategies matching server)
 LOCATOR_PRIORITY = {
@@ -74,11 +74,12 @@ async def _create_locator_obj(target_page, loc: Dict):
     return None
 
 
-async def click_with_fallback(page, locators: List[Dict]) -> bool:
+async def click_with_fallback(page, locators: List[Dict], expected_context: Optional[str] = None) -> bool:
     """
     Try multiple locators in priority order until one successfully clicks.
     Fortified against all 7 failure scenarios (Dynamic IDs, Obscured overlays,
-    iFrames, Lazy-loading, Hydration delays, Custom dropdowns, Multi-tab focus).
+    iFrames, Lazy-loading, Hydration delays, Custom dropdowns, Multi-tab focus)
+    and validates Pre-Click Semantic Verification against expected_context (Decision 14).
     """
     from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
@@ -92,7 +93,8 @@ async def click_with_fallback(page, locators: List[Dict]) -> bool:
 
     sorted_locators = sorted(locators, key=lambda x: LOCATOR_PRIORITY.get(x.get("type"), 99))
     errors = []
-    print(f"[SEARCH] Attempting click with {len(sorted_locators)} locators...")
+    semantic_errors = []
+    print(f"[SEARCH] Attempting click with {len(sorted_locators)} locators" + (f" (expected: '{expected_context}')" if expected_context else "") + "...")
 
     # Helper function to attempt locator click across main page and iFrames (Scenario 3)
     async def _try_click_locator(loc_obj, loc_type, force=False):
@@ -102,6 +104,12 @@ async def click_with_fallback(page, locators: List[Dict]) -> bool:
                 await loc_obj.first.scroll_into_view_if_needed(timeout=1500)
         except Exception:
             pass
+
+        # Decision 14: Pre-Click Semantic Verification
+        if expected_context:
+            from .skill_executor import extract_rich_snapshot, verify_semantic_context, SemanticVerificationError
+            snapshot = await extract_rich_snapshot(loc_obj)
+            verify_semantic_context(snapshot, expected_context)
 
         try:
             await loc_obj.click(force=force, timeout=4000)
@@ -114,6 +122,10 @@ async def click_with_fallback(page, locators: List[Dict]) -> bool:
                     elem = loc_obj.nth(idx)
                     try:
                         if await elem.is_visible():
+                            if expected_context:
+                                from .skill_executor import extract_rich_snapshot, verify_semantic_context
+                                snap = await extract_rich_snapshot(elem)
+                                verify_semantic_context(snap, expected_context)
                             await elem.click(force=force, timeout=3000)
                             return True
                     except Exception:
@@ -139,6 +151,13 @@ async def click_with_fallback(page, locators: List[Dict]) -> bool:
                 return True
 
         except Exception as e:
+            from .skill_executor import SemanticVerificationError
+            if isinstance(e, SemanticVerificationError):
+                print(f"  [WARN] Semantic verification mismatch on {loc_type}: {e}")
+                semantic_errors.append(e)
+                errors.append(f"{loc_type}: Semantic verification failed ({e})")
+                continue
+
             # Scenario 3: Check inside target_page.frames if main frame failed
             iframe_success = False
             if hasattr(target_page, "frames"):
@@ -151,7 +170,9 @@ async def click_with_fallback(page, locators: List[Dict]) -> bool:
                             print(f"  [OK] Click successful inside iframe with {loc_type}")
                             iframe_success = True
                             break
-                    except Exception:
+                    except Exception as frame_e:
+                        if isinstance(frame_e, SemanticVerificationError):
+                            semantic_errors.append(frame_e)
                         continue
             if iframe_success:
                 return True
@@ -175,8 +196,15 @@ async def click_with_fallback(page, locators: List[Dict]) -> bool:
             if loc_obj and await _try_click_locator(loc_obj, loc_type, force=True):
                 print(f"  [OK] Click successful on retry (force/scroll) with {loc_type}")
                 return True
-        except Exception:
+        except Exception as e:
+            from .skill_executor import SemanticVerificationError
+            if isinstance(e, SemanticVerificationError):
+                semantic_errors.append(e)
             continue
+
+    # If all locators failed and semantic verification errors occurred, raise SemanticVerificationError
+    if semantic_errors:
+        raise semantic_errors[0]
 
     # All locators failed
     error_report = f"[ERROR] All {len(sorted_locators)} locators failed for click:\n"

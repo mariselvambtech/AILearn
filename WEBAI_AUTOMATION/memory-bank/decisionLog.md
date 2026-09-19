@@ -518,16 +518,29 @@ Client side: dashboard `dashboard_health()` switched from `_probe_tcp()` to
 
 ---
 
+## Decision 14: Semantic Verification & Conditional Assertions
+
+**Date:** 2026-09-19
+**Status:** Implemented ✅
+
+### Context
+When browser selectors drift or target dynamic websites (e.g. Flipkart, e-commerce filters), brittle locators can match incorrect elements with similar markup, leading to wrong button clicks. Furthermore, critical actions like search submissions and navigation lacked deterministic post-action validation.
+
+### Decision
+Implemented Pre-Click Semantic Verification and Post-Click Conditional Assertions:
+1. **Rich Element Snapshot**: Rapid deterministic state extraction via `locator.evaluate()` (`{text, value, aria, title, checked}`) avoiding costly runtime LLM latency.
+2. **Pre-Click Semantic Guard**: `verify_semantic_context()` checks if `expected_context` is present in the lowercased snapshot values. If mismatched, candidate locators are skipped, allowing resilient fallback; if all candidates fail, `SemanticVerificationError` is raised.
+3. **Post-Click Assertions**: Added `action == "assert"` in `Step` schema and `SkillExecutor` supporting `url_contains`, `url_equals`, `title_contains`, `visible`, and `not_visible`.
+4. **LLM & Fallback Synthesis**: Instructed `SkillSynthesizer` to extract `expected_context` from `voice_context` and inject post-action `assert` steps.
+
+### Impact
+- **Positive:** Immune to locator drift on dynamic websites; deterministic verification prevents accidental clicks on incorrect filters/options.
+- **Negative:** Minor single-digit millisecond JS evaluate overhead prior to clicking.
+- **Verification:** `scratch/test_semantic_verification.py` (7/7 PASS) + regression suite.
+
+---
+
 ## Future Decisions Pending
-
-
-### Decision 14: Conditional Branching Implementation (Pending)
-**Question:** How to implement if/else logic based on extracted variable values?
-**Options:**
-1. New `condition` action type in recorder
-2. LLM-based conditional evaluation
-3. Rule-based condition engine in AI server
-**Status:** Awaiting user direction
 
 ### Decision 15: Jira Integration Approach (Pending)
 **Question:** How to integrate with Jira for ticket creation?

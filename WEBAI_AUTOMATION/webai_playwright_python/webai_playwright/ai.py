@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional, Sequence, Union
 
 from .config import LOGS_ENABLED
 
-from playwright.async_api import Page
+from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError
 
 from .config import PACKAGE_NAME, MAX_TASK_CHARS, TOKEN, WEBDRIVER_ELEMENT_KEY
 from .websocket_client import send_message, listen, close_ws
@@ -78,7 +78,20 @@ async def _send_command_response(index: int, task_id: str, result: Any) -> None:
     await send_message(message)
 
 async def _execute_command(page: Page, command: Dict[str, Any]) -> Any:
-    """Execute a single AI command against the active Playwright page.
+    """Execute a single AI command against the active Playwright page with timeout safety.
+
+    Catches Playwright and asyncio TimeoutErrors gracefully to return a structured error payload.
+    """
+    try:
+        return await _dispatch_command(page, command)
+    except (PlaywrightTimeoutError, asyncio.TimeoutError, TimeoutError) as te:
+        if LOGS_ENABLED:
+            print(f"[client] ⏱️ TimeoutError in command '{command.get('name')}': {te}")
+        return {"success": False, "error": f"Timeout: {str(te)}"}
+
+
+async def _dispatch_command(page: Page, command: Dict[str, Any]) -> Any:
+    """Internal dispatcher for AI commands against the active Playwright page.
 
     Dynamically targets the most recently opened tab/page in the browser context
     (page.context.pages[-1]) to support multi-tab scenarios (e.g. target='_blank' links).
@@ -445,6 +458,8 @@ async def ai(task: Union[str, Sequence[str]], *, page: Page, options: Optional[D
             idx = int(message.get("index", 0))
             try:
                 result = await _execute_command(page, message)
+            except (PlaywrightTimeoutError, asyncio.TimeoutError, TimeoutError) as te:
+                result = {"error": f"Timeout: {str(te)}", "success": False}
             except Exception as e:
                 result = {"error": str(e), "success": False}
             await _send_command_response(idx, task_id, result)

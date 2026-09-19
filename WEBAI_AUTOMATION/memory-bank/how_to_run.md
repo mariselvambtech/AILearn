@@ -117,3 +117,30 @@ The dashboard replaces the terminal for run/import/monitor flows — a browser-b
    ```
    *(Note: This runs on **Port 8080**. Open `http://localhost:8080` in your browser, log in with your API username/password, and you can run automations, import `recorded_steps.json` files, watch execution status live, and view logs — no terminal needed for those flows.)*
 > The dashboard still requires the **API Server (8000)** and **AI Server (8765)** to be running. Ollama (11434) is only needed for freeform (non-recorded) tasks.
+
+
+## 6. (Optional) Graphify update and mermaid diagram update
+1. Update the AST Knowledge Graph
+In this project workspace, graphify is installed in the webai_playwright_python virtual environment. Run:
+
+powershell
+.\webai_playwright_python\.venv\Scripts\graphify.exe update .
+(Alternatively, if you activate that virtual environment first, you can run graphify update . directly):
+
+powershell
+.\webai_playwright_python\.venv\Scripts\Activate.ps1
+graphify update .
+2. Regenerate Mermaid Diagrams
+Right after updating the graph, run the companion script to update the Mermaid diagram (
+
+MERMAID_GRAPH.md
+) and the interactive HTML viewer (
+
+mermaid_viewer.html
+):
+
+powershell
+python scripts/graphify_to_mermaid.py
+Combined One-Liner (PowerShell)
+powershell
+.\webai_playwright_python\.venv\Scripts\graphify.exe update . ; python scripts/graphify_to_mermaid.py

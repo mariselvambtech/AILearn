@@ -360,6 +360,13 @@ def get_query_param(path: str, key: str) -> Optional[str]:
     return vals[0] if vals else None
 
 
+LOCATOR_PRIORITY: Dict[str, int] = {
+    "test-id": 0, "id": 1, "name": 2, "href": 3,
+    "placeholder": 4, "alt": 5, "aria-label": 6, "title": 7,
+    "label": 8, "css": 9, "role": 10, "text": 11, "xpath": 12
+}
+
+
 def _env(name: str, default: str = "") -> str:
     val = os.getenv(name)
     return default if val is None or val == "" else val
@@ -397,6 +404,23 @@ async def ollama_chat(system: str, user: str) -> str:
         return obj.get("message", {}).get("content", "")
 
     return await asyncio.to_thread(_do_request)
+
+
+async def llm_plan_chat(system: str, user: str, screenshot_base64: Optional[str] = None) -> str:
+    """
+    Route planning chat requests to the configured LLM provider.
+
+    Defaults to local Ollama. When LLM_PROVIDER is set to 'kimi_k3',
+    routes to Kimi K3 with optional base64 screenshot for visual planning.
+    """
+    provider = _env("LLM_PROVIDER", "ollama").lower()
+    if provider == "kimi_k3":
+        try:
+            from .kimi_client import kimi_chat
+        except ImportError:
+            from kimi_client import kimi_chat  # type: ignore
+        return await kimi_chat(system, user, screenshot_base64=screenshot_base64)
+    return await ollama_chat(system, user)
 
 
 ALLOWED_ACTIONS = """
@@ -719,6 +743,16 @@ def extract_success_expectations(task: str) -> Dict[str, Any]:
         if m:
             expected_url_substrings.append(m.group(1).strip())
             continue
+
+        # Backward compatibility for "URL contains '...'" and "look for the words '...'"
+        m_url = URL_CONTAINS_RE.search(line)
+        if m_url:
+            expected_url_substrings.append(m_url.group(1).strip())
+
+        if "look for the words" in line.lower():
+            m_words = QUOTED_RE.search(line)
+            if m_words:
+                expected_texts.append(m_words.group(1).strip())
 
     # Dedup (case-insensitive)
     def _dedup(seq):
@@ -1662,7 +1696,7 @@ async def handle_client(ws: Any):
                     print(f"\n{log_prefix} 🤖 LLM PROMPT (CLICK):")
                     print(f"{log_prefix}    Target: '{label}'")
                     
-                    out = await ollama_chat(sub_system, user)
+                    out = await llm_plan_chat(sub_system, user)
                     
                     print(f"\n{log_prefix} 🤖 LLM RESPONSE:")
                     print(f"{log_prefix}    {out[:200]}...")
@@ -1723,7 +1757,7 @@ async def handle_client(ws: Any):
                     print(f"{log_prefix}    Value: '{value}'")
                     print(f"{log_prefix}    Instruction: {instruction[:150]}...")
                     
-                    out = await ollama_chat(sub_system, user)
+                    out = await llm_plan_chat(sub_system, user)
                     
                     print(f"\n{log_prefix} 🤖 LLM RESPONSE:")
                     print(f"{log_prefix}    {out[:200]}...")
@@ -1843,7 +1877,16 @@ async def handle_client(ws: Any):
             print(f"{log_prefix} 🎉 TASK COMPLETE (guided) success=True did_any_action={did_any_action}")
             await send_json({"type": "task-complete", "taskId": task_id, "success": True})
             return
+        force_fresh_snapshot = False
         for round_idx in range(max_rounds):
+            if force_fresh_snapshot:
+                print(f"{log_prefix} 🔄 [force_fresh_snapshot] Bypassing cached DOM; forcing fresh getDOMSnapshot...")
+                try:
+                    await send_command("getDOMSnapshot", {})
+                except Exception as snap_err:
+                    print(f"{log_prefix} ⚠️ getDOMSnapshot refresh warning: {snap_err}")
+                force_fresh_snapshot = False
+
             url = await send_command("getCurrentUrl", {})
             # ✅ Safety-net: ensure we are on the main URL before asking the model to "act"
             if primary_url and not did_force_open:
@@ -1881,7 +1924,11 @@ async def handle_client(ws: Any):
             else:
                 user_prompt = build_subgoal_prompt("act", system) + "\n\n" + context + "\n\nTASK:\n" + task_text
 
-            llm_out = await ollama_chat(system, user_prompt)
+            snap_b64 = None
+            if isinstance(start_msg.get("snapshot"), dict):
+                snap_b64 = start_msg["snapshot"].get("screenshot")
+
+            llm_out = await llm_plan_chat(system, user_prompt, screenshot_base64=snap_b64)
             print(f"{log_prefix} 🤖 Raw LLM Output: {llm_out}")
 
             plan = []
@@ -1940,6 +1987,8 @@ async def handle_client(ws: Any):
                     consecutive_action_failures += 1
                     failures += 1
                     last_errors.append(str(e))
+                    force_fresh_snapshot = True
+                    print(f"{log_prefix} ⚠️ Action execution failed: {e}. Set force_fresh_snapshot=True (consecutive_failures={consecutive_action_failures})")
 
                     if consecutive_action_failures >= MAX_CONSECUTIVE_FAILURES:
                         print(f"{log_prefix} 🚨 [HITL] Consecutive action failures ({consecutive_action_failures}) threshold reached. Requesting human intervention...")
@@ -1979,6 +2028,7 @@ async def handle_client(ws: Any):
                             "error": f"Too many failures. Last error: {e}",
                         })
                         return
+                    continue
 
             if record_enabled and plan:
                 cache_put_plan(url, task_text, recorded_plan)

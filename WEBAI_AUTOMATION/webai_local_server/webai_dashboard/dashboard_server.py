@@ -20,6 +20,7 @@ Run with:
 import json
 import os
 import socket
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -113,10 +114,18 @@ class RunResponse(BaseModel):
     message: str
 
 
+def sanitize_skill_filename(filename: Optional[str]) -> str:
+    """Sanitize a skill filename using os.path.basename to guard against directory traversal."""
+    if not filename:
+        return "synthesized_skill.json"
+    clean = os.path.basename(str(filename).replace("\\", "/")).strip()
+    return clean or "synthesized_skill.json"
+
+
 class SkillExecutePayload(BaseModel):
     """Payload for triggering dynamic execution of a synthesized AI skill."""
     skill_id: Optional[str] = "synthesized_skill"
-    filename: Optional[str] = "synthesized_skill.json"
+    filename: str = "synthesized_skill.json"
     parameters: Optional[Dict[str, Any]] = None
 
 
@@ -443,26 +452,44 @@ async def register(payload: RegisterPayload) -> Dict[str, Any]:
 
 @app.get("/api/skills")
 async def list_skills() -> List[Dict[str, Any]]:
-    """List all synthesized AI skills available in the client directory."""
+    """List all synthesized AI skills available in skills/ directory and legacy root."""
     skills = []
-    candidate_files = list(CLIENT_DIR.glob("*skill*.json"))
-    if not candidate_files:
-        default_file = CLIENT_DIR / "synthesized_skill.json"
-        if default_file.exists():
-            candidate_files = [default_file]
+    seen_names = set()
+
+    candidate_files: List[Path] = []
+    skills_dir = CLIENT_DIR / "skills"
+    if skills_dir.is_dir():
+        candidate_files.extend(sorted(skills_dir.glob("*.json")))
+
+    # Check root directory for legacy synthesized_skill.json or *skill*.json
+    default_file = CLIENT_DIR / "synthesized_skill.json"
+    if default_file.exists() and default_file not in candidate_files:
+        candidate_files.append(default_file)
+
+    for root_skill in CLIENT_DIR.glob("*skill*.json"):
+        if root_skill not in candidate_files:
+            candidate_files.append(root_skill)
 
     for sf in candidate_files:
         try:
             data = json.loads(sf.read_text(encoding="utf-8"))
             if isinstance(data, dict) and ("parameterized_steps" in data or "skill_name" in data):
+                name = (data.get("skill_name") or sf.stem).strip()
+                name_key = name.lower()
+                if name_key in seen_names:
+                    # Safeguard 1: Deduplicate mirror file if skill already loaded from skills/
+                    continue
+                seen_names.add(name_key)
+
                 skills.append({
                     "id": sf.stem,
-                    "skill_name": data.get("skill_name", sf.stem),
+                    "skill_name": name,
                     "description": data.get("description", ""),
                     "trigger_phrases": data.get("trigger_phrases", []),
                     "parameters_schema": data.get("parameters_schema", {}),
                     "step_count": len(data.get("parameterized_steps", [])),
-                    "filename": sf.name
+                    "filename": sf.name,
+                    "source_automation_id": data.get("source_automation_id")
                 })
         except Exception:
             continue
@@ -473,12 +500,18 @@ async def list_skills() -> List[Dict[str, Any]]:
 @app.post("/api/skills/execute")
 async def execute_skill_endpoint(payload: SkillExecutePayload) -> Dict[str, Any]:
     """Execute a synthesized AI Skill asynchronously via SkillExecutor in Playwright venv."""
-    filename = payload.filename or "synthesized_skill.json"
-    skill_path = CLIENT_DIR / filename
+    # Safeguard 2: Sanitize filename against directory traversal
+    clean_filename = sanitize_skill_filename(payload.filename)
+
+    # Search in skills/ first, then root client dir
+    skill_path = CLIENT_DIR / "skills" / clean_filename
+    if not skill_path.exists():
+        skill_path = CLIENT_DIR / clean_filename
+
     if not skill_path.exists():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Skill file '{filename}' not found."
+            detail=f"Skill file '{clean_filename}' not found."
         )
 
     venv_python = CLIENT_DIR / ".venv" / "Scripts" / "python.exe"
@@ -494,7 +527,7 @@ async def execute_skill_endpoint(payload: SkillExecutePayload) -> Dict[str, Any]
         f"executor = SkillExecutor(r'{skill_path}')\n"
         f"async def run():\n"
         f"    async with async_playwright() as p:\n"
-        f"        browser = await p.chromium.launch(headless=True)\n"
+        f"        browser = await p.chromium.launch(headless=False)\n"
         f"        page = await browser.new_page()\n"
         f"        res = await executor.execute_skill(page, json.loads(r'''{params_json}'''))\n"
         f"        await browser.close()\n"
@@ -504,12 +537,15 @@ async def execute_skill_endpoint(payload: SkillExecutePayload) -> Dict[str, Any]
 
     try:
         import subprocess
+        env = {**os.environ, "PYTHONIOENCODING": "utf-8:replace", "PYTHONUTF8": "1"}
         proc = subprocess.run(
             [str(venv_python), "-c", script_content],
             capture_output=True,
             text=True,
-            timeout=60,
-            cwd=str(CLIENT_DIR)
+            encoding="utf-8",
+            timeout=600,
+            cwd=str(CLIENT_DIR),
+            env=env,
         )
         if proc.returncode != 0:
             err_msg = proc.stderr.strip() or proc.stdout.strip() or f"Exited with code {proc.returncode}"
@@ -545,6 +581,62 @@ async def get_automation(automation_id: int,
     """Fetch one automation including its recorded steps (View Steps modal)."""
     api_key = _require_api_key(x_api_key)
     return _proxy_get(f"/automations/{automation_id}", api_key)
+
+
+@app.post("/api/automations/{automation_id}/synthesize", status_code=status.HTTP_200_OK)
+async def synthesize_automation_skill(
+    automation_id: int,
+    x_api_key: Optional[str] = Header(default=None)
+) -> Dict[str, Any]:
+    """
+    Synthesize an AI Skill recipe from database automation steps.
+
+    Spawns `dash_synthesize.py` as a subprocess inside the Playwright virtual
+    environment to perform synthesis, preventing cross-environment dependency conflicts.
+
+    Args:
+        automation_id: Database ID of the automation to synthesize.
+        x_api_key: Caller's X-API-Key header.
+
+    Returns:
+        Dict confirming status: {"status": "success"}.
+
+    Raises:
+        HTTPException: If authentication fails or the subprocess exits with an error.
+    """
+    api_key = x_api_key.strip() if (x_api_key and x_api_key.strip()) else os.getenv("WEBAI_API_KEY", "")
+    if not api_key:
+        api_key = _require_api_key(x_api_key)
+
+    python_exe = _select_playback_python()
+    env = {**os.environ, "PYTHONIOENCODING": "utf-8:replace", "PYTHONUTF8": "1"}
+    if api_key:
+        env["WEBAI_API_KEY"] = api_key
+    env["WEBAI_API_URL"] = API_URL
+    env["WEBAI_OLLAMA_URL"] = OLLAMA_URL
+
+    try:
+        subprocess.run(
+            [str(python_exe), "dash_synthesize.py", "--id", str(automation_id)],
+            cwd=CLIENT_DIR,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=True,
+            env=env,
+        )
+        return {"status": "success"}
+    except subprocess.CalledProcessError as exc:
+        err_detail = (exc.stderr or exc.stdout or str(exc)).strip()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Skill synthesis failed: {err_detail}",
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Skill synthesis failed: {exc}",
+        )
 
 
 @app.post("/api/automations/run", response_model=RunResponse)

@@ -39,7 +39,8 @@ def main():
     skill_def = synthesizer.synthesize(steps)
     
     if skill_def:
-        print("✅ Synthesis complete! 'synthesized_skill.json' is ready.")
+        out_file = synthesizer.save_skill(skill_def, base_dir=os.path.dirname(__file__))
+        print(f"✅ Synthesis complete! '{out_file}' is ready.")
     else:
         print("⚠️ Synthesis failed. Ensure Ollama is running.")
 
