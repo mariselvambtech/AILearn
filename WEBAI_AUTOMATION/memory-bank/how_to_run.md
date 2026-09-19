@@ -144,3 +144,9 @@ python scripts/graphify_to_mermaid.py
 Combined One-Liner (PowerShell)
 powershell
 .\webai_playwright_python\.venv\Scripts\graphify.exe update . ; python scripts/graphify_to_mermaid.py
+
+
+
+$env:TOKEN="local_dummy_token"
+$env:WEBSOCKET_PROTOCOL="ws"
+$env:WEBSOCKET_HOST="localhost:8765"
