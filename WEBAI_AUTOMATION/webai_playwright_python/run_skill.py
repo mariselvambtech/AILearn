@@ -9,6 +9,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import Optional
 
 from playwright.async_api import async_playwright
 
@@ -20,8 +21,27 @@ if str(PROJECT_ROOT) not in sys.path:
 from webai_playwright.skill_executor import SkillExecutor
 
 
+def resolve_skill_path(arg_path: Optional[str] = None, base_dir: Optional[str] = None) -> str:
+    """
+    Resolves skill file path supporting direct path, skills/ filename, or default fallback.
+    """
+    root = Path(base_dir) if base_dir else Path.cwd()
+    if arg_path:
+        p = Path(arg_path)
+        if p.is_file():
+            return str(p)
+        if (root / arg_path).is_file():
+            return str(root / arg_path)
+        if (root / "skills" / Path(arg_path).name).is_file():
+            return str(root / "skills" / Path(arg_path).name)
+        return str(arg_path)
+    
+    return str(root / "synthesized_skill.json")
+
+
 async def main():
-    skill_file = sys.argv[1] if len(sys.argv) > 1 else "synthesized_skill.json"
+    raw_arg = sys.argv[1] if len(sys.argv) > 1 else None
+    skill_file = resolve_skill_path(raw_arg, base_dir=PROJECT_ROOT)
     
     if not os.path.exists(skill_file):
         print(f" ❌ Skill file not found: {skill_file}")

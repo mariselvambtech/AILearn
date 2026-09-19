@@ -131,9 +131,7 @@ def main():
     skill_def = synthesizer.synthesize(steps)
 
     if skill_def:
-        output_path = os.path.join(os.path.dirname(__file__), "synthesized_skill.json")
-        with open(output_path, "w", encoding="utf-8") as f:
-            json.dump(skill_def, f, indent=2)
+        output_path = synthesizer.save_skill(skill_def, base_dir=os.path.dirname(__file__))
         print(f"\n✅ Synthesis complete! '{output_path}' is ready.")
         print(f"   Skill Name: {skill_def.get('skill_name')}")
         print(f"   Description: {skill_def.get('description')}")

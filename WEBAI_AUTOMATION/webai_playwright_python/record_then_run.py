@@ -103,8 +103,7 @@ async def main():
                 from webai_playwright.skill_synthesizer import SkillSynthesizer
                 synthesizer = SkillSynthesizer()
                 skill_recipe = synthesizer.synthesize(steps_json)
-                output_skill = "synthesized_skill.json"
-                Path(output_skill).write_text(json.dumps(skill_recipe, indent=2), encoding="utf-8")
+                output_skill = synthesizer.save_skill(skill_recipe)
                 print(f" [SkillSynthesizer] Saved skill recipe: {output_skill}")
                 print(f" Skill Name: {skill_recipe.get('skill_name')}")
                 print(f" Parameters: {list(skill_recipe.get('parameters_schema', {}).keys())}")

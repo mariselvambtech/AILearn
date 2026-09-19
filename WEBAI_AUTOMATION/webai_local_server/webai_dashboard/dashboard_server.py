@@ -113,10 +113,18 @@ class RunResponse(BaseModel):
     message: str
 
 
+def sanitize_skill_filename(filename: Optional[str]) -> str:
+    """Sanitize a skill filename using os.path.basename to guard against directory traversal."""
+    if not filename:
+        return "synthesized_skill.json"
+    clean = os.path.basename(str(filename).replace("\\", "/")).strip()
+    return clean or "synthesized_skill.json"
+
+
 class SkillExecutePayload(BaseModel):
     """Payload for triggering dynamic execution of a synthesized AI skill."""
     skill_id: Optional[str] = "synthesized_skill"
-    filename: Optional[str] = "synthesized_skill.json"
+    filename: str = "synthesized_skill.json"
     parameters: Optional[Dict[str, Any]] = None
 
 
@@ -443,21 +451,38 @@ async def register(payload: RegisterPayload) -> Dict[str, Any]:
 
 @app.get("/api/skills")
 async def list_skills() -> List[Dict[str, Any]]:
-    """List all synthesized AI skills available in the client directory."""
+    """List all synthesized AI skills available in skills/ directory and legacy root."""
     skills = []
-    candidate_files = list(CLIENT_DIR.glob("*skill*.json"))
-    if not candidate_files:
-        default_file = CLIENT_DIR / "synthesized_skill.json"
-        if default_file.exists():
-            candidate_files = [default_file]
+    seen_names = set()
+
+    candidate_files: List[Path] = []
+    skills_dir = CLIENT_DIR / "skills"
+    if skills_dir.is_dir():
+        candidate_files.extend(sorted(skills_dir.glob("*.json")))
+
+    # Check root directory for legacy synthesized_skill.json or *skill*.json
+    default_file = CLIENT_DIR / "synthesized_skill.json"
+    if default_file.exists() and default_file not in candidate_files:
+        candidate_files.append(default_file)
+
+    for root_skill in CLIENT_DIR.glob("*skill*.json"):
+        if root_skill not in candidate_files:
+            candidate_files.append(root_skill)
 
     for sf in candidate_files:
         try:
             data = json.loads(sf.read_text(encoding="utf-8"))
             if isinstance(data, dict) and ("parameterized_steps" in data or "skill_name" in data):
+                name = (data.get("skill_name") or sf.stem).strip()
+                name_key = name.lower()
+                if name_key in seen_names:
+                    # Safeguard 1: Deduplicate mirror file if skill already loaded from skills/
+                    continue
+                seen_names.add(name_key)
+
                 skills.append({
                     "id": sf.stem,
-                    "skill_name": data.get("skill_name", sf.stem),
+                    "skill_name": name,
                     "description": data.get("description", ""),
                     "trigger_phrases": data.get("trigger_phrases", []),
                     "parameters_schema": data.get("parameters_schema", {}),
@@ -473,12 +498,18 @@ async def list_skills() -> List[Dict[str, Any]]:
 @app.post("/api/skills/execute")
 async def execute_skill_endpoint(payload: SkillExecutePayload) -> Dict[str, Any]:
     """Execute a synthesized AI Skill asynchronously via SkillExecutor in Playwright venv."""
-    filename = payload.filename or "synthesized_skill.json"
-    skill_path = CLIENT_DIR / filename
+    # Safeguard 2: Sanitize filename against directory traversal
+    clean_filename = sanitize_skill_filename(payload.filename)
+
+    # Search in skills/ first, then root client dir
+    skill_path = CLIENT_DIR / "skills" / clean_filename
+    if not skill_path.exists():
+        skill_path = CLIENT_DIR / clean_filename
+
     if not skill_path.exists():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Skill file '{filename}' not found."
+            detail=f"Skill file '{clean_filename}' not found."
         )
 
     venv_python = CLIENT_DIR / ".venv" / "Scripts" / "python.exe"

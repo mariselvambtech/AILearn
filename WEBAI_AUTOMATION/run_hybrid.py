@@ -82,21 +82,29 @@ DEFAULT_SKILLS: List[Dict[str, Any]] = [
 def load_local_skills() -> List[Dict[str, Any]]:
     """Discovers and loads synthesized skills from JSON files in the workspace."""
     skills: List[Dict[str, Any]] = []
+    seen_names: set[str] = set()
 
-    # Potential locations for skill JSONs
-    skill_paths = [
-        ROOT_DIR / "synthesized_skill.json",
-        ROOT_DIR / "webai_playwright_python" / "synthesized_skill.json"
-    ]
+    # Potential locations for skill JSONs (skills/ first, then root mirrors)
+    candidate_paths: List[Path] = []
+    for s_dir in [ROOT_DIR / "skills", ROOT_DIR / "webai_playwright_python" / "skills"]:
+        if s_dir.is_dir():
+            candidate_paths.extend(sorted(s_dir.glob("*.json")))
 
-    for p in skill_paths:
-        if p.exists():
-            try:
-                data = json.loads(p.read_text(encoding="utf-8"))
-                if isinstance(data, dict) and "skill_name" in data:
-                    skills.append(data)
-            except Exception as e:
-                print(f" ⚠️ [WARN] Could not parse skill at {p}: {e}")
+    for root_p in [ROOT_DIR / "synthesized_skill.json", ROOT_DIR / "webai_playwright_python" / "synthesized_skill.json"]:
+        if root_p.exists() and root_p not in candidate_paths:
+            candidate_paths.append(root_p)
+
+    for p in candidate_paths:
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+            if isinstance(data, dict) and "skill_name" in data:
+                name_key = data["skill_name"].lower()
+                if name_key in seen_names:
+                    continue
+                seen_names.add(name_key)
+                skills.append(data)
+        except Exception as e:
+            print(f" ⚠️ [WARN] Could not parse skill at {p}: {e}")
 
     # Merge default fallback skills if not already present
     for default_sk in DEFAULT_SKILLS:

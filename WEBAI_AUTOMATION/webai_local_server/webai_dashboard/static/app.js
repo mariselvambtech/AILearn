@@ -530,7 +530,10 @@ function renderSkills(skills) {
             <div class="card skill-card" id="skill-card-${escapeHtml(skill.id)}">
                 <div class="card-header">
                     <h3 class="card-title">⚡ ${escapeHtml(skill.skill_name)}</h3>
-                    <span class="badge badge-accent">${skill.step_count} steps</span>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <span class="badge" style="font-size: 0.75rem; opacity: 0.8;">${escapeHtml(skill.filename)}</span>
+                        <span class="badge badge-accent">${skill.step_count} steps</span>
+                    </div>
                 </div>
                 <p class="card-desc" style="font-size: 0.9rem; color: var(--text-muted); margin: 8px 0;">${escapeHtml(skill.description)}</p>
                 <div class="trigger-phrases" style="font-size: 0.8rem; font-style: italic; opacity: 0.8; margin-bottom: 10px;">

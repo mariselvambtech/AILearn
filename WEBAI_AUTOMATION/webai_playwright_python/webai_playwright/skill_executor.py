@@ -25,6 +25,69 @@ from .fallback_helpers import (
 )
 
 
+class SemanticVerificationError(Exception):
+    """Raised when pre-click Rich Element Snapshot fails semantic verification against expected_context."""
+    pass
+
+
+RICH_SNAPSHOT_JS = """el => ({
+    text: el.innerText || el.textContent || '',
+    value: el.value || '',
+    aria: el.getAttribute('aria-label') || '',
+    title: el.getAttribute('title') || '',
+    checked: Boolean(el.checked)
+})"""
+
+
+async def extract_rich_snapshot(locator_obj: Any) -> Dict[str, Any]:
+    """
+    Extracts a comprehensive state dictionary from a DOM element using locator.evaluate().
+    Dictionary keys: text, value, aria, title, checked.
+    """
+    try:
+        if hasattr(locator_obj, "first") and hasattr(locator_obj, "count"):
+            if await locator_obj.count() > 0:
+                res = await locator_obj.first.evaluate(RICH_SNAPSHOT_JS)
+                if isinstance(res, dict):
+                    return res
+        if hasattr(locator_obj, "evaluate"):
+            res = await locator_obj.evaluate(RICH_SNAPSHOT_JS)
+            if isinstance(res, dict):
+                return res
+    except Exception:
+        pass
+    return {"text": "", "value": "", "aria": "", "title": "", "checked": False}
+
+
+def verify_semantic_context(snapshot: Dict[str, Any], expected_context: Optional[str]) -> bool:
+    """
+    Verifies that expected_context exists within the lowercase string values of the Rich Element Snapshot.
+    Inspects text, value, aria (aria-label), title, and checked state.
+    Raises SemanticVerificationError on mismatch.
+    """
+    if not expected_context or not expected_context.strip():
+        return True
+
+    expected = expected_context.strip().lower()
+    parts = [
+        str(snapshot.get("text") or ""),
+        str(snapshot.get("value") or ""),
+        str(snapshot.get("aria") or ""),
+        str(snapshot.get("title") or "")
+    ]
+    if snapshot.get("checked"):
+        parts.append("checked selected")
+
+    combined_text = " ".join(parts).lower()
+
+    if expected in combined_text:
+        return True
+
+    raise SemanticVerificationError(
+        f"Semantic verification failed: expected '{expected_context}' not found in element snapshot: {snapshot}"
+    )
+
+
 class SkillExecutor:
     """
     Executes synthesized AI skill recipes with dynamic runtime parameter injection.
@@ -67,7 +130,7 @@ class SkillExecutor:
         # Step 3: Template replacement in step fields
         resolved_steps = copy.deepcopy(self.parameterized_steps)
         for step in resolved_steps:
-            for field_name in ["url", "value", "name", "attribute_name"]:
+            for field_name in ["url", "value", "name", "attribute_name", "expected_context", "target"]:
                 field_val = step.get(field_name)
                 if field_val and isinstance(field_val, str) and "{{" in field_val:
                     for p_key, p_val in resolved_params.items():
@@ -110,7 +173,8 @@ class SkillExecutor:
                     await page.goto(url, wait_until="domcontentloaded")
             
             elif action == "click":
-                success = await click_with_fallback(page, locators)
+                expected_ctx = step.get("expected_context")
+                success = await click_with_fallback(page, locators, expected_context=expected_ctx)
                 if not success:
                     print(f" ⚠️ Step {idx} click failed for '{name}'")
 
@@ -145,6 +209,58 @@ class SkillExecutor:
             elif action == "verify_visible":
                 target_text = value or ""
                 assert await page.get_by_text(target_text).first.is_visible(), f"Verification failed: '{target_text}' not visible"
+
+            elif action == "assert":
+                target = step.get("target") or "url_contains"
+                expected_val = str(value or "")
+                print(f" [ASSERT] target='{target}', expected='{expected_val}'")
+
+                if target == "url_contains":
+                    current_url = page.url or ""
+                    assert expected_val.lower() in current_url.lower(), (
+                        f"Assertion failed: URL '{current_url}' does not contain expected '{expected_val}'"
+                    )
+                elif target == "url_equals":
+                    current_url = page.url or ""
+                    assert current_url == expected_val, (
+                        f"Assertion failed: URL '{current_url}' != '{expected_val}'"
+                    )
+                elif target == "title_contains":
+                    title = await page.title() if hasattr(page, "title") else ""
+                    assert expected_val.lower() in str(title).lower(), (
+                        f"Assertion failed: Page title '{title}' does not contain expected '{expected_val}'"
+                    )
+                elif target in ("visible", "element_visible", "text_visible"):
+                    is_vis = False
+                    if locators:
+                        from .fallback_helpers import _create_locator_obj
+                        loc_obj = await _create_locator_obj(page, locators[0])
+                        is_vis = await loc_obj.first.is_visible() if loc_obj and await loc_obj.count() > 0 else False
+                    elif expected_val and hasattr(page, "get_by_text"):
+                        loc_by_text = page.get_by_text(expected_val)
+                        is_vis = await loc_by_text.first.is_visible() if hasattr(loc_by_text, "first") else False
+                    assert is_vis, f"Assertion failed: Element with '{expected_val}' is not visible"
+                elif target in ("not_visible", "hidden"):
+                    is_vis = True
+                    if locators:
+                        from .fallback_helpers import _create_locator_obj
+                        loc_obj = await _create_locator_obj(page, locators[0])
+                        is_vis = await loc_obj.first.is_visible() if loc_obj and await loc_obj.count() > 0 else False
+                    elif expected_val and hasattr(page, "get_by_text"):
+                        loc_by_text = page.get_by_text(expected_val)
+                        is_vis = await loc_by_text.first.is_visible() if hasattr(loc_by_text, "first") else False
+                    assert not is_vis, f"Assertion failed: Element with '{expected_val}' is still visible"
+                else:
+                    # Fallback to general page text / URL check
+                    current_url = page.url or ""
+                    if expected_val.lower() in current_url.lower():
+                        pass
+                    elif hasattr(page, "content"):
+                        content = await page.content()
+                        assert expected_val.lower() in content.lower(), (
+                            f"Assertion failed: '{expected_val}' not found in URL or page content"
+                        )
+                print(f"  [OK] Assertion PASSED for '{target}' -> '{expected_val}'")
 
             executed_count += 1
 

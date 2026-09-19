@@ -15,21 +15,30 @@ class AudioAligner:
     Utility class for transcribing audio and aligning voice context with recorded steps.
     """
 
-    def __init__(self, model_size: str = "base") -> None:
+    def __init__(self, model_size: str = "distil-large-v3") -> None:
+        """Initialize AudioAligner with specified Whisper model size (defaults to 'distil-large-v3')."""
         self.model_size = model_size
         self._model = None
 
     def _get_model(self):
-        """Lazy initialization of faster-whisper model with hardware auto-detection."""
+        """Lazy initialization of faster-whisper model with hardware auto-detection and fallback."""
         if self._model is None:
             from faster_whisper import WhisperModel
             # Automatically uses NVIDIA GPU (CUDA) if available, falling back cleanly to CPU
-            self._model = WhisperModel(self.model_size, device="auto", compute_type="default")
+            try:
+                self._model = WhisperModel(self.model_size, device="auto", compute_type="default")
+            except Exception as e:
+                if self.model_size != "base.en":
+                    print(f" [WARN] [AudioAligner] Failed to load '{self.model_size}', falling back to 'base.en': {e}")
+                    self._model = WhisperModel("base.en", device="auto", compute_type="default")
+                else:
+                    raise
         return self._model
 
     def transcribe_audio(self, audio_path: str) -> List[Dict[str, Any]]:
         """
         Transcribes the WAV audio file and returns timestamped segments in milliseconds.
+        Uses VAD filtering and context prompt to prevent hallucinations and repetition.
         """
         if not os.path.exists(audio_path) or os.path.getsize(audio_path) < 100:
             print(f" [AudioAligner] Audio file invalid or empty: {audio_path}")
@@ -37,7 +46,15 @@ class AudioAligner:
 
         try:
             model = self._get_model()
-            segments, info = model.transcribe(audio_path, word_timestamps=False)
+            segments, info = model.transcribe(
+                audio_path,
+                word_timestamps=False,
+                vad_filter=True,
+                vad_parameters=dict(min_silence_duration_ms=500),
+                condition_on_previous_text=False,
+                beam_size=5,
+                initial_prompt="User instructing an automated web browser to click, type, select shirts, and navigate frames on websites like Flipkart and Wikipedia.",
+            )
             
             output_segments = []
             for seg in segments:

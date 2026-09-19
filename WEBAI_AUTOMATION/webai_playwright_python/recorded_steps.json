@@ -1,63 +1,308 @@
 [
   {
     "action": "open",
-    "url": "https://www.flipkart.com",
+    "url": "https://www.flipkart.com/",
     "name": null,
     "value": null,
-    "ts": 1787910000.0,
+    "key": null,
+    "ts": 1789801821.4966009,
     "locators": null,
-    "timestamp_ms": 1000.0,
-    "voice_context": "Navigate to Flipkart homepage"
-  },
-  {
-    "action": "type",
-    "url": "https://www.flipkart.com",
-    "name": "q",
-    "value": "red shirt",
-    "ts": 1787910003.0,
-    "locators": [
-      {
-        "type": "name",
-        "value": "q"
-      },
-      {
-        "type": "placeholder",
-        "value": "Search for Products, Brands and More"
-      },
-      {
-        "type": "css",
-        "value": "input._3704LK"
-      },
-      {
-        "type": "xpath",
-        "value": "//input[@name='q']"
-      }
-    ],
-    "timestamp_ms": 3000.0,
-    "voice_context": "Search for red shirt on Flipkart"
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null,
+    "timestamp_ms": 12964.183807373047,
+    "voice_context": "I launched the Flipcott website. So once I launched the Flipcott website, it asks for login. I don't want to login as a now. So I'm closing the login part of it. I'm clicking the fashion icon. I'm just scrolling down the browser a little bit. I'm choosing the jeans section, jeans pack section. Clicking the jeans. It loaded a new page with results showing the jeans. I'm selecting the filter as.",
+    "expected_context": null,
+    "target": null
   },
   {
     "action": "click",
-    "url": "https://www.flipkart.com",
-    "name": "Search",
+    "url": "https://www.flipkart.com/",
+    "name": "\u2715",
     "value": null,
-    "ts": 1787910005.0,
+    "key": null,
+    "ts": 1789801821.4966009,
     "locators": [
       {
-        "type": "role",
-        "value": "button",
-        "name": "Search"
-      },
-      {
         "type": "css",
-        "value": "button.L0Z3Pu"
+        "value": "span.b3wTlE"
       },
       {
         "type": "text",
-        "value": "Search"
+        "value": "\u2715"
+      },
+      {
+        "type": "role",
+        "value": "button",
+        "name": "\u2715"
+      },
+      {
+        "type": "xpath",
+        "value": "//div[5]/div/span"
       }
     ],
-    "timestamp_ms": 5000.0,
-    "voice_context": "Click search button"
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null,
+    "timestamp_ms": 12964.183807373047,
+    "voice_context": "I launched the Flipcott website. So once I launched the Flipcott website, it asks for login. I don't want to login as a now. So I'm closing the login part of it. I'm clicking the fashion icon. I'm just scrolling down the browser a little bit. I'm choosing the jeans section, jeans pack section. Clicking the jeans. It loaded a new page with results showing the jeans. I'm selecting the filter as.",
+    "expected_context": null,
+    "target": null
+  },
+  {
+    "action": "click",
+    "url": "https://www.flipkart.com/",
+    "name": "Fashion",
+    "value": null,
+    "key": null,
+    "ts": 1789801829.5521235,
+    "locators": [
+      {
+        "type": "href",
+        "value": "/ss-26-base-inline-at-store"
+      },
+      {
+        "type": "css",
+        "value": "a:nth-child(1)"
+      },
+      {
+        "type": "text",
+        "value": "Fashion"
+      },
+      {
+        "type": "role",
+        "value": "link",
+        "name": "Fashion"
+      },
+      {
+        "type": "xpath",
+        "value": "//div[2]/div/div/div/a"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null,
+    "timestamp_ms": 21019.70648765564,
+    "voice_context": "I launched the Flipcott website. So once I launched the Flipcott website, it asks for login. I don't want to login as a now. So I'm closing the login part of it. I'm clicking the fashion icon. I'm just scrolling down the browser a little bit. I'm choosing the jeans section, jeans pack section. Clicking the jeans. It loaded a new page with results showing the jeans. I'm selecting the filter as.",
+    "expected_context": null,
+    "target": null
+  },
+  {
+    "action": "navigate",
+    "url": "https://www.flipkart.com/ss-26-base-inline-at-store?pageUID=1789801808912",
+    "name": null,
+    "value": null,
+    "key": null,
+    "ts": 1789801840.487064,
+    "locators": null,
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null,
+    "timestamp_ms": 31954.646825790405,
+    "voice_context": "I launched the Flipcott website. So once I launched the Flipcott website, it asks for login. I don't want to login as a now. So I'm closing the login part of it. I'm clicking the fashion icon. I'm just scrolling down the browser a little bit. I'm choosing the jeans section, jeans pack section. Clicking the jeans. It loaded a new page with results showing the jeans. I'm selecting the filter as.",
+    "expected_context": null,
+    "target": null
+  },
+  {
+    "action": "click",
+    "url": "https://www.flipkart.com/ss-26-base-inline-at-store?pageUID=1789801808912",
+    "name": "Jeans",
+    "value": null,
+    "key": null,
+    "ts": 1789801840.487064,
+    "locators": [
+      {
+        "type": "href",
+        "value": "/clothing-and-accessories/bottomwear/pr?sid=clo%2Cvua&p%5B%5D=facets.ideal_for%255B%255D%3DMen&offer=nb%3Amp%3A02c5885027&ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIkplYW5zIl0sInZhbHVlVHlwZSI6Ik1VTFRJX1ZBTFVFRCJ9fX19fQ%3D%3D"
+      },
+      {
+        "type": "css",
+        "value": "a:nth-child(1)"
+      },
+      {
+        "type": "text",
+        "value": "Jeans"
+      },
+      {
+        "type": "role",
+        "value": "link",
+        "name": "Jeans"
+      },
+      {
+        "type": "xpath",
+        "value": "//div/div/div/div/a"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null,
+    "timestamp_ms": 31954.646825790405,
+    "voice_context": "I launched the Flipcott website. So once I launched the Flipcott website, it asks for login. I don't want to login as a now. So I'm closing the login part of it. I'm clicking the fashion icon. I'm just scrolling down the browser a little bit. I'm choosing the jeans section, jeans pack section. Clicking the jeans. It loaded a new page with results showing the jeans. I'm selecting the filter as.",
+    "expected_context": null,
+    "target": null
+  },
+  {
+    "action": "navigate",
+    "url": "https://www.flipkart.com/clothing-and-accessories/bottomwear/pr?sid=clo%2Cvua&p%5B%5D=facets.ideal_for%255B%255D%3DMen&offer=nb%3Amp%3A02c5885027&ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIkplYW5zIl0sInZhbHVlVHlwZSI6Ik1VTFRJX1ZBTFVFRCJ9fX19fQ%3D%3D",
+    "name": null,
+    "value": null,
+    "key": null,
+    "ts": 1789801850.6887991,
+    "locators": null,
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null,
+    "timestamp_ms": 42156.38208389282,
+    "voice_context": "I launched the Flipcott website. So once I launched the Flipcott website, it asks for login. I don't want to login as a now. So I'm closing the login part of it. I'm clicking the fashion icon. I'm just scrolling down the browser a little bit. I'm choosing the jeans section, jeans pack section. Clicking the jeans. It loaded a new page with results showing the jeans. I'm selecting the filter as. Pepe Jeans brand. So there is a filter called us brand and selecting the Pepe Jeans filter.",
+    "expected_context": null,
+    "target": null
+  },
+  {
+    "action": "click",
+    "url": "https://www.flipkart.com/clothing-and-accessories/bottomwear/pr?sid=clo%2Cvua&p%5B%5D=facets.ideal_for%255B%255D%3DMen&offer=nb%3Amp%3A02c5885027&ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIkplYW5zIl0sInZhbHVlVHlwZSI6Ik1VTFRJX1ZBTFVFRCJ9fX19fQ%3D%3D",
+    "name": "BRAND",
+    "value": null,
+    "key": null,
+    "ts": 1789801850.6887991,
+    "locators": [
+      {
+        "type": "css",
+        "value": "div._6odwB.UHMz4K:nth-child(1)"
+      },
+      {
+        "type": "text",
+        "value": "BRAND"
+      },
+      {
+        "type": "xpath",
+        "value": "//div/div/section[3]/div/div"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null,
+    "timestamp_ms": 42156.38208389282,
+    "voice_context": "I launched the Flipcott website. So once I launched the Flipcott website, it asks for login. I don't want to login as a now. So I'm closing the login part of it. I'm clicking the fashion icon. I'm just scrolling down the browser a little bit. I'm choosing the jeans section, jeans pack section. Clicking the jeans. It loaded a new page with results showing the jeans. I'm selecting the filter as. Pepe Jeans brand. So there is a filter called us brand and selecting the Pepe Jeans filter.",
+    "expected_context": null,
+    "target": null
+  },
+  {
+    "action": "click",
+    "url": "https://www.flipkart.com/clothing-and-accessories/bottomwear/pr?sid=clo%2Cvua&p%5B%5D=facets.ideal_for%255B%255D%3DMen&offer=nb%3Amp%3A02c5885027&ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIkplYW5zIl0sInZhbHVlVHlwZSI6Ik1VTFRJX1ZBTFVFRCJ9fX19fQ%3D%3D",
+    "name": "Pepe Jeans",
+    "value": null,
+    "key": null,
+    "ts": 1789801858.2165265,
+    "locators": [
+      {
+        "type": "css",
+        "value": "div.buvtMR:nth-child(2)"
+      },
+      {
+        "type": "text",
+        "value": "Pepe Jeans"
+      },
+      {
+        "type": "xpath",
+        "value": "//div[1]/div[3]/div/label/div[2]"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null,
+    "timestamp_ms": 49684.1094493866,
+    "voice_context": "Pepe Jeans brand. So there is a filter called us brand and selecting the Pepe Jeans filter. Now the page loaded with the jeans with brand only Pepe Jeans, not any other thing.",
+    "expected_context": null,
+    "target": null
+  },
+  {
+    "action": "navigate",
+    "url": "https://www.flipkart.com/clothing-and-accessories/bottomwear/pr?sid=clo%2Cvua&p%5B%5D=facets.ideal_for%255B%255D%3DMen&offer=nb%3Amp%3A02c5885027&ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIkplYW5zIl0sInZhbHVlVHlwZSI6Ik1VTFRJX1ZBTFVFRCJ9fX19fQ%3D%3D&p%5B%5D=facets.brand%255B%255D%3DPepe%2BJeans",
+    "name": null,
+    "value": null,
+    "key": null,
+    "ts": 1789801873.7364233,
+    "locators": null,
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null,
+    "timestamp_ms": 65204.00619506836,
+    "voice_context": "I am selecting a random Pepe Jeans fan and staffing the department.",
+    "expected_context": null,
+    "target": null
+  },
+  {
+    "action": "click",
+    "url": "https://www.flipkart.com/clothing-and-accessories/bottomwear/pr?sid=clo%2Cvua&p%5B%5D=facets.ideal_for%255B%255D%3DMen&offer=nb%3Amp%3A02c5885027&ctx=eyJjYXJkQ29udGV4dCI6eyJhdHRyaWJ1dGVzIjp7InRpdGxlIjp7Im11bHRpVmFsdWVkQXR0cmlidXRlIjp7ImtleSI6InRpdGxlIiwiaW5mZXJlbmNlVHlwZSI6IlRJVExFIiwidmFsdWVzIjpbIkplYW5zIl0sInZhbHVlVHlwZSI6Ik1VTFRJX1ZBTFVFRCJ9fX19fQ%3D%3D&p%5B%5D=facets.brand%255B%255D%3DPepe%2BJeans",
+    "name": "Link",
+    "value": null,
+    "key": null,
+    "ts": 1789801873.7364233,
+    "locators": [
+      {
+        "type": "href",
+        "value": "/pepe-jeans-slim-men-black/p/itmbf11df0c0d5c1?pid=JEAHE3FEHKRTSGDK&lid=LSTJEAHE3FEHKRTSGDKBC7FUF&marketplace=FLIPKART&store=clo%2Fvua&srno=b_1_7&otracker=browse&fm=neo%2Fmerchandising&iid=7dc4e0fe-8005-4771-a8c8-5746fc3b5368.JEAHE3FEHKRTSGDK.SEARCH&ppt=browse&ppn=browse&ssid=crnoe6489s0000001789801841074&ov_redirect=true"
+      },
+      {
+        "type": "css",
+        "value": "a.CIaYa1:nth-child(1)"
+      },
+      {
+        "type": "role",
+        "value": "link",
+        "name": null
+      },
+      {
+        "type": "xpath",
+        "value": "//div[3]/div/div[3]/div/a"
+      }
+    ],
+    "extract_type": null,
+    "attribute_name": null,
+    "save_options": null,
+    "table_config": null,
+    "page_summary": null,
+    "element_intent": null,
+    "fingerprint": null,
+    "timestamp_ms": 65204.00619506836,
+    "voice_context": "I am selecting a random Pepe Jeans fan and staffing the department.",
+    "expected_context": null,
+    "target": null
   }
 ]

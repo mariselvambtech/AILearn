@@ -286,3 +286,61 @@ class IntentRouter:
 
         # Default fallback
         return param_info.get("default")
+
+
+def load_local_skills(
+    skills_dir: Optional[Any] = None,
+    root_dir: Optional[Any] = None
+) -> List[Dict[str, Any]]:
+    """
+    Discovers and loads synthesized skills from JSON files in the workspace.
+
+    Scans skills/*.json first, then legacy root synthesized_skill.json files.
+    Applies deduplication by skill_name so dual-written mirrors do not produce duplicates.
+    """
+    from pathlib import Path
+    skills: List[Dict[str, Any]] = []
+    seen_names: set[str] = set()
+
+    candidate_dirs: List[Path] = []
+    if skills_dir:
+        candidate_dirs.append(Path(skills_dir))
+    else:
+        base = Path(root_dir) if root_dir else Path.cwd()
+        candidate_dirs.extend([
+            base / "skills",
+            base / "webai_playwright_python" / "skills",
+            base.parent / "webai_playwright_python" / "skills",
+        ])
+
+    candidate_files: List[Path] = []
+    for c_dir in candidate_dirs:
+        if c_dir.is_dir():
+            candidate_files.extend(sorted(c_dir.glob("*.json")))
+
+    # Legacy mirror root files
+    base = Path(root_dir) if root_dir else Path.cwd()
+    legacy_files = [
+        base / "synthesized_skill.json",
+        base / "webai_playwright_python" / "synthesized_skill.json",
+        base.parent / "webai_playwright_python" / "synthesized_skill.json",
+    ]
+    for lf in legacy_files:
+        if lf.exists() and lf not in candidate_files:
+            candidate_files.append(lf)
+
+    for p in candidate_files:
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+            if isinstance(data, dict) and ("skill_name" in data or "parameterized_steps" in data):
+                name = (data.get("skill_name") or p.stem).strip()
+                name_key = name.lower()
+                if name_key in seen_names:
+                    # Safeguard 1: Deduplicate mirror file
+                    continue
+                seen_names.add(name_key)
+                skills.append(data)
+        except Exception:
+            continue
+
+    return skills

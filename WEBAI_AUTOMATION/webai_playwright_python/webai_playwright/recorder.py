@@ -19,10 +19,10 @@ from playwright.async_api import Page
 
 @dataclass
 class Step:
-    action: str  # open | navigate | click | type | press_key | verify_text | verify_visible | extract | extract_table | wait
+    action: str  # open | navigate | click | type | press_key | verify_text | verify_visible | extract | extract_table | wait | assert
     url: Optional[str] = None
     name: Optional[str] = None     # click name OR confirmed label anchor OR key press context OR extraction variable name
-    value: Optional[str] = None    # typed value OR verify text OR extraction sample value
+    value: Optional[str] = None    # typed value OR verify text OR extraction sample value OR assert expected value
     key: Optional[str] = None      # pressed key (for press_key action) OR extract_type ('text'/'attribute')
     ts: float = 0.0
     locators: Optional[List[Dict[str, str]]] = None  # Multiple locator strategies
@@ -35,6 +35,8 @@ class Step:
     fingerprint: Optional[Dict[str, Any]] = None  # Structural DOM fingerprint
     timestamp_ms: float = 0.0  # Milliseconds elapsed since recording session start
     voice_context: Optional[str] = None  # Aligned transcript spoken context
+    expected_context: Optional[str] = None  # Pre-click semantic verification target
+    target: Optional[str] = None  # Target condition for assert action (e.g. url_contains, title_contains, visible)
 
 
 RECORDER_INIT_SCRIPT = r"""
