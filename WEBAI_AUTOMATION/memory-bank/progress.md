@@ -6,6 +6,7 @@
 
 | Feature | Status | Phase | Notes |
 |---------|--------|-------|-------|
+| **Transcriber Strategy Pattern & SenseVoice Support** | ✅ Working | Phase 28 (Decision 20) | Strategy pattern across `FasterWhisperTranscriber` and `SenseVoiceTranscriber` (`audio_transcriber.py`), dynamic switching via `VOICE_MODEL`, millisecond segment standardization, consumer refactoring in `audio_aligner.py` and `hitl_plugin.py` |
 | **Dashboard Skill Management (Delete Functionality)** | ✅ Working | Phase 27 (Decision 19) | Backend `DELETE /api/skills/{slug}` endpoint in `dashboard_server.py`, `skills_registry.json` unregistration, `skills/{slug}.json` removal, `skills/{slug}/` directory purge, frontend `🗑 Delete` button in `app.js`, and `.btn-danger` styles |
 | **Skill Synthesis (Auto-Saving Successful Agentic Workflows)** | ✅ Working | Phase 26 (Decision 18) | Session action history tracking in `local_webai_server_guided.py`, `"action_history"` attached to `task-complete` response, interactive auto-save prompt in `run_autonomous.py`, multi-locator step normalization, `skills/{slug}.json` recipe generation, and `skills_registry.json` update |
 | **Read-First System Prompting & Anti-Loop Directives** | ✅ Working | Phase 25 (Decision 16) | Viewport text inspection before clicking, dropdown menu toggle recognition, child link direct targeting, early `done` with `summary` for informational queries |

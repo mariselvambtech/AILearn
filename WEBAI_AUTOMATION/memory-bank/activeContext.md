@@ -4,6 +4,21 @@
 
 ## Current Session (2026-09-20)
 
+### Phase 28: Transcriber Strategy Pattern & SenseVoice Support (Decision 20, Rule 7 TDVC) ✅
+- **Transcriber Strategy Architecture (`audio_transcriber.py`):**
+  - Created `BaseTranscriber` ABC with `transcribe_text(file_path)` and `transcribe_segments(file_path)` returning millisecond timestamps (`start_ms`, `end_ms`).
+  - Implemented `FasterWhisperTranscriber` with lazy loading of `WhisperModel`, VAD filtering, hallucination reduction prompts, and dual timestamp output.
+  - Implemented `SenseVoiceTranscriber` with lazy loading of `funasr.AutoModel`, VAD FSMN support, regex text cleaning, and fallback CPU execution with user-friendly missing dependency guidance.
+  - Implemented `get_transcriber()` factory and module-level `ACTIVE_TRANSCRIBER` singleton driven by the `VOICE_MODEL` environment variable.
+- **Consumer Refactoring (`audio_aligner.py`, `hitl_plugin.py`):**
+  - Refactored `AudioAligner` to delegate segment transcription to `ACTIVE_TRANSCRIBER.transcribe_segments()` while preserving `_model` property forwarding and `align_steps()` compatibility.
+  - Refactored `HITLPlugin._transcribe_vocal_explanation()` to delegate plain text transcription to `ACTIVE_TRANSCRIBER.transcribe_text()`.
+- **TDVC Test Suite & Regression Verification:**
+  - Authored `test_audio_transcriber.py` testing default factory, explicit factory switching, fallback behavior, transcription execution, and backward compatibility (6/6 PASS).
+  - Verified audio test harnesses: `scratch/test_audio_alignment.py` and `scratch/test_audio_vad_configuration.py` (PASS).
+  - Executed full test suite across `webai_local_server/tests/` (60 passed, 4 skipped).
+  - Updated AST Knowledge Graph (`graphify update .`) and re-exported Mermaid diagrams (`scripts/graphify_to_mermaid.py`).
+
 ### Phase 27: Dashboard Skill Management (Delete Functionality) (Decision 19, Rule 7 TDVC) ✅
 - **Backend Delete Endpoint (`dashboard_server.py`):**
   - Added `@app.delete("/api/skills/{slug}")` endpoint with alphanumeric slug regex check `^[a-zA-Z0-9_-]+$` preventing directory traversal.
