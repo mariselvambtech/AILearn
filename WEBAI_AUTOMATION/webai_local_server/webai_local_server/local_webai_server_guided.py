@@ -10,6 +10,7 @@ import urllib.request
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from datetime import datetime
+import time
 
 import websockets
 
@@ -272,6 +273,77 @@ def _extract_coords(llm_out: str) -> Optional[Dict[str, int]]:
 
     return None
 
+
+def _make_action_sig(act: Dict[str, Any]) -> str:
+    """Generate a stable signature for an action to detect repetitive loops."""
+    if not isinstance(act, dict):
+        return ""
+    kind = (act.get("action") or "").strip().lower()
+    target = act.get("target") or {}
+    if not isinstance(target, dict):
+        target = {"raw": str(target)}
+    key_fields = {
+        "by": target.get("by"),
+        "text": target.get("text") or act.get("text"),
+        "label": target.get("label"),
+        "role": target.get("role"),
+        "name": target.get("name"),
+        "placeholder": target.get("placeholder"),
+        "x": act.get("x"),
+        "y": act.get("y"),
+        "url": act.get("url"),
+    }
+    clean = {k: v for k, v in key_fields.items() if v is not None and v != ""}
+    return f"{kind}:{json.dumps(clean, sort_keys=True)}"
+
+
+def _normalize_history_step(act: Dict[str, Any], url: Optional[str] = None) -> Dict[str, Any]:
+    """Normalize an executed action into a clean step dictionary for action history and skill saving."""
+    kind = (act.get("action") or "").strip().lower()
+    target = act.get("target") or {}
+    if not isinstance(target, dict):
+        target = {}
+
+    if "click" in kind:
+        action_type = "click"
+    elif "type" in kind:
+        action_type = "type"
+    elif kind in ("goto", "open", "navigate"):
+        action_type = "open"
+    elif "hover" in kind:
+        action_type = "hover"
+    else:
+        action_type = kind
+
+    name = act.get("name")
+    if not name and target:
+        name = target.get("name") or target.get("label") or target.get("text") or target.get("placeholder") or target.get("value")
+
+    value = act.get("value") or act.get("text")
+    locators = act.get("locators")
+    if not locators and target.get("by"):
+        by = target.get("by")
+        val = target.get("text") or target.get("label") or target.get("name") or target.get("value") or target.get("placeholder")
+        if val:
+            locators = [{"type": by, "value": val}]
+
+    step: Dict[str, Any] = {
+        "action": action_type,
+        "url": act.get("url") or url or "",
+        "name": name,
+        "value": value,
+        "key": act.get("key"),
+        "ts": time.time(),
+        "locators": locators if locators else None,
+    }
+    if "x" in act and "y" in act:
+        step["x"] = act["x"]
+        step["y"] = act["y"]
+    if target:
+        step["target"] = target
+    return step
+
+
 BASE_PROMPT = (
     "You are a careful browser automation planner.\n"
     "You MUST follow the allowed action schema exactly.\n"
@@ -283,10 +355,13 @@ BASE_PROMPT = (
     "  4) by='text'\n"
     "If an element isn't visible, use scroll_page down and try again.\n"
     "Do NOT guess selectors. Do NOT invent elements.\n"
-    "Do NOT output done until you have taken actions and verified success.\n"
+    "Do NOT output done until you have taken actions and verified success, UNLESS the user request is an informational query ('check', 'find out', 'what is') and the requested answer is already visible in the page context.\n"
     "Never use wait_text for URL verification. Use verify_url for URL checks.\n"
     "STRICT RULE: NEVER click 'Sign in', 'Login', or attempt account authorization unless the user prompt explicitly contains the word 'login'. If product choices or variants exist, use the 'request_help' action to ask the user which one they prefer.\n"
     "STRICT ARIA RULE: In clickByRole, 'role' MUST be a standard role like 'button' or 'link'. NEVER output 'role': 'element'.\n"
+    "READ-FIRST RULE: For informational queries ('check', 'find out', 'what is', 'read'), inspect visible text and page elements first. If the requested information is already visible, output {\"action\": \"done\", \"summary\": \"<found info>\"} immediately without clicking.\n"
+    "DROPDOWN MENU RULE: Recognize dropdown menu toggles (e.g. navigation menu bars, header expanders, hamburger toggles). Target specific child links directly instead of clicking toggles repeatedly.\n"
+    "ANTI-LOOP RULE: Never emit the exact same action and target if the previous step did not result in a URL or DOM change. If an action fails or causes no state transition, try an alternative action, scroll, or request_help.\n"
     "UNIVERSAL WEB SEMANTICS:\n"
     "1. VERBS VS. NOUNS: Navigation links in headers/nav (e.g., 'Cart', 'Menu', 'Login') are NOUNS used for viewing pages. Call-to-action buttons (e.g., 'Add to Cart', 'Buy Now', 'Submit') are VERBS used to execute actions.\n"
     "2. CONTEXT AWARENESS: If the user's intent is to perform an action on a specific item (e.g., purchasing, submitting), prioritize elements located in the 'main' or 'form' containers over elements in 'header' or 'nav'.\n"
@@ -653,6 +728,7 @@ def normalize_task(task: str) -> str:
     wants_search = any(k in lower for k in ["search", "google", "type", "enter", "query"])
     wants_click = any(k in lower for k in ["click", "tap"])
     wants_nav = bool(primary_url) or any(k in lower for k in ["go to", "open", "launch"])
+    wants_info = any(k in lower for k in ["check", "find out", "what is", "lookup", "read", "verify text", "get info"])
 
     lines: List[str] = []
     if primary_url:
@@ -662,7 +738,9 @@ def normalize_task(task: str) -> str:
         lines.append("")
 
     lines.append("Goal:")
-    if wants_search:
+    if wants_info:
+        lines.append("- Inspect visible page text/context first to find the requested information, or navigate to it.")
+    elif wants_search:
         lines.append("- Complete the requested search/action described below.")
     elif wants_click:
         lines.append("- Navigate and perform the requested click/navigation action.")
@@ -674,6 +752,9 @@ def normalize_task(task: str) -> str:
     lines.append("")
     lines.append("Requirements:")
     lines.append("- Wait until the page is fully loaded before interacting.")
+    lines.append("- For informational queries ('check', 'find out'), inspect visible text first and output {\"action\": \"done\", \"summary\": \"<found info>\"} immediately if found.")
+    lines.append("- Recognize dropdown menu toggles and target specific child links directly.")
+    lines.append("- Never emit the exact same action and target if the previous step did not result in a URL or DOM change.")
     lines.append("- Prefer stable targeting: label first, then role+name, then placeholder, then visible text.")
     lines.append("- If an element is not visible, scroll down and try again.")
     lines.append("- Avoid guessing; use visible interactive elements in context.")
@@ -698,6 +779,8 @@ URL_CONTAINS_RE = re.compile(r"""url\s+contains\s+["']([^"']+)["']""", re.IGNORE
 
 def _infer_task_type(task: str) -> str:
     t = (task or "").lower()
+    if any(k in t for k in ["check", "find out", "what is", "lookup", "read", "get info"]):
+        return "informational"
     if any(k in t for k in ["select", "dropdown", "autocomplete", "choose", "pick an option"]):
         return "dropdown"
     if any(k in t for k in ["fill", "form", "submit", "enter details", "sign up", "register"]):
@@ -907,13 +990,24 @@ def cache_put_plan(url: str, task_text: str, plan: List[Dict[str, Any]]) -> None
 # Templates / Skill registry
 # -----------------------------
 def build_system_prompt(task_text: str, expect: Dict[str, Any]) -> str:
-    task_type = (expect.get("task_type") or "generic").strip().lower()
+    task_type = (expect.get("task_type") or _infer_task_type(task_text) or "generic").strip().lower()
+
+    INFORMATIONAL_TEMPLATE = (
+        "INFORMATIONAL QUERY TEMPLATE:\n"
+        "- Inspect the visible page context (text, headings, elements) before taking any action.\n"
+        "- If the requested information or answer is already visible, output {\"action\": \"done\", \"summary\": \"<found info>\"} immediately without clicking.\n"
+        "- If not visible, scroll down or navigate directly to the relevant section.\n"
+        "- Recognize dropdown menu toggles and target specific child links directly instead of toggling menus repeatedly.\n"
+        "- Never emit the exact same action and target if the previous step did not result in a URL or DOM change.\n"
+    )
 
     NAV_TEMPLATE = (
         "NAVIGATION TEMPLATE:\n"
         "- Click the relevant link/button and confirm navigation.\n"
         "- After clicking, verify navigation by URL/title/content change.\n"
         "- For hyperlinks/menu items, prefer role='link' with name, then by='text'.\n"
+        "- Recognize dropdown menu toggles and target specific child links directly.\n"
+        "- Never emit the exact same action and target if the previous step did not result in a URL or DOM change.\n"
     )
 
     SEARCH_TEMPLATE = (
@@ -931,12 +1025,17 @@ def build_system_prompt(task_text: str, expect: Dict[str, Any]) -> str:
 
     DROPDOWN_TEMPLATE = (
         "DROPDOWN TEMPLATE:\n"
-        "- Use selectSmart or selectSearchSmart.\n"
+        "- Use selectSmart or selectSearchSmart for form select elements.\n"
+        "- For menu navigation dropdowns, click the target child link directly.\n"
+        "- Do not repeatedly toggle menus if no navigation occurs.\n"
         "- Verify selected value using wait_text.\n"
+        "- Never emit the exact same action and target if the previous step did not result in a URL or DOM change.\n"
     )
 
     template = NAV_TEMPLATE
-    if task_type == "search":
+    if task_type == "informational":
+        template = INFORMATIONAL_TEMPLATE
+    elif task_type == "search":
         template = SEARCH_TEMPLATE
     elif task_type == "form":
         template = FORM_TEMPLATE
@@ -979,6 +1078,68 @@ def _has_progress(prev_url: Optional[str], prev_title: Optional[str], url: str, 
     return False
 
 
+def _normalize_history_step(act: Dict[str, Any], url: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Normalizes an action dictionary executed during an autonomous session
+    into a replay-compatible recorded step structure for Skill Synthesis.
+    """
+    action = (act.get("action") or "").strip()
+    norm: Dict[str, Any] = {"timestamp": time.time()}
+    if url:
+        norm["url"] = url
+    elif act.get("url"):
+        norm["url"] = act.get("url")
+
+    if action in ("goto", "open"):
+        norm["action"] = "open"
+        norm["url"] = act.get("url") or url or ""
+        return norm
+
+    norm["action"] = action
+    target = act.get("target")
+
+    # Extract name / target info
+    if isinstance(target, dict):
+        by = target.get("by")
+        name = target.get("name") or target.get("text") or target.get("label") or target.get("placeholder") or ""
+        norm["name"] = name
+        locs = []
+        if by == "text":
+            locs.append({"type": "text", "value": target.get("text", "")})
+        elif by == "label":
+            locs.append({"type": "label", "value": target.get("label", "")})
+        elif by == "role":
+            locs.append({"type": "role", "value": target.get("role", ""), "name": target.get("name", "")})
+        elif by == "placeholder":
+            locs.append({"type": "placeholder", "value": target.get("placeholder", "")})
+        elif by:
+            locs.append({"type": by, "value": name})
+        norm["locators"] = locs
+    elif isinstance(target, str):
+        norm["name"] = target
+        norm["locators"] = [{"type": "css", "value": target}]
+
+    # Fallback to direct name/text if target wasn't dict
+    if "name" not in norm and act.get("name"):
+        norm["name"] = act.get("name")
+
+    # Value for typing
+    if action in ("type", "typewithfallback"):
+        norm["action"] = "type"
+        norm["value"] = act.get("text") or act.get("value") or ""
+
+    # Click actions
+    if action in ("click", "clickwithfallback"):
+        norm["action"] = "click"
+
+    # Coordinates
+    if "x" in act and "y" in act:
+        norm["x"] = act["x"]
+        norm["y"] = act["y"]
+
+    return norm
+
+
 async def handle_client(ws: Any):
     """
     Core WebSocket connection handler for incoming automation clients.
@@ -992,6 +1153,7 @@ async def handle_client(ws: Any):
     (navigate -> act -> verify), API server logging, and fallback recovery.
     """
     did_any_action = False
+    session_action_history: List[Dict[str, Any]] = []
 
     path = get_request_path(ws)
     client_key = get_query_param(path, "key")
@@ -1121,7 +1283,7 @@ async def handle_client(ws: Any):
         return act
 
     async def exec_action(act: Dict[str, Any]) -> None:
-        nonlocal did_any_action
+        nonlocal did_any_action, session_action_history
 
         kind = (act.get("action") or "").strip().lower()
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
@@ -1135,6 +1297,7 @@ async def handle_client(ws: Any):
             await send_command("navigate", {"url": url})
             print(f"{log_prefix} ✅ Navigation complete")
             did_any_action = True
+            session_action_history.append(_normalize_history_step(act, url=url))
             return
 
         if kind in ("clicklocation", "click_location"):
@@ -1144,22 +1307,46 @@ async def handle_client(ws: Any):
             await send_command("clickLocation", {"x": x, "y": y})
             print(f"{log_prefix} ✅ Click successful")
             did_any_action = True
+            session_action_history.append(_normalize_history_step(act))
             return
 
         if kind == "scroll_page":
             direction = act.get("target", "down")
-            print(f"{log_prefix} \u21d5\ufe0f  Scrolling page: {direction}")
+            print(f"{log_prefix} ⇅ Scrolling page: {direction}")
             await send_command("scrollPage", {"target": direction})
-            print(f"{log_prefix} \u2705 Scroll successful")
+            print(f"{log_prefix} ✅ Scroll successful")
             did_any_action = True
             return
 
         if kind == "press_key":
             key = act.get("key", "Enter")
-            print(f"{log_prefix} \u23ce  Pressing key: {key}")
+            print(f"{log_prefix} ⏎ Pressing key: {key}")
             await send_command("pressKey", {"key": key})
-            print(f"{log_prefix} \u2705 Key press successful")
+            print(f"{log_prefix} ✅ Key press successful")
             did_any_action = True
+            session_action_history.append(_normalize_history_step(act))
+            return
+
+        if kind in ("hoverlocation", "hover_location"):
+            x = int(act.get("x", 0))
+            y = int(act.get("y", 0))
+            print(f"{log_prefix} 🎯 Hovering at coordinates: ({x}, {y})")
+            await send_command("hoverLocation", {"x": x, "y": y})
+            print(f"{log_prefix} ✅ Hover successful")
+            did_any_action = True
+            session_action_history.append(_normalize_history_step(act))
+            return
+
+        if kind == "hover":
+            target = act.get("target") or {}
+            by = (target.get("by") or "").strip().lower()
+            if by == "text":
+                text = target.get("text", "")
+                await send_command("hoverByText", {"text": text, "exact": bool(target.get("exact", False))})
+            elif "x" in act and "y" in act:
+                await send_command("hoverLocation", {"x": int(act["x"]), "y": int(act["y"])})
+            did_any_action = True
+            session_action_history.append(_normalize_history_step(act))
             return
 
         if kind == "wait_text":
@@ -1181,25 +1368,28 @@ async def handle_client(ws: Any):
 
             if by == "label":
                 label = target.get("label", "")
-                print(f"{log_prefix} 🖱️  Clicking element by label: '{label}'")
+                print(f"{log_prefix} 🖱️ Clicking element by label: '{label}'")
                 await send_command("clickByLabel", {"label": label, "exact": bool(target.get("exact", False))})
                 print(f"{log_prefix} ✅ Click successful")
                 did_any_action = True
+                session_action_history.append(_normalize_history_step(act))
                 return
             if by == "role":
                 role = target.get("role", "")
                 name = target.get("name", "")
-                print(f"{log_prefix} 🖱️  Clicking {role} with name: '{name}'")
+                print(f"{log_prefix} 🖱️ Clicking {role} with name: '{name}'")
                 await send_command("clickByRole", {"role": role, "name": name, "exact": bool(target.get("exact", False))})
                 print(f"{log_prefix} ✅ Click successful")
                 did_any_action = True
+                session_action_history.append(_normalize_history_step(act))
                 return
             if by == "text":
                 text = target.get("text", "")
-                print(f"{log_prefix} 🖱️  Clicking element with text: '{text}'")
+                print(f"{log_prefix} 🖱️ Clicking element with text: '{text}'")
                 await send_command("clickByText", {"text": text, "exact": bool(target.get("exact", False))})
                 print(f"{log_prefix} ✅ Click successful")
                 did_any_action = True
+                session_action_history.append(_normalize_history_step(act))
                 return
             
             # Helpful error message
@@ -1227,6 +1417,7 @@ async def handle_client(ws: Any):
                 await send_command("typeById", {"id": element_id, "text": text})
                 print(f"{log_prefix} ✅ Type successful")
                 did_any_action = True
+                session_action_history.append(_normalize_history_step(act))
                 return
             if by == "name":
                 name_attr = target.get("value", "")
@@ -1234,6 +1425,7 @@ async def handle_client(ws: Any):
                 await send_command("typeByName", {"name": name_attr, "text": text})
                 print(f"{log_prefix} ✅ Type successful")
                 did_any_action = True
+                session_action_history.append(_normalize_history_step(act))
                 return
             if by == "css":
                 css = target.get("value", "")
@@ -1241,6 +1433,7 @@ async def handle_client(ws: Any):
                 await send_command("typeByCSS", {"css": css, "text": text})
                 print(f"{log_prefix} ✅ Type successful")
                 did_any_action = True
+                session_action_history.append(_normalize_history_step(act))
                 return
             if by == "xpath":
                 xpath = target.get("value", "")
@@ -1248,6 +1441,7 @@ async def handle_client(ws: Any):
                 await send_command("typeByXPath", {"xpath": xpath, "text": text})
                 print(f"{log_prefix} ✅ Type successful")
                 did_any_action = True
+                session_action_history.append(_normalize_history_step(act))
                 return
             if by == "aria-label":
                 aria_label = target.get("value", "")
@@ -1255,6 +1449,7 @@ async def handle_client(ws: Any):
                 await send_command("typeByAriaLabel", {"aria_label": aria_label, "text": text})
                 print(f"{log_prefix} ✅ Type successful")
                 did_any_action = True
+                session_action_history.append(_normalize_history_step(act))
                 return
             if by == "label":
                 label = target.get("value", "") or target.get("label", "")
@@ -1262,6 +1457,7 @@ async def handle_client(ws: Any):
                 await send_command("typeByLabel", {"label": label, "text": text, "exact": bool(target.get("exact", False))})
                 print(f"{log_prefix} ✅ Type successful")
                 did_any_action = True
+                session_action_history.append(_normalize_history_step(act))
                 return
             if by == "placeholder":
                 placeholder = target.get("value", "") or target.get("placeholder", "")
@@ -1269,6 +1465,7 @@ async def handle_client(ws: Any):
                 await send_command("typeByPlaceholder", {"placeholder": placeholder, "text": text, "exact": bool(target.get("exact", False))})
                 print(f"{log_prefix} ✅ Type successful")
                 did_any_action = True
+                session_action_history.append(_normalize_history_step(act))
                 return
             if by == "role":
                 role = target.get("role", "") or "textbox"
@@ -1277,6 +1474,7 @@ async def handle_client(ws: Any):
                 await send_command("typeByRole", {"role": role, "name": name, "text": text, "exact": bool(target.get("exact", False))})
                 print(f"{log_prefix} ✅ Type successful")
                 did_any_action = True
+                session_action_history.append(_normalize_history_step(act))
                 return
             raise RuntimeError(f"Unsupported type target: {target}")
 
@@ -1326,6 +1524,7 @@ async def handle_client(ws: Any):
             await send_command("typeWithFallback", {"locators": locators, "text": text})
             print(f"{log_prefix} ✅ Type successful")
             did_any_action = True
+            session_action_history.append(_normalize_history_step(act))
             return
 
         if kind == "clickwithfallback":
@@ -1334,6 +1533,7 @@ async def handle_client(ws: Any):
             await send_command("clickWithFallback", {"locators": locators})
             print(f"{log_prefix} ✅ Click successful")
             did_any_action = True
+            session_action_history.append(_normalize_history_step(act))
             return
 
         if kind == "extract":
@@ -1566,11 +1766,22 @@ async def handle_client(ws: Any):
             return hitl_res
 
         if kind == "done":
-            # Only accept done if we actually executed something.
-            if not did_any_action:
+            summary = act.get("summary")
+            # Only accept done without summary if we actually executed something.
+            # If summary is provided (e.g. informational query), accept immediately.
+            if not did_any_action and not summary:
                 # Ignore premature done and let the loop continue.
                 return
-            await send_json({"type": "task-complete", "taskId": task_id, "success": True})
+            result_payload: Dict[str, Any] = {
+                "type": "task-complete",
+                "taskId": task_id,
+                "success": True,
+                "action_history": session_action_history,
+            }
+            if summary:
+                result_payload["result"] = summary
+                print(f"{log_prefix} 🎉 Informational query completed with summary: {summary}")
+            await send_json(result_payload)
             raise TaskDone()
 
         raise RuntimeError(f"Unsupported action: {act}")
@@ -1630,6 +1841,9 @@ async def handle_client(ws: Any):
 
         prev_url: Optional[str] = None
         prev_title: Optional[str] = None
+        last_action_sig: Optional[str] = None
+        repeat_action_count: int = 0
+        last_seen_url: Optional[str] = None
 
         
         # -----------------------------
@@ -1832,6 +2046,9 @@ async def handle_client(ws: Any):
                                             f"You must evaluate the new visible DOM elements below and plan the NEXT logical step."
                                         )
                                         system = build_system_prompt(task_text, expect)
+                                        repeat_action_count = 0
+                                        last_action_sig = None
+                                        last_seen_url = None
                                         break # This break safely flushes the remaining stale actions in the current plan queue
                                         # --- END HITL FIX ---
 
@@ -1875,7 +2092,12 @@ async def handle_client(ws: Any):
 
             # After all recorded steps, complete task
             print(f"{log_prefix} 🎉 TASK COMPLETE (guided) success=True did_any_action={did_any_action}")
-            await send_json({"type": "task-complete", "taskId": task_id, "success": True})
+            await send_json({
+                "type": "task-complete",
+                "taskId": task_id,
+                "success": True,
+                "action_history": session_action_history,
+            })
             return
         force_fresh_snapshot = False
         for round_idx in range(max_rounds):
@@ -1893,6 +2115,7 @@ async def handle_client(ws: Any):
                 if (not url) or (url == "about:blank") or (not url.startswith(primary_url)):
                     print(f"🧭 Forcing initial navigation to primary URL: {primary_url} (current: {url})")
                     await send_command("navigate", {"url": primary_url})
+                    session_action_history.append(_normalize_history_step({"action": "goto", "url": primary_url}))
                     did_force_open = True
                     continue
 
@@ -1914,7 +2137,12 @@ async def handle_client(ws: Any):
             # - user explicitly asked verification (Verify ... lines present)
             # - and we actually executed actions
             if strict and explicit_verify and did_any_action and (url_ok or text_ok):
-                await send_json({"type": "task-complete", "taskId": task_id, "success": True})
+                await send_json({
+                    "type": "task-complete",
+                    "taskId": task_id,
+                    "success": True,
+                    "action_history": session_action_history,
+                })
                 return
 
 
@@ -1958,6 +2186,27 @@ async def handle_client(ws: Any):
 
             print("📋 plan:", plan)
 
+            # Circuit Breaker: Detect repetitive non-navigating actions and trigger proactive HITL
+            if plan:
+                first_act = plan[0]
+                current_sig = _make_action_sig(first_act)
+                current_url = url
+
+                if current_sig and current_sig == last_action_sig and current_url == last_seen_url:
+                    repeat_action_count += 1
+                    print(f"{log_prefix} ⚠️ [CircuitBreaker] Duplicate action detected: {current_sig} at {current_url} (repeat_action_count={repeat_action_count})")
+                else:
+                    repeat_action_count = 0
+                    last_action_sig = current_sig
+                    last_seen_url = current_url
+
+                if repeat_action_count >= 2:
+                    print(f"{log_prefix} 🚨 [CircuitBreaker] Stuck action loop detected ({repeat_action_count} identical non-navigating actions). Overwriting plan with proactive HITL request_help...")
+                    plan = [{
+                        "action": "request_help",
+                        "message": "I clicked this multiple times without navigation. Please click the desired option directly on screen, then click Resume AI."
+                    }]
+
             actions_attempted += len(plan)
 
             for a in plan[:max_actions_per_round]:
@@ -1982,6 +2231,9 @@ async def handle_client(ws: Any):
                         system = build_system_prompt(task_text, expect)
                         failures = 0
                         last_errors = []
+                        repeat_action_count = 0
+                        last_action_sig = None
+                        last_seen_url = None
                         break
                 except Exception as e:
                     consecutive_action_failures += 1
@@ -2016,6 +2268,9 @@ async def handle_client(ws: Any):
                                 system = build_system_prompt(task_text, expect)
                                 failures = 0
                                 last_errors = []
+                                repeat_action_count = 0
+                                last_action_sig = None
+                                last_seen_url = None
                                 break # Safely flushes remaining stale actions in current plan
                         except Exception as hitl_err:
                             print(f"{log_prefix} ⚠️ [HITL] Human intervention handler error: {hitl_err}")

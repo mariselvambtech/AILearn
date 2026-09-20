@@ -19,6 +19,8 @@ Run with:
 """
 import json
 import os
+import re
+import shutil
 import socket
 import subprocess
 import sys
@@ -562,6 +564,91 @@ async def execute_skill_endpoint(payload: SkillExecutePayload) -> Dict[str, Any]
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Skill execution failed: {exc}"
         )
+
+
+@app.delete("/api/skills/{slug}", status_code=status.HTTP_200_OK)
+async def delete_skill_endpoint(slug: str) -> Dict[str, Any]:
+    """
+    Delete a synthesized AI skill.
+    
+    Removes the skill JSON recipe, the recorded steps directory,
+    and unregisters the skill from skills_registry.json.
+    """
+    # Strict validation to prevent directory traversal or malformed slugs
+    if not slug or not re.match(r"^[a-zA-Z0-9_-]+$", slug):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid skill slug format.",
+        )
+
+    skills_dir = CLIENT_DIR / "skills"
+    skill_file = skills_dir / f"{slug}.json"
+    slug_dir = skills_dir / slug
+    registry_file = skills_dir / "skills_registry.json"
+
+    deleted = False
+
+    # 1. Update skills_registry.json
+    if registry_file.exists():
+        try:
+            registry_data = json.loads(registry_file.read_text(encoding="utf-8"))
+            if isinstance(registry_data, list):
+                original_len = len(registry_data)
+                updated_data = [
+                    entry for entry in registry_data
+                    if entry.get("slug") != slug and entry.get("skill_file") != f"{slug}.json"
+                ]
+                if len(updated_data) != original_len:
+                    deleted = True
+                registry_file.write_text(
+                    json.dumps(updated_data, indent=2, ensure_ascii=False),
+                    encoding="utf-8",
+                )
+        except Exception:
+            pass
+
+    # 2. Delete skills/{slug}.json
+    if skill_file.exists():
+        try:
+            os.remove(skill_file)
+            deleted = True
+        except OSError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to delete skill file: {exc}",
+            )
+
+    # Check root client directory for legacy mirror if present
+    legacy_file = CLIENT_DIR / f"{slug}.json"
+    if legacy_file.exists():
+        try:
+            os.remove(legacy_file)
+            deleted = True
+        except OSError:
+            pass
+
+    # 3. Delete skills/{slug}/ directory
+    if slug_dir.exists() and slug_dir.is_dir():
+        try:
+            shutil.rmtree(slug_dir, ignore_errors=True)
+            deleted = True
+        except OSError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to delete skill directory: {exc}",
+            )
+
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Skill '{slug}' not found.",
+        )
+
+    return {
+        "success": True,
+        "slug": slug,
+        "message": f"Skill '{slug}' deleted successfully.",
+    }
 
 
 # ---------------------------------------------------------------------------

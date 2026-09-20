@@ -540,9 +540,114 @@ Implemented Pre-Click Semantic Verification and Post-Click Conditional Assertion
 
 ---
 
+## Decision 16: Read-First System Prompting & Anti-Loop Directives
+
+**Date:** 2026-09-20
+**Status:** Implemented ✅
+
+### Context
+Autonomous LLM navigation frequently fell into loops: repeatedly clicking dropdown navigation toggles (e.g., menu bars or accordion headers) without progressing to child links, or blindly clicking elements when the requested informational answer (e.g., school phone numbers, fees) was already plainly visible in the viewport.
+
+### Decision
+Augmented system prompts and task normalization with read-first and anti-loop directives:
+1. **Read-First Directive**: Instructed the planner LLM that for informational queries ("check", "find out", "what is", "read"), it must inspect visible page context first and immediately output `{"action": "done", "summary": "<found info>"}` if the answer is present, without clicking.
+2. **Early `done` Acceptance**: Updated `exec_action` in `local_webai_server_guided.py` so that a `done` action containing a `summary` is accepted immediately without requiring prior navigation actions.
+3. **Dropdown Menu Guidance**: Instructed the LLM to recognize menu toggles and target child/destination links directly rather than getting trapped repeatedly clicking expanders.
+4. **Anti-Loop Directives**: Explicitly instructed the LLM never to emit the exact same action and target if the prior step resulted in zero URL or DOM change.
+
+### Impact
+- **Positive:** Dramatically reduces token waste and navigation latency for informational lookups; prevents dropdown toggle traps.
+- **Verification:** Unit tested in `webai_local_server/tests/test_circuit_breaker_anti_loop.py` (9/9 PASS).
+
+---
+
+## Decision 17: Action Deduplication Circuit Breaker & Proactive HITL Escalation
+
+**Date:** 2026-09-20
+**Status:** Implemented ✅
+
+### Context
+When the LLM planner does hallucinate or get trapped in repetitive action loops (e.g. clicking the same button repeatedly on an unresponsive or non-navigating element), it burned through execution rounds until max failure limits were reached, frustrating users and wasting API tokens.
+
+### Decision
+Implemented a runtime Circuit Breaker with Proactive HITL Escalation in `local_webai_server_guided.py`:
+1. **Action Signature Generation**: `_make_action_sig(act)` generates deterministic signatures `(action, target)` across all action types (text, role, label, coordinates, placeholder, etc.).
+2. **Signature & State Tracking**: In `handle_client`, track `last_action_sig`, `repeat_action_count`, and `last_seen_url`.
+3. **Loop Detection**: In each round of the autonomous planning loop, if `current_sig == last_action_sig` and `current_url == last_seen_url`, increment `repeat_action_count`. Otherwise, reset it to 0.
+4. **Proactive HITL Escalation**: If `repeat_action_count >= 2`, immediately overwrite the plan with `{"action": "request_help", "message": "I clicked this multiple times without navigation. Please click the desired option directly on screen, then click Resume AI."}`, proactively dropping the Observer Mode panel instead of burning turns.
+5. **State Reset on Resume**: Upon human intervention resolution (or resume), reset `repeat_action_count = 0`, `last_action_sig = None`, and `last_seen_url = None`.
+
+### Impact
+- **Positive:** Stops infinite action loops after 2 duplicates; promptly engages the user via Observer Mode to unblock navigation; safely clears memory and resumes once the human assists.
+- **Verification:** Unit tests in `webai_local_server/tests/test_circuit_breaker_anti_loop.py` (9/9 PASS) and full regression suite (54/54 PASS).
+
+---
+
+---
+
+## Decision 18: Skill Synthesis (Auto-Saving Successful Agentic Workflows)
+
+**Date:** 2026-09-20
+**Status:** Implemented ✅
+
+### Context
+When the autonomous AI agent successfully completes a novel or complex task, running it autonomously again via the frontier LLM wastes tokens, adds latency, and risks stochastic drift. The platform needed a closed learning loop where successful autonomous executions are converted into reusable, deterministic skills.
+
+### Decision
+Implemented the "Skill Synthesis" learning loop across `local_webai_server_guided.py` and `run_autonomous.py`:
+1. **Server-Side Action History Tracking**:
+   - Initialized `session_action_history: List[Dict[str, Any]] = []` per client connection in `handle_client`.
+   - Added `_normalize_history_step(act, url)` to convert runtime actions (`goto`, `click`, `type`, coordinates) into replay-compatible step definitions with multi-locators.
+   - Recorded all successful actions (`exec_action` and forced navigation) in `session_action_history`.
+   - Included `"action_history": session_action_history` in `task-complete` response payloads (`done`, guided completion, strict verification).
+2. **Interactive Skill Synthesis Loop in `run_autonomous.py`**:
+   - Post-execution check for `result.get("success")` and `result.get("action_history")`.
+   - Prompts the user: `✨ Task completed successfully! Would you like to save this workflow as a reusable skill? (y/n): `.
+   - If affirmative, prompts for `Skill Name` and `Trigger Description`.
+   - Calls `save_synthesized_skill()` which:
+     - Creates slug directory `skills/{slug}/recorded_steps.json`.
+     - Writes `skills/{slug}.json` matching skill schema (`skill_name`, `description`, `trigger_phrases`, `parameters_schema`, `parameterized_steps`, `recorded_steps_path`).
+     - Updates/appends metadata to `skills/skills_registry.json`.
+   - Future runs can be handled deterministically by the local `IntentRouter` instead of the LLM.
+3. **Decoupled Architecture**:
+   - `playwright` dependencies in `run_autonomous.py` are lazily imported in `main()` so that `save_synthesized_skill` can be imported and executed standalone in any environment.
+
+### Impact
+- **Positive:** Completes the self-learning loop from autonomous exploration to deterministic execution; eliminates future LLM costs for repeated tasks; updates the skill library and registry automatically.
+- **Verification:** Unit and integration tests in `webai_local_server/tests/test_skill_synthesis_auto_save.py` (3/3 PASS) and full regression suite (57/57 PASS).
+
+---
+
+## Decision 19: Dashboard Skill Management (Delete Functionality)
+
+**Date:** 2026-09-20
+**Status:** Implemented ✅
+
+### Context
+Users can synthesize and save skills via autonomous execution or from recorded database automations. However, there was no way to delete unwanted, obsolete, or experimental skills from the UI, leaving orphaned files in `skills/` and stale entries in `skills_registry.json`.
+
+### Decision
+Implemented complete skill deletion functionality across backend and dashboard frontend:
+1. **Backend Endpoint (`DELETE /api/skills/{slug}`) in `dashboard_server.py`**:
+   - Validates `slug` with strict regex `^[a-zA-Z0-9_-]+$` preventing directory traversal.
+   - Loads and updates `skills/skills_registry.json` removing the matching slug/filename entry.
+   - Uses `os.remove()` to safely delete `skills/{slug}.json` (and any legacy root mirror).
+   - Uses `shutil.rmtree()` to recursively remove the `skills/{slug}/` directory containing `recorded_steps.json`.
+   - Returns 200 OK summary or 404 if the skill does not exist.
+2. **Frontend UI in `app.js` & `styles.css`**:
+   - Added `🗑 Delete` buttons styled with `.btn-danger` on both the main Synthesized AI Skills cards and nested automation skill cards.
+   - Implemented `deleteSkill(slug)` with confirmation prompt, `DELETE` API call, toast notifications, and automatic `loadSkills()` refresh.
+   - Added `.btn-danger` and hover state in `styles.css`.
+
+### Impact
+- **Positive:** Provides full lifecycle management for synthesized skills without requiring manual file system navigation or JSON registry editing.
+- **Verification:** Unit and integration tests in `webai_local_server/tests/test_dashboard_skill_delete.py` (3/3 PASS) and full regression suite (60/60 PASS).
+
+---
+
 ## Future Decisions Pending
 
-### Decision 15: Jira Integration Approach (Pending)
+### Decision 20: Jira Integration Approach (Pending)
 **Question:** How to integrate with Jira for ticket creation?
 **Options:**
 1. Direct Jira REST API calls from AI server
@@ -550,7 +655,7 @@ Implemented Pre-Click Semantic Verification and Post-Click Conditional Assertion
 3. Store condition results in DB, separate worker creates tickets
 **Status:** Awaiting user direction
 
-### Decision 16: Variable Persistence Model (Pending)
+### Decision 21: Variable Persistence Model (Pending)
 **Question:** How should extracted variables persist across steps for condition checks?
 **Options:**
 1. In-memory dict (current: `page.__extracted_data__`)
