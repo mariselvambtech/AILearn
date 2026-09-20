@@ -223,7 +223,10 @@ function renderAutomations() {
                     ${s.description ? `<p style="font-size: 0.78rem; color: var(--text-muted); margin: 4px 0;">${escapeHtml(s.description)}</p>` : ""}
                     <form onsubmit="handleSkillExecute(event, '${escapeHtml(s.id)}', '${escapeHtml(s.filename)}')">
                       ${paramFields}
-                      <button type="submit" class="btn btn-accent btn-sm" style="width: 100%; margin-top: 6px; padding: 4px 8px; font-size: 0.8rem;">▶ Run Skill</button>
+                      <div style="display: flex; gap: 6px; margin-top: 6px;">
+                        <button type="submit" class="btn btn-accent btn-sm" style="flex: 1; padding: 4px 8px; font-size: 0.8rem;">▶ Run Skill</button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="deleteSkill('${escapeHtml(s.id)}')" style="padding: 4px 8px; font-size: 0.8rem;" title="Delete skill">🗑 Delete</button>
+                      </div>
                     </form>
                   </div>
                 `;
@@ -611,11 +614,29 @@ function renderSkills(skills) {
                 </div>
                 <form onsubmit="handleSkillExecute(event, '${escapeHtml(skill.id)}', '${escapeHtml(skill.filename)}')">
                     ${paramFields}
-                    <button type="submit" class="btn btn-accent" style="width: 100%; margin-top: 12px;">▶ Run Skill</button>
+                    <div style="display: flex; gap: 8px; margin-top: 12px;">
+                        <button type="submit" class="btn btn-accent" style="flex: 1;">▶ Run Skill</button>
+                        <button type="button" class="btn btn-danger" onclick="deleteSkill('${escapeHtml(skill.id)}')" title="Delete skill">🗑 Delete</button>
+                    </div>
                 </form>
             </div>
         `;
     }).join("");
+}
+
+async function deleteSkill(slug) {
+    if (!slug) return;
+    if (!confirm(`Are you sure you want to delete the synthesized skill '${slug}'? This will permanently delete its recipe and recorded steps.`)) {
+        return;
+    }
+    toast(`Deleting skill '${slug}'…`, "info", 4000);
+    try {
+        const res = await api(`/api/skills/${encodeURIComponent(slug)}`, { method: "DELETE" });
+        toast(res.message || `Skill '${slug}' deleted successfully.`, "success", 5000);
+        await loadSkills();
+    } catch (err) {
+        toast(`Failed to delete skill: ${err.message}`, "danger", 6000);
+    }
 }
 
 async function handleSkillExecute(event, skillId, filename) {

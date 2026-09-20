@@ -4,6 +4,61 @@
 
 ## Current Session (2026-09-20)
 
+### Phase 27: Dashboard Skill Management (Delete Functionality) (Decision 19, Rule 7 TDVC) ✅
+- **Backend Delete Endpoint (`dashboard_server.py`):**
+  - Added `@app.delete("/api/skills/{slug}")` endpoint with alphanumeric slug regex check `^[a-zA-Z0-9_-]+$` preventing directory traversal.
+  - Removes matching skill entries from `skills/skills_registry.json`.
+  - Removes `skills/{slug}.json` recipe file (and any root legacy mirror) via `os.remove()`.
+  - Removes `skills/{slug}/` directory containing `recorded_steps.json` via `shutil.rmtree()`.
+  - Returns 200 OK summary or 404 if skill not found.
+- **Frontend Dashboard UI (`app.js`, `styles.css`):**
+  - Added `🗑 Delete` buttons with `.btn-danger` on each skill card in the main Synthesized Skills section and nested automation cards.
+  - Implemented `deleteSkill(slug)` with confirmation dialog, API deletion request, success toast, and automatic UI refresh.
+  - Added `.btn-danger` class and hover style in `styles.css`.
+- **TDVC Test Suite & Full Regression:**
+  - Authored `webai_local_server/tests/test_dashboard_skill_delete.py` (3/3 PASS).
+  - Executed full regression suite: 60 passed, 4 skipped, 0 failed.
+  - Rebuilt Knowledge Graph (`graphify update .`) and re-exported Mermaid diagrams (`scripts/graphify_to_mermaid.py`).
+
+### Phase 26: Skill Synthesis (Auto-Saving Successful Agentic Workflows) (Decision 18, Rule 7 TDVC) ✅
+- **Session Action History Tracking (`local_webai_server_guided.py`):**
+  - Initialized `session_action_history: List[Dict[str, Any]] = []` in `handle_client()`.
+  - Authored `_normalize_history_step(act, url)` to translate runtime actions (`goto`, `click`, `type`, coordinates) into replay-compatible step definitions containing multi-locators (`text`, `label`, `role`, `placeholder`, `css`), action names, values, and timestamps.
+  - Recorded all successful actions (including forced navigation to `primary_url`) into `session_action_history`.
+  - Attached `"action_history": session_action_history` to `task-complete` response payloads (`done` action, guided completion, and strict verification completion).
+- **Interactive Auto-Saving Loop (`run_autonomous.py`):**
+  - Inspected `result.get("success")` and `result.get("action_history")` after `ai()` execution.
+  - Prompted user: `✨ Task completed successfully! Would you like to save this workflow as a reusable skill? (y/n): `.
+  - If accepted, prompted for `Skill Name` and `Trigger Description`.
+  - Implemented `save_synthesized_skill()`:
+    - Creates `{base_dir}/{slug}/recorded_steps.json` with recorded history.
+    - Creates `{base_dir}/{slug}.json` matching skill schema (`skill_name`, `description`, `trigger_phrases`, `parameters_schema`, `parameterized_steps`, `recorded_steps_path`).
+    - Updates/appends metadata to `{base_dir}/skills_registry.json`.
+- **Decoupled Architecture:**
+  - Lazily imported `playwright.async_api.async_playwright` and `webai_playwright.ai.ai` inside `main()`, enabling `save_synthesized_skill` to be imported and executed standalone in environments without `playwright`.
+- **TDVC Test Suite & Full Regression:**
+  - Authored `webai_local_server/tests/test_skill_synthesis_auto_save.py` (3/3 PASS).
+  - Executed full test suite across `webai_local_server/tests/` (57/57 PASS).
+  - Synchronized Knowledge Graph (`graphify update .`) and re-exported Mermaid diagrams (`scripts/graphify_to_mermaid.py`).
+
+### Phase 25: Autonomous Navigation Engine Hardening (Decision 16, Decision 17, Rule 7 TDVC) ✅
+- **Read-First & Anti-Loop Prompt Directives (Decision 16):**
+  - Updated `BASE_PROMPT` in `local_webai_server_guided.py` with `READ-FIRST RULE`, `DROPDOWN MENU RULE`, and `ANTI-LOOP RULE`.
+  - In `normalize_task()`, detect informational queries ("check", "find out", "what is", "lookup", "read", "verify text") and inject explicit read-first, dropdown toggle, and anti-loop requirements.
+  - In `_infer_task_type()`, infer `"informational"` task type.
+  - In `build_system_prompt()`, add `INFORMATIONAL_TEMPLATE` guiding the LLM to inspect visible viewport text first and return `{"action": "done", "summary": "<found info>"}` immediately if the target information is already visible.
+  - In `exec_action()`, allow early `done` with `summary` for informational queries without requiring prior actions.
+- **Action Deduplication Circuit Breaker (Decision 17):**
+  - Created `_make_action_sig(act)` helper deterministically serializing `(action, target)` into a consistent signature.
+  - Maintained `last_action_sig`, `repeat_action_count`, and `last_seen_url` in `handle_client()`.
+  - In each round of the autonomous planning loop, if `current_sig == last_action_sig` and `current_url == last_seen_url`, increment `repeat_action_count`. Otherwise reset to 0.
+- **Proactive HITL Escalation:**
+  - If `repeat_action_count >= 2`, overwrite `plan` with `{"action": "request_help", "message": "I clicked this multiple times without navigation. Please click the desired option directly on screen, then click Resume AI."}`, proactively invoking `HITLPlugin` and dropping Observer Mode.
+  - On human intervention resolution (`res.get("action") == "observer_mode_complete"` or `res.get("status") == "resolved"`), reset `repeat_action_count = 0`, `last_action_sig = None`, and `last_seen_url = None`.
+- **TDVC Test Suite & Regression:**
+  - Authored `webai_local_server/tests/test_circuit_breaker_anti_loop.py` (9/9 PASS).
+  - Executed full test suite across `webai_local_server/tests/` (54/54 PASS).
+
 ### Phase 24: Pure Autonomous AI Navigation Entry Point (`run_autonomous.py`) (Rule 3) ✅
 - **Blank-Slate Autonomous Runner:** Created dedicated entry point [`webai_playwright_python/run_autonomous.py`](file:///d:/AI/AILearn/WEBAI_AUTOMATION/webai_playwright_python/run_autonomous.py) for purely autonomous, blank-slate AI browser navigation.
 - **Independence from Pre-recorded Data:** Does NOT load or execute `recorded_steps.json`. Purely reads natural language prompt from `generated_task.txt` and delegates intelligent navigation to the local WebAI server via `webai_playwright.ai()`.

@@ -434,7 +434,23 @@ erDiagram
 | `extract` | `extractData` | Extract text/attribute with fallback |
 | `extract_table` | `extractTableData` | Extract table with pagination |
 | `wait` | (server-side sleep) | Explicit delay (1-60 seconds) |
-| `done` | `task-complete` | Task complete signal |
+| `done` | `task-complete` | Task complete signal (supports `summary` for early exit) |
+| `request_help` | `request_help` / `request_human_intervention` | Triggers HITL Observer Mode for human assistance |
+
+## Autonomous Navigation Hardening Patterns
+
+### Read-First & Anti-Loop Pattern (Decision 16)
+1. **Viewport Text First**: For informational tasks ("check", "find out", "what is", "read"), the LLM is instructed to inspect visible text before taking action. If the answer is present, it emits `{"action": "done", "summary": "<found info>"}` immediately.
+2. **Early `done` Acceptance**: `exec_action()` accepts `done` without requiring prior clicks if `summary` is provided.
+3. **Dropdown Toggle Decoupling**: Instructs planner to target child navigation links directly rather than repeatedly clicking parent menu expanders.
+4. **Anti-Loop Directives**: Instructs planner never to repeat the identical action and target when previous steps produced no URL or DOM changes.
+
+### Action Deduplication Circuit Breaker Pattern (Decision 17)
+1. **Action Signature**: `_make_action_sig(act)` generates deterministic `kind:{clean_target_json}` signatures.
+2. **State Tracking**: `last_action_sig`, `repeat_action_count`, and `last_seen_url` are tracked per execution loop.
+3. **Duplicate Detection**: If `current_sig == last_action_sig` and `current_url == last_seen_url`, `repeat_action_count += 1`. Any URL change or signature change resets it to 0.
+4. **Proactive HITL Escalation**: When `repeat_action_count >= 2`, plan is overwritten with `request_help`, instantly launching Observer Mode without burning turns.
+5. **State Reset**: On human intervention resolution / resume, `repeat_action_count`, `last_action_sig`, and `last_seen_url` are cleanly reset.
 
 ## Related Documents
 - `techContext.md` — Technologies, ports, setup commands
