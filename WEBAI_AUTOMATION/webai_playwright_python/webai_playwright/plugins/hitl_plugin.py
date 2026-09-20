@@ -15,6 +15,8 @@ import threading
 import time
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
+from ..audio_transcriber import ACTIVE_TRANSCRIBER
+
 if TYPE_CHECKING:
     from playwright.async_api import Page, BrowserContext
     from ..recorder import Step, WebRecorder
@@ -386,14 +388,11 @@ class HITLPlugin:
     _inject_and_await_click = _inject_and_await_observer_mode
 
     def _transcribe_vocal_explanation(self, audio_filepath: str) -> str:
-        """Transcribe PCM WAV audio using faster-whisper."""
+        """Transcribe PCM WAV audio using active transcriber strategy."""
         try:
             if not os.path.exists(audio_filepath) or os.path.getsize(audio_filepath) == 0:
                 return ""
-            from faster_whisper import WhisperModel
-            model = WhisperModel(self.whisper_model_size, device="cpu", compute_type="int8")
-            segments, _ = model.transcribe(audio_filepath, beam_size=5)
-            transcription = " ".join([segment.text for segment in segments]).strip()
+            transcription = ACTIVE_TRANSCRIBER.transcribe_text(audio_filepath)
             return transcription
         except Exception as e:
             print(f" [HITLPlugin] Audio transcription fallback: {e}")

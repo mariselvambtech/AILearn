@@ -645,9 +645,41 @@ Implemented complete skill deletion functionality across backend and dashboard f
 
 ---
 
+## Decision 20: Transcriber Strategy Pattern & SenseVoice Support
+
+**Date:** 2026-09-20
+**Status:** Implemented ✅
+
+### Context
+Voice transcription was tightly coupled to `faster-whisper` across `audio_aligner.py` and `hitl_plugin.py`. As newer multilingual and faster voice models like Alibaba's `SenseVoice` emerge, the system required a modular, pluggable transcription architecture that allows runtime hot-swapping without modifying consumer code or risking regressions in temporal alignment.
+
+### Decision
+Implemented a centralized Strategy Pattern & Factory in `webai_playwright_python/webai_playwright/audio_transcriber.py`:
+1. **`BaseTranscriber` ABC**: Defines `transcribe_text(file_path: str) -> str` and `transcribe_segments(file_path: str) -> List[Dict[str, Any]]` returning standardized millisecond timestamps (`start`, `end`, `start_ms`, `end_ms`).
+2. **`FasterWhisperTranscriber` Strategy**:
+   - Lazily loads `WhisperModel("Systran/faster-distil-whisper-large-v3", device="auto", compute_type="default")` with fallback to `"base.en"` and `"base"`.
+   - Incorporates VAD filtering, hallucination reduction prompts, and millisecond segment normalization.
+3. **`SenseVoiceTranscriber` Strategy**:
+   - Lazily loads `funasr.AutoModel(model="iic/SenseVoiceSmall", vad_model="fsmn-vad", device="cuda:0")` with fallback to `"cpu"`.
+   - Cleans output via `rich_transcription_postprocess`.
+   - Maps output to full-range `0..999999` ms segments for seamless step alignment.
+   - Provides user-friendly installation instructions if `funasr` is missing (`pip install funasr modelscope`).
+4. **`get_transcriber()` Factory & `ACTIVE_TRANSCRIBER` Singleton**:
+   - Inspects `VOICE_MODEL` env var (`"whisper"` vs `"sensevoice"`).
+   - Module-level singleton `ACTIVE_TRANSCRIBER` is instantiated with zero VRAM penalty due to lazy model loading.
+5. **Consumer Refactoring**:
+   - `AudioAligner` (`audio_aligner.py`): Delegates segment transcription to `ACTIVE_TRANSCRIBER.transcribe_segments()`.
+   - `HITLPlugin` (`hitl_plugin.py`): Delegates vocal explanation transcription to `ACTIVE_TRANSCRIBER.transcribe_text()`.
+
+### Impact
+- **Positive:** Enables zero-code switching between Whisper and SenseVoice models; decouples consumers from specific model libraries; guarantees zero startup/import overhead.
+- **Verification:** Authored `test_audio_transcriber.py` (6/6 PASS), verified temporal alignment and VAD test harnesses (`test_audio_alignment.py`, `test_audio_vad_configuration.py`), and verified full regression suite (60/60 PASS).
+
+---
+
 ## Future Decisions Pending
 
-### Decision 20: Jira Integration Approach (Pending)
+### Decision 21: Jira Integration Approach (Pending)
 **Question:** How to integrate with Jira for ticket creation?
 **Options:**
 1. Direct Jira REST API calls from AI server
@@ -655,7 +687,7 @@ Implemented complete skill deletion functionality across backend and dashboard f
 3. Store condition results in DB, separate worker creates tickets
 **Status:** Awaiting user direction
 
-### Decision 21: Variable Persistence Model (Pending)
+### Decision 22: Variable Persistence Model (Pending)
 **Question:** How should extracted variables persist across steps for condition checks?
 **Options:**
 1. In-memory dict (current: `page.__extracted_data__`)
