@@ -4,6 +4,57 @@
 
 ## Current Session (2026-09-20)
 
+### Phase 31: Custom Filepaths for Data Extraction & TaskDone Control-Flow (Decision 23, Rule 7 TDVC) ✅
+- **Custom `filepath` Tool Support (`local_webai_server_guided.py`):**
+  - Updated `ALLOWED_ACTIONS` and `EXTRACTION_TEMPLATE` in `build_system_prompt()` to include optional `"filepath": "<path>"` for `extract_text` and `extract_table`.
+  - Added `_ensure_parent_dir()` helper to automatically create parent directories recursively (`os.makedirs(parent, exist_ok=True)`).
+  - Updated `_save_txt_extraction`, `_save_excel_extraction`, `_save_word_extraction`, and `_save_csv_extraction` to use `_ensure_parent_dir()`.
+  - Updated `exec_action` to extract `custom_filepath = act.get("filepath")`, passing it directly into the save helpers and reporting the saved path in LLM context observations.
+- **TaskDone & WebSocket Disconnect Hardening:**
+  - Added explicit `except TaskDone: raise` prior to `except Exception as e:` in both the freeform loop and guided mode loops, preventing task completion from being registered as an action failure or incrementing failure counters.
+  - Hardened `send_json()` and `handle_client()` against `websockets.exceptions.ConnectionClosed` so client terminations exit gracefully without stack traces.
+- **TDVC Test Verification & Full Regression:**
+  - Added tests for custom nested filepath creation and `TaskDone` exception handling to `webai_local_server/tests/test_agentic_data_extraction.py` (7/7 PASS).
+  - Verified full test suite across `webai_local_server/tests/`: 71 passed, 0 failed (100% PASS).
+  - Re-exported Mermaid visual diagrams (`scripts/graphify_to_mermaid.py`).
+
+### Phase 30: Execution Loop Short-Circuiting & Locator-Based Table Extraction (Decision 22, Rule 7 TDVC) ✅
+- **Server Execution Loop Short-Circuiting (`local_webai_server_guided.py`):**
+  - Fixed action failure handling inside multi-action batched plans: replaced `continue` with `break` in `handle_client()`.
+  - Discards remaining unexecuted plan steps (such as premature `done`) when an action throws an exception, logging the short-circuit event.
+  - Allows the server to cycle into the next execution round (`round_idx`), retrieve fresh DOM/URL states, and trigger replanning or HITL escalation without sending premature `task-complete`.
+- **Client Locator Resolution & Pseudo-Selector Fix (`fallback_helpers.py`, `playwright_actions.py`):**
+  - Refactored `playwright_actions.extract_table` to resolve targets into Playwright `Locator` instances (`page.locator(f"table:has-text('{val}')")` or CSS/ID locators) prior to extraction.
+  - Refactored `fallback_helpers.extract_table_data` to support `Locator` objects natively and evaluate directly via `locator.first.evaluate("""async (table, config) => { ... }""", config)`.
+  - Completely eliminated `document.querySelector(tableSelector)` from the JS context, resolving DOM `SyntaxError` on Playwright `:has-text(...)` pseudo-selectors.
+- **TDVC Test Verification & Full Regression:**
+  - Added short-circuit loop test to `webai_local_server/tests/test_agentic_data_extraction.py` (5/5 PASS).
+  - Updated `webai_playwright_python/test_agentic_extraction.py` to verify Locator passing and evaluation (4/4 PASS).
+  - Executed full test suite across `webai_local_server/tests/`: 65 passed, 4 skipped (100% PASS).
+  - Re-exported Mermaid visual diagrams (`scripts/graphify_to_mermaid.py`).
+
+### Phase 29: Agentic Tool Use for Data Extraction (Decision 21, Rule 7 TDVC) ✅
+- **Server Schema & System Prompts (`local_webai_server_guided.py`):**
+  - Exposed `extract_text` and `extract_table` in `ALLOWED_ACTIONS` with format options (`txt`, `word`, `excel`, `csv`).
+  - Added `EXTRACTION_TEMPLATE` to `build_system_prompt()` and task classification in `_infer_task_type()`.
+  - Added format normalization in `normalize_action()`.
+- **Client Dispatching & Auto Header Detection (`ai.py`, `playwright_actions.py`, `fallback_helpers.py`):**
+  - Implemented `extract_text(page, target)` in `playwright_actions.py`, resolving targets to fallback locators and calling `extract_with_fallback`.
+  - Implemented `extract_table(page, target)` in `playwright_actions.py`, delegating to `extract_table_data`.
+  - Enhanced `extract_table_data` in `fallback_helpers.py` to auto-detect table column headers and indices when omitted by autonomous callers, with fallback to headless rows.
+  - Routed `extract_text` and `extract_table` commands in `ai._dispatch_command`.
+- **Server Execution Loop & Observation Injection:**
+  - Added handlers in `exec_action()` for `extract_text` and agentic `extract_table`.
+  - Piped extracted text to `_save_txt_extraction` / `_save_word_extraction` (`extracted_data.txt`, `extracted_data.docx`).
+  - Piped extracted tables to pandas/openpyxl Excel or CSV persistence (`extracted_table.xlsx`, `extracted_table.csv`).
+  - Appended steps to `session_action_history` with full locator and target metadata for Skill Synthesis.
+  - Injected observation into LLM context: `Action successful. Data extracted and saved to [Format] file on disk.`
+- **TDVC Test Suites & Full Regression:**
+  - Authored `test_agentic_data_extraction.py` in `webai_local_server/tests/` (4/4 PASS).
+  - Authored `test_agentic_extraction.py` in `webai_playwright_python/` (3/3 PASS).
+  - Verified full test suite across `webai_local_server/tests/`: 68 passed, 0 failed (100% PASS).
+  - Re-exported Mermaid visual diagrams (`scripts/graphify_to_mermaid.py`).
+
 ### Phase 28: Transcriber Strategy Pattern & SenseVoice Support (Decision 20, Rule 7 TDVC) ✅
 - **Transcriber Strategy Architecture (`audio_transcriber.py`):**
   - Created `BaseTranscriber` ABC with `transcribe_text(file_path)` and `transcribe_segments(file_path)` returning millisecond timestamps (`start_ms`, `end_ms`).

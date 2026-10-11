@@ -1,0 +1,86 @@
+[
+  {
+    "timestamp": 1791699451.987175,
+    "url": "https://sastra.edu/",
+    "action": "open"
+  },
+  {
+    "timestamp": 1791699456.5655549,
+    "action": "click",
+    "name": "Academics",
+    "locators": [
+      {
+        "type": "text",
+        "value": "Academics"
+      }
+    ],
+    "target": {
+      "by": "text",
+      "text": "Academics",
+      "exact": false
+    },
+    "ts": 1791699456.5655549
+  },
+  {
+    "timestamp": 1791699471.6101074,
+    "url": "https://sastra.edu/",
+    "action": "open"
+  },
+  {
+    "timestamp": 1791699476.3597453,
+    "action": "click",
+    "name": "Admissions",
+    "locators": [
+      {
+        "type": "text",
+        "value": "Admissions"
+      }
+    ],
+    "target": {
+      "by": "text",
+      "text": "Admissions",
+      "exact": false
+    },
+    "ts": 1791699476.3597453
+  },
+  {
+    "timestamp": 1791699480.0851436,
+    "url": "https://sastra.edu/",
+    "action": "open"
+  },
+  {
+    "timestamp": 1791699485.4167876,
+    "action": "click",
+    "name": "UG / PG Programmes",
+    "locators": [
+      {
+        "type": "text",
+        "value": "UG / PG Programmes"
+      }
+    ],
+    "target": {
+      "by": "text",
+      "text": "UG / PG Programmes",
+      "exact": false
+    },
+    "ts": 1791699485.4167876
+  },
+  {
+    "timestamp": 1791699537.094871,
+    "action": "extract_text",
+    "name": "Programmes 2026",
+    "locators": [
+      {
+        "type": "text",
+        "value": "Programmes 2026"
+      }
+    ],
+    "target": {
+      "by": "text",
+      "text": "Programmes 2026",
+      "exact": false
+    },
+    "format": "word",
+    "ts": 1791699537.094871
+  }
+]

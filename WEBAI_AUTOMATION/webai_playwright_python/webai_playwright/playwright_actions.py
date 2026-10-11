@@ -17,7 +17,13 @@ from playwright.async_api import Page, Frame, ElementHandle, Locator
 from . import cdp
 
 # Import fallback helper functions for automatic locator fallback
-from .fallback_helpers import type_with_fallback, click_with_fallback, validate_page
+from .fallback_helpers import (
+    type_with_fallback,
+    click_with_fallback,
+    validate_page,
+    extract_with_fallback,
+    extract_table_data,
+)
 
 ScrollType = str
 
@@ -509,6 +515,101 @@ async def select_search_smart(page: Page, target: Dict[str, Any], query: str, op
     await page.get_by_text(option_text, exact=False).first.click(timeout=DEFAULT_ACTION_TIMEOUT_MS)
     await _post_action_wait(page)
     return True
+
+
+# =============================================================================
+# Agentic Data Extraction Wrappers (Decision 21)
+# =============================================================================
+
+async def extract_text(page: Page, target: Any) -> str:
+    """
+    Extract visible text from the target element using fallback locators.
+    """
+    locators = []
+    if isinstance(target, str):
+        locators = [{"type": "css", "value": target}, {"type": "text", "value": target}]
+    elif isinstance(target, dict):
+        by = (target.get("by") or "").strip().lower()
+        if by == "label":
+            locators = [{"type": "label", "value": target.get("label", "")}]
+        elif by == "placeholder":
+            locators = [{"type": "placeholder", "value": target.get("placeholder", "")}]
+        elif by == "text":
+            locators = [{"type": "text", "value": target.get("text", "")}]
+        elif by == "role":
+            locators = [{"type": "role", "value": target.get("role", ""), "name": target.get("name", "")}]
+        elif by == "id":
+            locators = [{"type": "id", "value": target.get("id", target.get("value", ""))}]
+        elif by == "css":
+            locators = [{"type": "css", "value": target.get("css", target.get("selector", target.get("value", "")))}]
+        elif by == "xpath":
+            locators = [{"type": "xpath", "value": target.get("xpath", target.get("value", ""))}]
+        elif "type" in target and "value" in target:
+            locators = [target]
+        else:
+            val = target.get("text") or target.get("label") or target.get("name") or target.get("value") or ""
+            if val:
+                locators = [{"type": "text", "value": val}]
+    elif isinstance(target, list):
+        locators = target
+
+    if not locators:
+        raise ValueError(f"extract_text requires a valid target locator, got: {target}")
+
+    return await extract_with_fallback(page, locators, extract_type="text")
+
+
+async def extract_table(page: Page, target: Any) -> Dict[str, Any]:
+    """
+    Extract tabular data from the target table element with auto-detected columns and pagination.
+    Resolves the target to a Playwright Locator first to avoid document.querySelector syntax errors.
+    """
+    table_selector = "table"
+    columns = []
+    column_indices = []
+    max_pages = 1
+    locator = None
+
+    if isinstance(target, str):
+        table_selector = target
+        locator = page.locator(table_selector)
+    elif isinstance(target, dict):
+        by = (target.get("by") or "").strip().lower()
+        if by == "css" or "css" in target:
+            table_selector = target.get("css") or target.get("selector") or "table"
+            locator = page.locator(table_selector)
+        elif by == "id" or "id" in target:
+            table_selector = f"#{target.get('id')}"
+            locator = page.locator(table_selector)
+        elif by == "text" or "text" in target:
+            val = target.get("text", "")
+            if val:
+                locator = page.locator(f"table:has-text('{val}')")
+                table_selector = f"table:has-text('{val}')"
+            else:
+                locator = page.locator("table")
+                table_selector = "table"
+        elif target.get("selector"):
+            table_selector = target.get("selector")
+            locator = page.locator(table_selector)
+        else:
+            locator = page.locator("table")
+
+        columns = target.get("columns") or []
+        column_indices = target.get("column_indices") or []
+        max_pages = int(target.get("max_pages", 1))
+    elif hasattr(target, "first") and hasattr(target, "evaluate"):
+        locator = target
+
+    target_node = locator if locator is not None else page.locator(table_selector)
+
+    return await extract_table_data(
+        target_node,
+        table_selector=table_selector,
+        column_indices=column_indices,
+        columns=columns,
+        max_pages=max_pages,
+    )
 
 
 # -----------------------------------------------------------------------------
