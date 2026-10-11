@@ -33,6 +33,15 @@ except ImportError:
 # PHASE 8.2: SAVE EXTRACTED DATA - Helpers
 # ============================================================================
 
+def _ensure_parent_dir(filepath: str) -> None:
+    """Ensure parent directory of filepath exists."""
+    if not filepath:
+        return
+    parent = os.path.dirname(filepath)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+
+
 def _save_txt_extraction(filepath: str, mode: str, data: Dict[str, Any]) -> None:
     """
     Save the extracted data to a simple text file.
@@ -43,6 +52,7 @@ def _save_txt_extraction(filepath: str, mode: str, data: Dict[str, Any]) -> None
     import os
     from datetime import datetime
     
+    _ensure_parent_dir(filepath)
     write_mode = 'w' if mode == 'new' and os.path.exists(filepath) else 'a'
     
     with open(filepath, write_mode, encoding='utf-8') as f:
@@ -79,6 +89,7 @@ def _save_excel_extraction(filepath: str, mode: str, data: Dict[str, Any]) -> No
     import os
     from datetime import datetime
     
+    _ensure_parent_dir(filepath)
     if mode == 'new' or not os.path.exists(filepath):
         wb = openpyxl.Workbook()
         ws = wb.active
@@ -117,6 +128,32 @@ def _save_excel_extraction(filepath: str, mode: str, data: Dict[str, Any]) -> No
     wb.save(filepath)
 
 
+def _save_csv_extraction(filepath: str, mode: str, data: Dict[str, Any]) -> None:
+    """
+    Save extracted data to a CSV file.
+    """
+    import os
+    import csv
+    from datetime import datetime
+    
+    _ensure_parent_dir(filepath)
+    file_exists = os.path.exists(filepath) and os.path.getsize(filepath) > 0
+    write_mode = 'w' if mode == 'new' else 'a'
+    
+    with open(filepath, write_mode, newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        if not file_exists or mode == 'new':
+            writer.writerow(['Variable', 'Value', 'Type', 'Attribute', 'URL', 'Timestamp'])
+        writer.writerow([
+            data.get('name', ''),
+            data.get('value', ''),
+            data.get('extract_type', 'text'),
+            data.get('attribute_name', ''),
+            data.get('url', ''),
+            datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        ])
+
+
 def _save_word_extraction(filepath: str, mode: str, data: Dict[str, Any]) -> None:
     """
     Save the extracted data to a Microsoft Word document using python-docx.
@@ -133,6 +170,7 @@ def _save_word_extraction(filepath: str, mode: str, data: Dict[str, Any]) -> Non
     import os
     from datetime import datetime
     
+    _ensure_parent_dir(filepath)
     if mode == 'new' or not os.path.exists(filepath):
         doc = Document()
         doc.add_heading('Extracted Data', 0)
@@ -151,6 +189,7 @@ def _save_word_extraction(filepath: str, mode: str, data: Dict[str, Any]) -> Non
     doc.add_paragraph(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
     doc.save(filepath)
+
 
 
 
@@ -297,51 +336,6 @@ def _make_action_sig(act: Dict[str, Any]) -> str:
     return f"{kind}:{json.dumps(clean, sort_keys=True)}"
 
 
-def _normalize_history_step(act: Dict[str, Any], url: Optional[str] = None) -> Dict[str, Any]:
-    """Normalize an executed action into a clean step dictionary for action history and skill saving."""
-    kind = (act.get("action") or "").strip().lower()
-    target = act.get("target") or {}
-    if not isinstance(target, dict):
-        target = {}
-
-    if "click" in kind:
-        action_type = "click"
-    elif "type" in kind:
-        action_type = "type"
-    elif kind in ("goto", "open", "navigate"):
-        action_type = "open"
-    elif "hover" in kind:
-        action_type = "hover"
-    else:
-        action_type = kind
-
-    name = act.get("name")
-    if not name and target:
-        name = target.get("name") or target.get("label") or target.get("text") or target.get("placeholder") or target.get("value")
-
-    value = act.get("value") or act.get("text")
-    locators = act.get("locators")
-    if not locators and target.get("by"):
-        by = target.get("by")
-        val = target.get("text") or target.get("label") or target.get("name") or target.get("value") or target.get("placeholder")
-        if val:
-            locators = [{"type": by, "value": val}]
-
-    step: Dict[str, Any] = {
-        "action": action_type,
-        "url": act.get("url") or url or "",
-        "name": name,
-        "value": value,
-        "key": act.get("key"),
-        "ts": time.time(),
-        "locators": locators if locators else None,
-    }
-    if "x" in act and "y" in act:
-        step["x"] = act["x"]
-        step["y"] = act["y"]
-    if target:
-        step["target"] = target
-    return step
 
 
 BASE_PROMPT = (
@@ -525,6 +519,8 @@ Allowed actions (use targets; do NOT use CSS selectors):
 15) {"action":"verify_url","contains":"contact-us"}
 16) {"action":"verify_element","target":{"by":"text","text":"Get in touch","exact":false},"timeout_ms":10000}
 17) {"action":"request_help","message":"Conversational question asking the human for assistance"}
+18) {"action":"extract_text","target":{"by":"text","text":"..."},"format":"txt","filepath":"D:\\path\\file.txt"}   // format: "txt" | "word" (filepath is optional)
+19) {"action":"extract_table","target":{"by":"text","text":"..."},"format":"excel","filepath":"D:\\path\\file.xlsx"} // format: "excel" | "csv" (filepath is optional)
 
 """.strip()
 
@@ -779,6 +775,8 @@ URL_CONTAINS_RE = re.compile(r"""url\s+contains\s+["']([^"']+)["']""", re.IGNORE
 
 def _infer_task_type(task: str) -> str:
     t = (task or "").lower()
+    if any(k in t for k in ["extract", "scrape", "save to excel", "save to word", "save table", "export", "save text"]):
+        return "extraction"
     if any(k in t for k in ["check", "find out", "what is", "lookup", "read", "get info"]):
         return "informational"
     if any(k in t for k in ["select", "dropdown", "autocomplete", "choose", "pick an option"]):
@@ -1032,8 +1030,19 @@ def build_system_prompt(task_text: str, expect: Dict[str, Any]) -> str:
         "- Never emit the exact same action and target if the previous step did not result in a URL or DOM change.\n"
     )
 
+    EXTRACTION_TEMPLATE = (
+        "DATA EXTRACTION TEMPLATE:\n"
+        "- Locate the target text, table, or list container on the page.\n"
+        "- If extracting visible text, emit: {\"action\": \"extract_text\", \"target\": {\"by\": \"text\" | \"role\" | \"css\", ...}, \"format\": \"txt\" | \"word\", \"filepath\": \"optional/custom/path.ext\"}.\n"
+        "- If extracting tabular data, emit: {\"action\": \"extract_table\", \"target\": {\"by\": \"css\" | \"text\", ...}, \"format\": \"excel\" | \"csv\", \"filepath\": \"optional/custom/path.ext\"}.\n"
+        "- If the user specifies a custom folder or filename to save, you MUST specify it in the \"filepath\" property.\n"
+        "- After extracting the data, output {\"action\": \"done\", \"summary\": \"Data extracted and saved successfully.\"}.\n"
+    )
+
     template = NAV_TEMPLATE
-    if task_type == "informational":
+    if task_type == "extraction":
+        template = EXTRACTION_TEMPLATE
+    elif task_type == "informational":
         template = INFORMATIONAL_TEMPLATE
     elif task_type == "search":
         template = SEARCH_TEMPLATE
@@ -1137,6 +1146,12 @@ def _normalize_history_step(act: Dict[str, Any], url: Optional[str] = None) -> D
         norm["x"] = act["x"]
         norm["y"] = act["y"]
 
+    if target:
+        norm["target"] = target
+    if "format" in act:
+        norm["format"] = act["format"]
+    norm["ts"] = norm["timestamp"]
+
     return norm
 
 
@@ -1173,7 +1188,10 @@ async def handle_client(ws: Any):
         return json.loads(raw)
 
     async def send_json(obj: Dict[str, Any]) -> None:
-        await ws.send(json.dumps(obj))
+        try:
+            await ws.send(json.dumps(obj))
+        except (websockets.exceptions.ConnectionClosed, websockets.exceptions.ConnectionClosedError, websockets.exceptions.ConnectionClosedOK):
+            pass
 
     async def send_command(name: str, arguments: Dict[str, Any]) -> Any:
         nonlocal command_index, task_id
@@ -1279,6 +1297,11 @@ async def handle_client(ws: Any):
         if kind == "press_key":
             if not act.get("key") and act.get("button"):
                 act["key"] = act.get("button")
+
+        # extract_text / extract_table: normalize format
+        if kind in ("extract_text", "extract_table"):
+            fmt = act.get("format") or act.get("fmt") or ("excel" if kind == "extract_table" else "txt")
+            act["format"] = str(fmt).strip().lower()
 
         return act
 
@@ -1617,7 +1640,98 @@ async def handle_client(ws: Any):
             did_any_action = True
             return
 
+        if kind == "extract_text":
+            target = act.get("target") or {}
+            fmt = str(act.get("format") or "txt").strip().lower()
+            name = act.get("name") or "extracted_text"
+            custom_filepath = act.get("filepath")
+
+            print(f"\n{log_prefix} 📝 AGENTIC EXTRACTING TEXT: target={target}, format={fmt}, filepath={custom_filepath}")
+            res = await send_command("extract_text", {"command": "extract_text", "target": target})
+            extracted_text = res if isinstance(res, str) else (res.get("value") or res.get("text") or str(res or "") if isinstance(res, dict) else str(res or ""))
+            print(f"{log_prefix} ✅ Extracted text: {extracted_text[:100]}...")
+
+            save_data = {
+                "name": name,
+                "value": extracted_text,
+                "extract_type": "text",
+                "attribute_name": "",
+                "url": act.get("url") or ""
+            }
+
+            saved_file = ""
+            if fmt in ("word", "docx"):
+                filepath = custom_filepath or "extracted_data.docx"
+                _save_word_extraction(filepath, "append", save_data)
+                saved_file = filepath
+            else:
+                filepath = custom_filepath or "extracted_data.txt"
+                _save_txt_extraction(filepath, "append", save_data)
+                saved_file = filepath
+
+            print(f"{log_prefix} 💾 Saved text extraction to {saved_file}")
+            did_any_action = True
+            session_action_history.append(_normalize_history_step(act))
+            obs = f"Action successful. Data extracted and saved to {filepath} on disk."
+            return {"observation": obs, "status": "success"}
+
         if kind == "extract_table":
+            if not act.get("table_config") and not act.get("save_options"):
+                # Autonomous AI Tool Use
+                target = act.get("target") or {}
+                fmt = str(act.get("format") or "excel").strip().lower()
+                name = act.get("name") or "table_data"
+                custom_filepath = act.get("filepath")
+
+                print(f"\n{log_prefix} 📊 AGENTIC EXTRACTING TABLE: target={target}, format={fmt}, filepath={custom_filepath}")
+                res = await send_command("extract_table", {"command": "extract_table", "target": target})
+                table_rows = res.get("data", []) if isinstance(res, dict) else (res if isinstance(res, list) else [])
+                row_count = len(table_rows) if isinstance(table_rows, list) else 0
+                print(f"{log_prefix} ✅ Extracted {row_count} table rows")
+
+                saved_file = ""
+                if fmt in ("csv",):
+                    filepath = custom_filepath or "extracted_table.csv"
+                    _ensure_parent_dir(filepath)
+                    try:
+                        import pandas as pd
+                        df = pd.DataFrame(table_rows)
+                        if os.path.exists(filepath):
+                            df.to_csv(filepath, mode="a", header=False, index=False)
+                        else:
+                            df.to_csv(filepath, index=False)
+                    except Exception:
+                        with open(filepath, "a", encoding="utf-8") as f:
+                            for row in table_rows:
+                                f.write(str(row) + "\n")
+                    saved_file = filepath
+                else: # excel / xlsx
+                    filepath = custom_filepath or "extracted_table.xlsx"
+                    _ensure_parent_dir(filepath)
+                    try:
+                        import pandas as pd
+                        df = pd.DataFrame(table_rows)
+                        if os.path.exists(filepath):
+                            existing_df = pd.read_excel(filepath)
+                            df = pd.concat([existing_df, df], ignore_index=True)
+                        df.to_excel(filepath, index=False)
+                    except Exception as e:
+                        _save_excel_extraction(filepath, "append", {
+                            "name": name,
+                            "value": str(table_rows),
+                            "extract_type": "table",
+                            "attribute_name": "",
+                            "url": act.get("url") or ""
+                        })
+                    saved_file = filepath
+
+                print(f"{log_prefix} 💾 Saved table extraction to {saved_file}")
+                did_any_action = True
+                session_action_history.append(_normalize_history_step(act))
+                obs = f"Action successful. Data extracted and saved to {filepath} on disk."
+                return {"observation": obs, "status": "success"}
+
+
             # NEW: Phase 8.3 - Table extraction
             key = act.get("name", "table_data")
             table_config = act.get("table_config", {})
@@ -2019,6 +2133,8 @@ async def handle_client(ws: Any):
                         try:
                             await exec_action(a)
                             consecutive_action_failures = 0
+                        except TaskDone:
+                            raise
                         except Exception as e:
                             consecutive_action_failures += 1
                             failures += 1
@@ -2215,6 +2331,11 @@ async def handle_client(ws: Any):
                     res = await exec_action(a)
                     consecutive_action_failures = 0
 
+                    if isinstance(res, dict) and "observation" in res:
+                        obs_msg = res["observation"]
+                        print(f"{log_prefix} 📌 Context observation: {obs_msg}")
+                        task_text += f"\n\nObservation: {obs_msg}"
+
                     if isinstance(res, dict) and (res.get("action") == "observer_mode_complete" or res.get("status") == "resolved" or res.get("click", {}).get("action") == "observer_mode_complete"):
                         transcription = (res.get("audio_transcription") or "").strip()
                         if not transcription or transcription.startswith("User completed actions"):
@@ -2235,6 +2356,8 @@ async def handle_client(ws: Any):
                         last_action_sig = None
                         last_seen_url = None
                         break
+                except TaskDone:
+                    raise
                 except Exception as e:
                     consecutive_action_failures += 1
                     failures += 1
@@ -2245,8 +2368,10 @@ async def handle_client(ws: Any):
                     if consecutive_action_failures >= MAX_CONSECUTIVE_FAILURES:
                         print(f"{log_prefix} 🚨 [HITL] Consecutive action failures ({consecutive_action_failures}) threshold reached. Requesting human intervention...")
                         try:
+                            hitl_message = f"I am stuck. My last action failed multiple times with error: {str(e)}. Please click the correct element on the screen or provide guidance, then click Resume AI."
                             hitl_res = await send_command("request_human_intervention", {
                                 "reason": "consecutive_action_failures",
+                                "message": hitl_message,
                                 "last_error": str(e)
                             })
                             print(f"{log_prefix} 🤝 [HITL] Received resolution payload: {hitl_res}")
@@ -2283,7 +2408,8 @@ async def handle_client(ws: Any):
                             "error": f"Too many failures. Last error: {e}",
                         })
                         return
-                    continue
+                    print(f"{log_prefix} 🛑 [Short-Circuit] Action failed in batched plan. Discarding remaining {len(plan) - (plan.index(a) + 1 if a in plan else 0)} plan action(s).")
+                    break
 
             if record_enabled and plan:
                 cache_put_plan(url, task_text, recorded_plan)
@@ -2296,6 +2422,10 @@ async def handle_client(ws: Any):
         })
     
     except TaskDone:
+        return
+
+    except (websockets.exceptions.ConnectionClosed, websockets.exceptions.ConnectionClosedError, websockets.exceptions.ConnectionClosedOK):
+        print(f"{log_prefix} ℹ️ Client disconnected.")
         return
 
     except Exception as e:
