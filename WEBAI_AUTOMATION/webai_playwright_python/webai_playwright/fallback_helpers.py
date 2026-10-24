@@ -32,7 +32,7 @@ def _get_active_page(page):
     Returns the active Playwright page/tab from context if multiple tabs exist.
     """
     try:
-        if page and hasattr(page, "context") and page.context and page.context.pages:
+        if page and hasattr(page, "context") and page.context and hasattr(page.context, "pages") and isinstance(page.context.pages, (list, tuple)) and len(page.context.pages) > 0:
             return page.context.pages[-1]
     except Exception:
         pass
@@ -72,6 +72,55 @@ async def _create_locator_obj(target_page, loc: Dict):
     elif loc_type == "xpath":
         return target_page.locator(f"xpath={loc_value}")
     return None
+
+
+async def drag_and_drop_with_fallback(
+    page,
+    source_locators: List[Dict],
+    target_locators: List[Dict],
+    source_coords: Optional[Dict[str, int]] = None,
+    target_coords: Optional[Dict[str, int]] = None
+) -> bool:
+    """
+    Drag and drop with 13-rank locator resolution fallback and mouse coordinate fallback.
+    """
+    target_page = _get_active_page(page)
+
+    sorted_src = sorted(source_locators or [], key=lambda x: LOCATOR_PRIORITY.get(x.get("type"), 99))
+    sorted_tgt = sorted(target_locators or [], key=lambda x: LOCATOR_PRIORITY.get(x.get("type"), 99))
+
+    # Pass 1: Try locator-based drag_to
+    for s_loc in sorted_src:
+        try:
+            src_obj = await _create_locator_obj(target_page, s_loc)
+            if not src_obj:
+                continue
+            for t_loc in sorted_tgt:
+                try:
+                    tgt_obj = await _create_locator_obj(target_page, t_loc)
+                    if not tgt_obj:
+                        continue
+                    await src_obj.drag_to(tgt_obj, timeout=4000)
+                    return True
+                except Exception:
+                    continue
+        except Exception:
+            continue
+
+    # Pass 2: Coordinate mouse fallback
+    if source_coords and target_coords and hasattr(target_page, "mouse"):
+        try:
+            sx, sy = source_coords.get("x", 0), source_coords.get("y", 0)
+            tx, ty = target_coords.get("x", 0), target_coords.get("y", 0)
+            await target_page.mouse.move(sx, sy)
+            await target_page.mouse.down()
+            await target_page.mouse.move(tx, ty, steps=10)
+            await target_page.mouse.up()
+            return True
+        except Exception as e:
+            print(f" [drag_and_drop_with_fallback] Coordinate drag error: {e}")
+
+    return False
 
 
 async def click_with_fallback(page, locators: List[Dict], expected_context: Optional[str] = None) -> bool:

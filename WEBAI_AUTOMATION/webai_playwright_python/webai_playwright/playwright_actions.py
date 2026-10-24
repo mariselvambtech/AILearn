@@ -16,11 +16,11 @@ from playwright.async_api import Page, Frame, ElementHandle, Locator
 
 from . import cdp
 
-# Import fallback helper functions for automatic locator fallback
 from .fallback_helpers import (
     type_with_fallback,
     click_with_fallback,
     validate_page,
+    drag_and_drop_with_fallback,
     extract_with_fallback,
     extract_table_data,
 )
@@ -180,6 +180,17 @@ async def scroll_page_script(page: Page, target: ScrollType) -> Any:
     if target == "bottom":
         return await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
     return None
+
+
+async def scroll_wheel(page: Page, delta_x: int = 0, delta_y: int = 0) -> Any:
+    """Scroll page by accumulated pixel wheel offsets (delta_x, delta_y)."""
+    try:
+        if hasattr(page, "mouse") and hasattr(page.mouse, "wheel"):
+            await page.mouse.wheel(delta_x, delta_y)
+            return True
+    except Exception:
+        pass
+    return await page.evaluate(f"window.scrollBy({delta_x}, {delta_y})")
 
 
 async def get_viewport_metadata(page: Page) -> Dict[str, Any]:

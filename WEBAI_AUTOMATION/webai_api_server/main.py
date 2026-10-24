@@ -677,6 +677,37 @@ async def import_recording(
     }
 
 
+# ===== HITL LEARNED MEMORY ENDPOINTS =====
+
+@app.post("/hitl-memory", response_model=schemas.HITLMemoryResponse)
+async def save_hitl_memory_endpoint(
+    memory: schemas.HITLMemoryCreate,
+    current_user: Optional[models.User] = Depends(auth.get_optional_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Save a new HITL learned recovery memory.
+    Associates with current_user if authenticated, otherwise saves as global recovery knowledge.
+    """
+    user_id = current_user.id if current_user else None
+    return crud.create_hitl_memory(db, memory, user_id=user_id)
+
+
+@app.get("/hitl-memory", response_model=List[schemas.HITLMemoryResponse])
+async def get_hitl_memories_endpoint(
+    url: str,
+    automation_id: Optional[int] = None,
+    skill_name: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Query learned recovery memories matching exact url_pattern first,
+    falling back to domain matching, filtered by optional automation_id or skill_name.
+    """
+    return crud.get_hitl_memories(db, url=url, automation_id=automation_id, skill_name=skill_name)
+
+
+
 # Run server
 if __name__ == "__main__":
     import uvicorn

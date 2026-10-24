@@ -263,3 +263,14 @@ def get_current_user_by_api_key(api_key: str = Depends(api_key_header), db: Sess
         )
 
     return user
+
+
+def get_optional_user(
+    api_key: Optional[str] = Depends(api_key_header),
+    db: Session = Depends(get_db)
+) -> Optional[models.User]:
+    """Retrieve user if valid API key is supplied; otherwise returns None."""
+    if not api_key:
+        return None
+    return db.query(models.User).filter(models.User.api_key == api_key, models.User.is_active == True).first()
+

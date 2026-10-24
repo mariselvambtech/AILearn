@@ -5,12 +5,18 @@ import json
 import logging
 import os
 import re
+import sys
 import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from datetime import datetime
 import time
+
+# Ensure sibling webai_playwright_python directory is in sys.path for cross-venv portability
+_pw_root = str(Path(__file__).resolve().parent.parent.parent / "webai_playwright_python")
+if _pw_root not in sys.path:
+    sys.path.insert(0, _pw_root)
 
 import websockets
 
@@ -336,6 +342,103 @@ def _make_action_sig(act: Dict[str, Any]) -> str:
     return f"{kind}:{json.dumps(clean, sort_keys=True)}"
 
 
+def _normalize_history_step(act: Dict[str, Any], url: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Normalizes an action dictionary executed during an autonomous or HITL session
+    into a replay-compatible recorded step structure for Skill Synthesis and memory storage.
+    """
+    kind = (act.get("action") or "").strip().lower()
+    ts = act.get("timestamp") or act.get("ts") or time.time()
+    target = act.get("target")
+
+    norm: Dict[str, Any] = {
+        "timestamp": ts,
+        "ts": ts,
+        "url": act.get("url") or url or "",
+    }
+
+    if kind in ("goto", "open", "navigate"):
+        norm["action"] = "open"
+        norm["url"] = act.get("url") or url or ""
+        return norm
+    elif "click" in kind:
+        norm["action"] = "click"
+    elif "type" in kind:
+        norm["action"] = "type"
+    elif "drag" in kind:
+        norm["action"] = "drag_and_drop"
+    elif "scroll" in kind:
+        norm["action"] = "scroll_page"
+    elif "hover" in kind:
+        norm["action"] = "hover"
+    else:
+        norm["action"] = kind
+
+    name = act.get("name")
+    locs = act.get("locators")
+
+    if isinstance(target, dict):
+        by = target.get("by")
+        if not name:
+            name = target.get("name") or target.get("text") or target.get("label") or target.get("placeholder") or target.get("value") or ""
+        if not locs and by:
+            if by == "text":
+                locs = [{"type": "text", "value": target.get("text", "")}]
+            elif by == "label":
+                locs = [{"type": "label", "value": target.get("label", "")}]
+            elif by == "role":
+                locs = [{"type": "role", "value": target.get("role", ""), "name": target.get("name", "")}]
+            elif by == "placeholder":
+                locs = [{"type": "placeholder", "value": target.get("placeholder", "")}]
+            else:
+                val = target.get("text") or target.get("label") or target.get("name") or target.get("value") or target.get("placeholder") or ""
+                locs = [{"type": by, "value": val}]
+    elif isinstance(target, str):
+        if not name:
+            name = target
+        if not locs:
+            if kind == "scroll_page":
+                norm["target"] = target
+            else:
+                locs = [{"type": "css", "value": target}]
+
+    norm["name"] = name
+    norm["locators"] = locs
+
+    value = act.get("value") or act.get("text")
+    if value is not None:
+        norm["value"] = value
+
+    if act.get("key"):
+        norm["key"] = act.get("key")
+
+    if "x" in act and "y" in act:
+        norm["x"] = act["x"]
+        norm["y"] = act["y"]
+
+    if "source_locators" in act:
+        norm["source_locators"] = act["source_locators"]
+    if "target_locators" in act:
+        norm["target_locators"] = act["target_locators"]
+    if "source_coords" in act:
+        norm["source_coords"] = act["source_coords"]
+    if "target_coords" in act:
+        norm["target_coords"] = act["target_coords"]
+    if "delta_x" in act:
+        norm["delta_x"] = act["delta_x"]
+    if "delta_y" in act:
+        norm["delta_y"] = act["delta_y"]
+    if "target" in act and not norm.get("target"):
+        norm["target"] = act["target"]
+
+    if act.get("voice_context"):
+        norm["voice_context"] = act["voice_context"]
+    if act.get("full_voice_context"):
+        norm["full_voice_context"] = act["full_voice_context"]
+    if act.get("timestamp_ms"):
+        norm["timestamp_ms"] = act["timestamp_ms"]
+
+    return norm
 
 
 BASE_PROMPT = (
@@ -571,24 +674,26 @@ def _extract_json_array(text: str) -> List[Dict[str, Any]]:
     raise RuntimeError(f"LLM returned non-JSON plan: {text[:300]}")
 
 
-def _prune_dom_snapshot(html: str) -> str:
+def _prune_dom_snapshot(html: str, max_chars: int = 12000) -> str:
     """
     Prunes a raw DOM/HTML snapshot using Crawl4AI LLM Markdown strategy to retain
     interactive elements and key semantic tags, significantly reducing token context size
-    for Hermes 3 inference.
+    for Hermes 3 inference. Strips header, nav, footer, aside, and script tags to focus on body content.
 
     Args:
         html: Raw HTML/DOM snapshot string.
+        max_chars: Maximum characters to retain in the pruned output (default 12000).
 
     Returns:
-        Pruned string containing essential interactive DOM elements in Markdown format.
+        Pruned string containing essential interactive DOM elements and text in Markdown format.
     """
     if not html:
         return ""
-    # Strip script, style, and svg tags completely
-    cleaned = re.sub(r"<(script|style|svg|noscript|iframe)[^>]*?>.*?</\1>", "", html, flags=re.IGNORECASE | re.DOTALL)
+    # Strip noisy mega-menu headers, nav, footers, asides, scripts, styles, and svg tags completely
+    cleaned = re.sub(r"<(header|nav|footer|aside|script|style|svg|noscript|iframe)[^>]*?>.*?</\1>", "", html, flags=re.IGNORECASE | re.DOTALL)
     
     # Try Crawl4AI LLM Markdown conversion strategy first
+    md = ""
     try:
         import html2text
         h = html2text.HTML2Text()
@@ -596,21 +701,29 @@ def _prune_dom_snapshot(html: str) -> str:
         h.ignore_images = True
         h.body_width = 0
         md = h.handle(cleaned).strip()
-        if len(md) > 20:
-            return md[:4000]
     except Exception:
         pass
 
-    # Extract interactive tags fallback
+    # Extract interactive tags block
     pattern = re.compile(
         r"<(?:button|input|a|select|textarea|option|form)[^>]*?>.*?</(?:button|input|a|select|textarea|option|form)>|<(?:button|input|a|select|textarea)[^>]*?/?>",
         re.IGNORECASE | re.DOTALL,
     )
     matches = pattern.findall(cleaned)
-    if matches:
-        pruned = "\n".join(matches[:120])
-        return pruned if len(pruned) > 30 else cleaned[:4000]
-    return cleaned[:4000]
+    interactive_block = "\n".join(matches[:120]) if matches else ""
+
+    # Strip HTML tags and collapse whitespace to preserve static text in tables, lists, and paragraphs
+    text_only = md if (md and len(md) > 20) else re.sub(r"<[^>]+>", " ", cleaned)
+    text_only = re.sub(r"[ \t]+", " ", text_only)
+    text_only = re.sub(r"\n\s*\n+", "\n\n", text_only).strip()
+
+    if interactive_block and text_only:
+        return (text_only + "\n\n" + interactive_block)[:max_chars]
+    elif text_only:
+        return text_only[:max_chars]
+    elif interactive_block:
+        return interactive_block[:max_chars]
+    return cleaned[:max_chars]
 
 
 def _writeback_healed_step(automation_id: Optional[int], step_index: int, new_locators: List[Dict[str, Any]]) -> bool:
@@ -1086,75 +1199,6 @@ def _has_progress(prev_url: Optional[str], prev_title: Optional[str], url: str, 
         return True
     return False
 
-
-def _normalize_history_step(act: Dict[str, Any], url: Optional[str] = None) -> Dict[str, Any]:
-    """
-    Normalizes an action dictionary executed during an autonomous session
-    into a replay-compatible recorded step structure for Skill Synthesis.
-    """
-    action = (act.get("action") or "").strip()
-    norm: Dict[str, Any] = {"timestamp": time.time()}
-    if url:
-        norm["url"] = url
-    elif act.get("url"):
-        norm["url"] = act.get("url")
-
-    if action in ("goto", "open"):
-        norm["action"] = "open"
-        norm["url"] = act.get("url") or url or ""
-        return norm
-
-    norm["action"] = action
-    target = act.get("target")
-
-    # Extract name / target info
-    if isinstance(target, dict):
-        by = target.get("by")
-        name = target.get("name") or target.get("text") or target.get("label") or target.get("placeholder") or ""
-        norm["name"] = name
-        locs = []
-        if by == "text":
-            locs.append({"type": "text", "value": target.get("text", "")})
-        elif by == "label":
-            locs.append({"type": "label", "value": target.get("label", "")})
-        elif by == "role":
-            locs.append({"type": "role", "value": target.get("role", ""), "name": target.get("name", "")})
-        elif by == "placeholder":
-            locs.append({"type": "placeholder", "value": target.get("placeholder", "")})
-        elif by:
-            locs.append({"type": by, "value": name})
-        norm["locators"] = locs
-    elif isinstance(target, str):
-        norm["name"] = target
-        norm["locators"] = [{"type": "css", "value": target}]
-
-    # Fallback to direct name/text if target wasn't dict
-    if "name" not in norm and act.get("name"):
-        norm["name"] = act.get("name")
-
-    # Value for typing
-    if action in ("type", "typewithfallback"):
-        norm["action"] = "type"
-        norm["value"] = act.get("text") or act.get("value") or ""
-
-    # Click actions
-    if action in ("click", "clickwithfallback"):
-        norm["action"] = "click"
-
-    # Coordinates
-    if "x" in act and "y" in act:
-        norm["x"] = act["x"]
-        norm["y"] = act["y"]
-
-    if target:
-        norm["target"] = target
-    if "format" in act:
-        norm["format"] = act["format"]
-    norm["ts"] = norm["timestamp"]
-
-    return norm
-
-
 async def handle_client(ws: Any):
     """
     Core WebSocket connection handler for incoming automation clients.
@@ -1168,6 +1212,7 @@ async def handle_client(ws: Any):
     (navigate -> act -> verify), API server logging, and fallback recovery.
     """
     did_any_action = False
+    latest_transcription: str = ""
     session_action_history: List[Dict[str, Any]] = []
 
     path = get_request_path(ws)
@@ -1336,9 +1381,29 @@ async def handle_client(ws: Any):
         if kind == "scroll_page":
             direction = act.get("target", "down")
             print(f"{log_prefix} ⇅ Scrolling page: {direction}")
-            await send_command("scrollPage", {"target": direction})
+            delta_x = act.get("delta_x")
+            delta_y = act.get("delta_y")
+            if delta_x is not None or delta_y is not None:
+                await send_command("scrollWheel", {"delta_x": int(delta_x or 0), "delta_y": int(delta_y or 0)})
+            else:
+                await send_command("scrollPage", {"target": direction})
             print(f"{log_prefix} ✅ Scroll successful")
             did_any_action = True
+            session_action_history.append(_normalize_history_step(act))
+            return
+
+        if kind in ("drag_and_drop", "draganddrop", "drag"):
+            name = act.get("name", "drag")
+            print(f"{log_prefix} ↔️ Drag and drop: {name}")
+            await send_command("dragAndDrop", {
+                "source_locators": act.get("source_locators") or act.get("locators") or [],
+                "target_locators": act.get("target_locators") or [],
+                "source_coords": act.get("source_coords"),
+                "target_coords": act.get("target_coords"),
+            })
+            print(f"{log_prefix} ✅ Drag and drop successful")
+            did_any_action = True
+            session_action_history.append(_normalize_history_step(act))
             return
 
         if kind == "press_key":
@@ -1895,10 +1960,67 @@ async def handle_client(ws: Any):
             if summary:
                 result_payload["result"] = summary
                 print(f"{log_prefix} 🎉 Informational query completed with summary: {summary}")
+                # Auto-save extraction if requested in task_text or latest_transcription
+                check_str = (task_text + " " + latest_transcription).lower()
+                if any(w in check_str for w in ["excel", "word", "file", "extract"]):
+                    save_payload = {
+                        "name": "Extracted Summary",
+                        "value": summary,
+                        "extract_type": "text",
+                        "url": url,
+                    }
+                    txt_path = "extracted_output.txt"
+                    xlsx_path = "extracted_output.xlsx"
+                    docx_path = "extracted_output.docx"
+                    try:
+                        _save_txt_extraction(txt_path, "new", save_payload)
+                        print(f"{log_prefix} 💾 Saved text summary to: {os.path.abspath(txt_path)}")
+                    except Exception as e_txt:
+                        print(f"{log_prefix} ⚠️ Text save warning: {e_txt}")
+                    try:
+                        _save_excel_extraction(xlsx_path, "new", save_payload)
+                        print(f"{log_prefix} 💾 Saved Excel summary to: {os.path.abspath(xlsx_path)}")
+                    except Exception as e_xl:
+                        print(f"{log_prefix} ⚠️ Excel save warning: {e_xl}")
+                    try:
+                        _save_word_extraction(docx_path, "new", save_payload)
+                        print(f"{log_prefix} 💾 Saved Word summary to: {os.path.abspath(docx_path)}")
+                    except Exception as e_doc:
+                        print(f"{log_prefix} ⚠️ Word save warning: {e_doc}")
             await send_json(result_payload)
             raise TaskDone()
 
         raise RuntimeError(f"Unsupported action: {act}")
+
+    tried_recovery_urls = set()
+
+    async def _try_learned_recovery(current_url: str) -> bool:
+        """Attempt to self-heal using database/JSON learned HITL memories before triggering modal popup."""
+        if not current_url or current_url in tried_recovery_urls:
+            return False
+        tried_recovery_urls.add(current_url)
+        try:
+            from webai_playwright.hitl_memory_store import lookup_hitl_memory
+            memories = lookup_hitl_memory(current_url, automation_id=options.get("automation_id"))
+            if not memories:
+                return False
+
+            print(f"{log_prefix} 🧠 [HITL Learned Memory] Found {len(memories)} recovery memories for '{current_url}'. Applying Voice+DOM Self-Healing...")
+            mem = memories[0]
+            steps = mem.get("learned_steps_json") or []
+            v_ctx = mem.get("voice_context") or ""
+            if not steps:
+                return False
+
+            print(f"{log_prefix} 🗣️ User's taught instruction: '{v_ctx}'")
+            for st in steps:
+                norm_st = _normalize_history_step(st, url=current_url)
+                await exec_action(norm_st)
+            print(f"{log_prefix} ✅ Self-healed {len(steps)} steps from learned memory.")
+            return True
+        except Exception as rec_err:
+            print(f"{log_prefix} ⚠️ [HITL Memory Recovery Error]: {rec_err}")
+            return False
 
     try:
         start_msg = await recv_json()
@@ -1958,6 +2080,7 @@ async def handle_client(ws: Any):
         last_action_sig: Optional[str] = None
         repeat_action_count: int = 0
         last_seen_url: Optional[str] = None
+        post_hitl_active: bool = False
 
         
         # -----------------------------
@@ -2140,6 +2263,12 @@ async def handle_client(ws: Any):
                             failures += 1
                             last_errors.append(str(e))
 
+                            if consecutive_action_failures >= 1:
+                                if await _try_learned_recovery(url):
+                                    consecutive_action_failures = 0
+                                    failures = 0
+                                    break
+
                             if consecutive_action_failures >= MAX_CONSECUTIVE_FAILURES:
                                 print(f"{log_prefix} 🚨 [HITL] Consecutive action failures ({consecutive_action_failures}) threshold reached in guided mode. Requesting human intervention...")
                                 try:
@@ -2153,6 +2282,30 @@ async def handle_client(ws: Any):
                                     if isinstance(hitl_res, dict):
                                         click_info = hitl_res.get("click", {})
                                         voice_info = hitl_res.get("audio_transcription", "")
+                                        latest_transcription = voice_info
+                                        telemetry_steps = hitl_res.get("telemetry") or click_info.get("telemetry") or []
+
+                                        for t_step in telemetry_steps:
+                                            norm_step = _normalize_history_step(t_step, url=url)
+                                            session_action_history.append(norm_step)
+                                            if options.get("automation_id") and norm_step.get("locators"):
+                                                try:
+                                                    _writeback_healed_step(options.get("automation_id"), step_idx, norm_step["locators"])
+                                                except Exception as wb_err:
+                                                    print(f"{log_prefix} [HITL Writeback Warning]: {wb_err}")
+
+                                        try:
+                                            from webai_playwright.hitl_memory_store import save_hitl_memory
+                                            save_hitl_memory(
+                                                url=url,
+                                                voice_context=voice_info,
+                                                learned_steps=telemetry_steps,
+                                                dom_excerpt=context[:2000] if 'context' in locals() else "",
+                                                blocker_context=str(last_errors[-1:]) if last_errors else "",
+                                                automation_id=options.get("automation_id")
+                                            )
+                                        except Exception as mem_err:
+                                            print(f"{log_prefix} [HITL Memory Save Warning]: {mem_err}")
                                         
                                         # --- START HITL STATE & PROMPT RESET FIX ---
                                         task_text += (
@@ -2165,6 +2318,7 @@ async def handle_client(ws: Any):
                                         repeat_action_count = 0
                                         last_action_sig = None
                                         last_seen_url = None
+                                        post_hitl_active = True
                                         break # This break safely flushes the remaining stale actions in the current plan queue
                                         # --- END HITL FIX ---
 
@@ -2263,10 +2417,71 @@ async def handle_client(ws: Any):
 
 
             # ---- LLM planning (single round for simplicity) ----
+            is_informational = (expect.get("task_type") == "informational")
+            should_include_dom_text = is_informational or post_hitl_active or (repeat_action_count >= 1)
+
+            pruned_dom = ""
+            if should_include_dom_text:
+                try:
+                    js_clean_text = """
+                    (() => {
+                        try {
+                            const clone = (document.body || document.documentElement).cloneNode(true);
+                            clone.querySelectorAll('header, nav, footer, aside, script, style, noscript, svg, iframe, #webai-hitl-observer-panel').forEach(el => el.remove());
+                            return (clone.innerText || clone.textContent || '').replace(/\\r?\\n[ \\t]*/g, '\\n').replace(/\\n{3,}/g, '\\n\\n').trim();
+                        } catch (e) {
+                            return '';
+                        }
+                    })()
+                    """
+                    clean_res = await send_command("executeScript", {"script": js_clean_text})
+                    if isinstance(clean_res, dict):
+                        pruned_dom = clean_res.get("result") or clean_res.get("value") or ""
+                    elif isinstance(clean_res, str):
+                        pruned_dom = clean_res
+                    if pruned_dom and len(pruned_dom) > 12000:
+                        pruned_dom = pruned_dom[:12000] + "\n... [truncated]"
+                except Exception as clean_err:
+                    print(f"{log_prefix} ⚠️ executeScript clean text extraction warning: {clean_err}")
+
+                if not pruned_dom:
+                    try:
+                        raw_dom = await send_command("getDOMSnapshot", {})
+                        html_str = (
+                            raw_dom.get("dom") or raw_dom.get("html") or str(raw_dom)
+                            if isinstance(raw_dom, dict)
+                            else str(raw_dom or "")
+                        )
+                        pruned_dom = _prune_dom_snapshot(html_str, max_chars=12000)
+                    except Exception as snap_text_err:
+                        print(f"{log_prefix} ⚠️ getDOMSnapshot text extraction warning: {snap_text_err}")
+
             if options.get("keep_alive") or options.get("from_skill"):
                 user_prompt = _build_spatial_prompt(task_text, url, title, elements)
+                if pruned_dom:
+                    user_prompt += (
+                        f"\n\nCRITICAL: The readable body text of the page is provided below in VISIBLE PAGE TEXT / CONTENT. "
+                        f"If the requested information (e.g. course list, schedule, details) is visible in the page text, "
+                        f"do NOT output scroll_page! Immediately return [\"action\": \"done\", \"summary\": \"<extracted information or answer>\"].\n\n"
+                        f"VISIBLE PAGE TEXT / CONTENT:\n{pruned_dom}"
+                    )
             else:
-                user_prompt = build_subgoal_prompt("act", system) + "\n\n" + context + "\n\nTASK:\n" + task_text
+                if is_informational or post_hitl_active:
+                    prompt_header = (
+                        system
+                        + "\n\nSUBGOAL: INFORMATIONAL / POST-HITL EXECUTION\n"
+                        + "CRITICAL: The readable body text of the page is already provided below in VISIBLE PAGE TEXT / CONTENT. "
+                        + "Do NOT output scroll_page! Read the text below, extract the requested list/information, "
+                        + "and immediately return [{\"action\": \"done\", \"summary\": \"<extracted information or answer>\"}]. "
+                        + "You do NOT need to click or scroll if the answer is already visible."
+                    )
+                else:
+                    prompt_header = build_subgoal_prompt("act", system)
+
+                user_prompt = prompt_header + "\n\n" + context
+                if pruned_dom:
+                    user_prompt += f"\n\nVISIBLE PAGE TEXT / CONTENT:\n{pruned_dom}"
+                user_prompt += "\n\nTASK:\n" + task_text
 
             snap_b64 = None
             if isinstance(start_msg.get("snapshot"), dict):
@@ -2302,6 +2517,28 @@ async def handle_client(ws: Any):
 
             print("📋 plan:", plan)
 
+            # Anti-scroll interceptor: If user intervened or task is informational and transcription indicates reading/extraction,
+            # intercept pointless scroll_page if body text was already provided in pruned_dom
+            voice_indicates_reading = any(k in latest_transcription.lower() for k in ["listed", "read", "extract", "page itself", "courses", "here"])
+            if (post_hitl_active or is_informational) and voice_indicates_reading and pruned_dom:
+                if plan and any(p.get("action") == "scroll_page" or p.get("kind") == "scroll_page" for p in plan):
+                    print(f"{log_prefix} 🛑 Intercepted redundant scroll_page after HITL handoff. Re-prompting LLM to extract directly from VISIBLE PAGE TEXT...")
+                    extract_prompt = (
+                        f"You previously output a scroll_page action, but the entire page text is ALREADY provided below. "
+                        f"Do NOT scroll. Extract the complete requested details (e.g., courses / information) from the text below "
+                        f"and output JSON: [{{\"action\": \"done\", \"summary\": \"<extracted details>\"}}]\n\n"
+                        f"PAGE TEXT:\n{pruned_dom}"
+                    )
+                    extract_out = await llm_plan_chat(system, extract_prompt)
+                    try:
+                        parsed_extract = json.loads(extract_out.strip().replace("```json", "").replace("```", ""))
+                        if isinstance(parsed_extract, list) and parsed_extract:
+                            plan = parsed_extract
+                        elif isinstance(parsed_extract, dict):
+                            plan = [parsed_extract]
+                    except Exception:
+                        plan = [{"action": "done", "summary": pruned_dom[:4000]}]
+
             # Circuit Breaker: Detect repetitive non-navigating actions and trigger proactive HITL
             if plan:
                 first_act = plan[0]
@@ -2315,6 +2552,12 @@ async def handle_client(ws: Any):
                     repeat_action_count = 0
                     last_action_sig = current_sig
                     last_seen_url = current_url
+
+                if repeat_action_count >= 1:
+                    if await _try_learned_recovery(url):
+                        repeat_action_count = 0
+                        last_action_sig = None
+                        break
 
                 if repeat_action_count >= 2:
                     print(f"{log_prefix} 🚨 [CircuitBreaker] Stuck action loop detected ({repeat_action_count} identical non-navigating actions). Overwriting plan with proactive HITL request_help...")
@@ -2340,6 +2583,24 @@ async def handle_client(ws: Any):
                         transcription = (res.get("audio_transcription") or "").strip()
                         if not transcription or transcription.startswith("User completed actions"):
                             transcription = "None"
+                        latest_transcription = transcription
+
+                        telemetry_steps = res.get("telemetry") or res.get("click", {}).get("telemetry") or []
+                        for t_step in telemetry_steps:
+                            session_action_history.append(_normalize_history_step(t_step, url=url))
+
+                        try:
+                            from webai_playwright.hitl_memory_store import save_hitl_memory
+                            save_hitl_memory(
+                                url=url,
+                                voice_context=transcription,
+                                learned_steps=telemetry_steps,
+                                dom_excerpt=context[:2000] if 'context' in locals() else "",
+                                blocker_context=str(last_errors[-1:]) if last_errors else "",
+                                automation_id=options.get("automation_id")
+                            )
+                        except Exception as mem_err:
+                            print(f"{log_prefix} [HITL Memory Save Warning]: {mem_err}")
 
                         print(f"\n{log_prefix} 🧹 [Post-HITL Memory Wipe] Resetting LLM context and wiping action history.")
                         override_prompt = (
@@ -2355,6 +2616,7 @@ async def handle_client(ws: Any):
                         repeat_action_count = 0
                         last_action_sig = None
                         last_seen_url = None
+                        post_hitl_active = True
                         break
                 except TaskDone:
                     raise
@@ -2364,6 +2626,12 @@ async def handle_client(ws: Any):
                     last_errors.append(str(e))
                     force_fresh_snapshot = True
                     print(f"{log_prefix} ⚠️ Action execution failed: {e}. Set force_fresh_snapshot=True (consecutive_failures={consecutive_action_failures})")
+
+                    if consecutive_action_failures >= 1:
+                        if await _try_learned_recovery(url):
+                            consecutive_action_failures = 0
+                            failures = 0
+                            break
 
                     if consecutive_action_failures >= MAX_CONSECUTIVE_FAILURES:
                         print(f"{log_prefix} 🚨 [HITL] Consecutive action failures ({consecutive_action_failures}) threshold reached. Requesting human intervention...")
@@ -2381,6 +2649,24 @@ async def handle_client(ws: Any):
                                 transcription = (hitl_res.get("audio_transcription") or "").strip()
                                 if not transcription or transcription.startswith("User completed actions"):
                                     transcription = "None"
+                                latest_transcription = transcription
+
+                                telemetry_steps = hitl_res.get("telemetry") or hitl_res.get("click", {}).get("telemetry") or []
+                                for t_step in telemetry_steps:
+                                    session_action_history.append(_normalize_history_step(t_step, url=url))
+
+                                try:
+                                    from webai_playwright.hitl_memory_store import save_hitl_memory
+                                    save_hitl_memory(
+                                        url=url,
+                                        voice_context=transcription,
+                                        learned_steps=telemetry_steps,
+                                        dom_excerpt=context[:2000] if 'context' in locals() else "",
+                                        blocker_context=str(last_errors[-1:]) if last_errors else "",
+                                        automation_id=options.get("automation_id")
+                                    )
+                                except Exception as mem_err:
+                                    print(f"{log_prefix} [HITL Memory Save Warning]: {mem_err}")
 
                                 print(f"\n{log_prefix} 🧹 [Post-HITL Memory Wipe] Resetting LLM context and wiping action history.")
                                 override_prompt = (
@@ -2396,6 +2682,7 @@ async def handle_client(ws: Any):
                                 repeat_action_count = 0
                                 last_action_sig = None
                                 last_seen_url = None
+                                post_hitl_active = True
                                 break # Safely flushes remaining stale actions in current plan
                         except Exception as hitl_err:
                             print(f"{log_prefix} ⚠️ [HITL] Human intervention handler error: {hitl_err}")

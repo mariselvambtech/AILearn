@@ -671,7 +671,6 @@ Implemented a centralized Strategy Pattern & Factory in `webai_playwright_python
    - `AudioAligner` (`audio_aligner.py`): Delegates segment transcription to `ACTIVE_TRANSCRIBER.transcribe_segments()`.
    - `HITLPlugin` (`hitl_plugin.py`): Delegates vocal explanation transcription to `ACTIVE_TRANSCRIBER.transcribe_text()`.
 
-### Impact
 - **Positive:** Enables zero-code switching between Whisper and SenseVoice models; decouples consumers from specific model libraries; guarantees zero startup/import overhead.
 - **Verification:** Authored `test_audio_transcriber.py` (6/6 PASS), verified temporal alignment and VAD test harnesses (`test_audio_alignment.py`, `test_audio_vad_configuration.py`), and verified full regression suite (60/60 PASS).
 
@@ -733,6 +732,8 @@ During autonomous web extraction, two critical issues arose:
 - Allows Playwright pseudo-selectors and flexible target schemas without throwing browser DOM `SyntaxError`.
 - Validated with 5 server unit tests and 4 client unit tests; 69 server tests pass cleanly.
 
+---
+
 ## Decision 23: Custom Filepaths in Agentic Extraction & TaskDone Control-Flow Handling
 
 **Date:** 2026-09-20
@@ -758,9 +759,44 @@ During autonomous web extraction, two critical issues arose:
 
 ---
 
+## Decision 24: Simultaneous Voice + Multi-Action HITL Recording, MSSQL HITL Learned Memory Store & Voice+DOM Self-Healing
+
+**Date:** 2026-10-23
+**Status:** Implemented ✅
+
+### Context
+During Human-In-The-Loop (HITL) manual interventions, human operators frequently perform multi-action sequences (clicking, typing, dragging-and-dropping, and scrolling) while simultaneously speaking voice explanations. Previously, only single clicks were recorded, vocal explanations were transcribed only as monolithic text without timestamp alignment, and manual interventions were lost once the session ended, forcing the system to encounter the same blockers repeatedly.
+
+### Decision
+Implemented end-to-end Simultaneous Voice + Multi-Action recording with database-backed self-healing:
+1. **Multi-Action Event Capture in `HITLPlugin` (`hitl_plugin.py`)**:
+   - Injected real-time telemetry array (`window.__webai_telemetry`) and session clock (`window.__webai_observer_start`).
+   - Added event listeners for `click` (with modal UI shielding), `type` (debounced 400ms across input, textarea, contenteditable), `drag_and_drop` (HTML5 drop and mousemove fallback capturing source/target locators and coordinates), and `scroll_page` (debounced 350ms accumulating wheel deltas).
+   - In the `#webai-hitl-resume-btn` click handler, added active element check (`document.activeElement`) to flush uncommitted inputs before resolving `resumeWebAI`.
+   - Captured simultaneous audio via `AudioRecorder`, transcribed segments via `ACTIVE_TRANSCRIBER.transcribe_segments()`, and temporally aligned voice explanations to each discrete step using `AudioAligner`.
+2. **MSSQL Learned Memory Store (`webai_api_server`)**:
+   - Added `HITLMemory` model in `models.py` with `id`, `url_pattern`, `domain`, `skill_name`, `automation_id`, `blocker_context`, `voice_context`, `dom_excerpt`, `learned_steps_json` (JSON), `created_at`, and `created_at_ist` computed column.
+   - Added Pydantic schemas in `schemas.py` and CRUD operations in `crud.py` prioritizing exact `url_pattern` matches followed by `domain` fallback.
+   - Added `POST /hitl-memory` and `GET /hitl-memory` API endpoints in `main.py` with optional authentication via `get_optional_user`.
+   - Created database migration script `migrate_hitl_memory.py` registered in `init_db.py`.
+3. **Modular Helper & Local Fallback (`hitl_memory_store.py`)**:
+   - Built `save_hitl_memory(...)` and `lookup_hitl_memory(...)` calling central API server with graceful local JSON fallback at `skills/hitl_memory.json` on network/server errors.
+4. **Playback Support & Fallback Helpers**:
+   - Implemented `drag_and_drop_with_fallback` in `fallback_helpers.py` with locator `drag_to` and coordinate mouse emulation fallback.
+   - Added `scroll_wheel` in `playwright_actions.py` and dispatched in `ai.py` and Guided Server.
+5. **Voice+DOM Self-Healing in Guided, Freeform, and SkillExecutor**:
+   - Guided & Freeform Server (`local_webai_server_guided.py`): Consolidated `_normalize_history_step` to preserve multi-action telemetry, added `_try_learned_recovery` triggered on consecutive action failures / stuck loops, and automatically saved learned memory post-HITL.
+   - `SkillExecutor` (`skill_executor.py`): Stored `recipe_path`, supported `drag_and_drop` and `scroll_page`, and implemented `_handle_stuck_recovery` on action failures and `SemanticVerificationError` (checking learned memory first, falling back to HITL, and updating the recipe file on disk).
+
+### Impact
+- **Positive:** Automations autonomously self-heal from previous human interventions without prompting the user a second time; multi-action human interventions and speech are preserved with millisecond temporal alignment.
+- **Verification:** Unit and integration tests in `webai_local_server/tests/test_hitl_memory_and_multi_action.py` (6/6 PASS) and full regression suite (66/66 PASS).
+
+---
+
 ## Future Decisions Pending
 
-### Decision 24: Jira Integration Approach (Pending)
+### Decision 25: Jira Integration Approach (Pending)
 **Question:** How to integrate with Jira for ticket creation?
 **Options:**
 1. Direct Jira REST API calls from AI server

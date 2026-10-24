@@ -452,6 +452,13 @@ erDiagram
 4. **Proactive HITL Escalation**: When `repeat_action_count >= 2`, plan is overwritten with `request_help`, instantly launching Observer Mode without burning turns.
 5. **State Reset**: On human intervention resolution / resume, `repeat_action_count`, `last_action_sig`, and `last_seen_url` are cleanly reset.
 
+### HITL Learned Memory Store & Voice+DOM Self-Healing Pattern (Decision 21)
+1. **Multi-Action Event Capture**: `HITLPlugin` (`hitl_plugin.py`) captures `click` (shielding UI), `type` (debounced 400ms), `drag_and_drop` (HTML5 drop & mousemove fallback), and `scroll_page` (accumulating wheel deltas over 350ms).
+2. **Active Element Flush**: On clicking Resume AI, active `<input>`, `<textarea>`, or `[contenteditable]` elements are immediately flushed into the telemetry buffer before resolution.
+3. **Temporal Speech Alignment**: Audio recorded during intervention is segmented via `ACTIVE_TRANSCRIBER.transcribe_segments()` and aligned with telemetry steps via `AudioAligner`.
+4. **MSSQL Memory Store & Local Fallback**: `webai_api_server` provides `HITLMemory` table and `/hitl-memory` endpoints, while `webai_playwright.hitl_memory_store` provides resilient API calls with local JSON fallback at `skills/hitl_memory.json`.
+5. **Self-Healing Execution**: Guided Server (`local_webai_server_guided.py`) and `SkillExecutor` (`skill_executor.py`) query learned memory before prompting the user, replaying learned steps to automatically recover from locator breakage and website layout changes.
+
 ## Related Documents
 - `techContext.md` — Technologies, ports, setup commands
 - `decisionLog.md` — Why these patterns were chosen

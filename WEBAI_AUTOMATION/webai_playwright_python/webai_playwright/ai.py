@@ -246,6 +246,22 @@ async def _dispatch_command(page: Page, command: Dict[str, Any]) -> Any:
     if name == "pressKey":
         return await pw.press_key(active_page, args.get("key", "Enter") or "Enter")
 
+    if name == "dragAndDrop":
+        return await pw.drag_and_drop_with_fallback(
+            active_page,
+            source_locators=args.get("source_locators", []),
+            target_locators=args.get("target_locators", []),
+            source_coords=args.get("source_coords"),
+            target_coords=args.get("target_coords"),
+        )
+
+    if name == "scrollWheel":
+        return await pw.scroll_wheel(
+            active_page,
+            delta_x=int(args.get("delta_x", 0)),
+            delta_y=int(args.get("delta_y", 0)),
+        )
+
     if name == "selectSmart":
         return await pw.select_smart(
             active_page,
