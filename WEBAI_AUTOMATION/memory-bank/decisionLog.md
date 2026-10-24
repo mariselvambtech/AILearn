@@ -671,15 +671,95 @@ Implemented a centralized Strategy Pattern & Factory in `webai_playwright_python
    - `AudioAligner` (`audio_aligner.py`): Delegates segment transcription to `ACTIVE_TRANSCRIBER.transcribe_segments()`.
    - `HITLPlugin` (`hitl_plugin.py`): Delegates vocal explanation transcription to `ACTIVE_TRANSCRIBER.transcribe_text()`.
 
-### Impact
 - **Positive:** Enables zero-code switching between Whisper and SenseVoice models; decouples consumers from specific model libraries; guarantees zero startup/import overhead.
 - **Verification:** Authored `test_audio_transcriber.py` (6/6 PASS), verified temporal alignment and VAD test harnesses (`test_audio_alignment.py`, `test_audio_vad_configuration.py`), and verified full regression suite (60/60 PASS).
 
 ---
 
+## Decision 21: Agentic Tool Use for Data Extraction
+
+**Date:** 2026-09-20
+**Status:** Implemented ✅
+
+### Context
+Users frequently ask the autonomous AI to extract and save information (e.g. course lists, tables, text) to disk. Previously, extraction saving was strictly an interactive recording feature triggered by right-click context menus. Autonomous agents had no clean tool interface to extract and save structured tabular or text data directly to disk without burning turns in loop navigation.
+
+### Decision
+Exposed native agentic extraction actions to the LLM Brain via JSON action schemas:
+1. **Schema & Prompts (`local_webai_server_guided.py`):**
+   - Added `{"action": "extract_text", "target": {...}, "format": "txt" | "word"}` and `{"action": "extract_table", "target": {...}, "format": "excel" | "csv"}` to `ALLOWED_ACTIONS` and `build_system_prompt()`.
+   - Added `EXTRACTION_TEMPLATE` and task classification in `_infer_task_type()`.
+2. **Client Dispatching (`ai.py` & `playwright_actions.py`):**
+   - Implemented `extract_text(page, target)` converting target dictionaries/selectors to multi-locator fallbacks and delegating to `extract_with_fallback`.
+   - Implemented `extract_table(page, target)` delegating to `extract_table_data` with enhanced auto-header detection in `fallback_helpers.py`.
+   - Routed commands in `ai._dispatch_command`.
+3. **Server Execution Loop & Context Observation Injection:**
+   - In `exec_action()`, intercepted `extract_text` and agentic `extract_table`.
+   - Sent command to client via WebSockets and received data payload.
+   - Piped data to `_save_txt_extraction`, `_save_word_extraction`, or pandas Excel/CSV persistence (`extracted_data.txt`, `extracted_data.docx`, `extracted_table.xlsx`, `extracted_table.csv`).
+   - Recorded action to `session_action_history` for Skill Synthesis.
+   - Injected observation string into LLM context: `Action successful. Data extracted and saved to [Format] file on disk.`
+
+### Impact
+- Autonomous agents can natively scrape and save text or tables to disk with full format control.
+- Backward compatibility with recorded playback (`table_config`, `save_options`) is completely preserved.
+- Verified with 4 unit tests in `test_agentic_data_extraction.py`, 3 client tests in `test_agentic_extraction.py`, and full 68-test server regression.
+
 ---
 
-## Decision 21: Simultaneous Voice + Multi-Action HITL Recording, MSSQL HITL Learned Memory Store & Voice+DOM Self-Healing
+## Decision 22: Execution Loop Short-Circuiting & Locator-Based Table Extraction
+
+**Date:** 2026-09-20
+**Status:** Implemented ✅
+
+### Context
+During autonomous web extraction, two critical issues arose:
+1. **Execution Loop Failure Propagation:** When an action in a multi-step batched plan (e.g. `[extract_table, done]`) failed, the server logged the error and executed `continue`. This skipped the error-handling break and directly proceeded to evaluate subsequent plan items like `done`, resulting in a premature, false-positive `task-complete` signal.
+2. **Playwright Selector SyntaxError in Table Extraction:** Playwright pseudo-selectors like `table:has-text('UG/PG Programmes')` were passed directly into browser `document.querySelector()`, which is a standard DOM API that does not support Playwright's pseudo-class extensions, throwing a DOM `SyntaxError`.
+
+### Decision
+1. **Short-Circuit on Plan Failure (`local_webai_server_guided.py`):**
+   - Replaced `continue` with `break` in the action execution `except Exception as e:` handler.
+   - When an action fails, remaining plan actions are immediately discarded and logged.
+   - The server refreshes DOM/URL context in the next round (`round_idx`), enabling the LLM to replan or trigger HITL escalation without false completions.
+2. **Locator-Based Table Extraction (`fallback_helpers.py` & `playwright_actions.py`):**
+   - Refactored `playwright_actions.extract_table` to resolve targets into Playwright `Locator` instances (e.g., `page.locator(f"table:has-text('{val}')")`).
+   - Refactored `fallback_helpers.extract_table_data` to accept either a `Locator` or a `Page`.
+   - Updated the JavaScript evaluation to run directly on the resolved DOM element via `locator.first.evaluate("""async (table, config) => { ... }""", config)`, bypassing `document.querySelector` completely.
+
+### Impact
+- Eliminates premature `task-complete` signals caused by unchecked execution of downstream plan actions.
+- Allows Playwright pseudo-selectors and flexible target schemas without throwing browser DOM `SyntaxError`.
+- Validated with 5 server unit tests and 4 client unit tests; 69 server tests pass cleanly.
+
+---
+
+## Decision 23: Custom Filepaths in Agentic Extraction & TaskDone Control-Flow Handling
+
+**Date:** 2026-09-20
+**Status:** Implemented ✅
+
+### Context
+1. When users prompt the autonomous AI to save extracted text or tables to specific absolute paths (e.g., `'D:\test\mytable.docx'`), the tools previously defaulted to root relative names (`extracted_data.txt`, `extracted_table.xlsx`) without honoring requested destinations or creating missing folders.
+2. In `local_webai_server_guided.py`, the `done` action finishes by sending `task-complete` and raising internal `TaskDone()`. In both the freeform and guided action execution loops, `TaskDone` was being caught by generic `except Exception as e:`, erroneously incrementing failure counts, triggering fresh snapshot requests, and polluting logs before crashing if connections closed.
+
+### Decision
+1. **Custom `filepath` Support:**
+   - Updated `ALLOWED_ACTIONS` and `EXTRACTION_TEMPLATE` in `build_system_prompt()` to include the optional `"filepath": "<path>"` property.
+   - Enhanced `_save_txt_extraction`, `_save_excel_extraction`, `_save_csv_extraction`, and `_save_word_extraction` with `_ensure_parent_dir()` using `os.makedirs(parent, exist_ok=True)`.
+   - Updated `exec_action` for both `extract_text` and `extract_table` to accept and prioritize `act.get("filepath")`.
+2. **`TaskDone` Control-Flow & WebSocket Hardening:**
+   - In both freeform and guided action execution loops, explicitly caught `except TaskDone: raise` before `except Exception as e:` so task completion is never treated as an action failure.
+   - Wrapped `send_json()` with exception guards for `websockets.exceptions.ConnectionClosed` so abrupt disconnects exit gracefully.
+
+### Impact
+- Autonomous agents can reliably create directories on demand and save extracted artifacts to explicit user-specified paths.
+- Task completion via `done` cleanly terminates loops without false-positive error tracking.
+- Verified with 7 unit tests in `test_agentic_data_extraction.py` and 71/71 server regression tests.
+
+---
+
+## Decision 24: Simultaneous Voice + Multi-Action HITL Recording, MSSQL HITL Learned Memory Store & Voice+DOM Self-Healing
 
 **Date:** 2026-10-23
 **Status:** Implemented ✅
@@ -716,7 +796,7 @@ Implemented end-to-end Simultaneous Voice + Multi-Action recording with database
 
 ## Future Decisions Pending
 
-### Decision 22: Jira Integration Approach (Pending)
+### Decision 25: Jira Integration Approach (Pending)
 **Question:** How to integrate with Jira for ticket creation?
 **Options:**
 1. Direct Jira REST API calls from AI server
@@ -724,7 +804,7 @@ Implemented end-to-end Simultaneous Voice + Multi-Action recording with database
 3. Store condition results in DB, separate worker creates tickets
 **Status:** Awaiting user direction
 
-### Decision 22: Variable Persistence Model (Pending)
+### Decision 24: Variable Persistence Model (Pending)
 **Question:** How should extracted variables persist across steps for condition checks?
 **Options:**
 1. In-memory dict (current: `page.__extracted_data__`)

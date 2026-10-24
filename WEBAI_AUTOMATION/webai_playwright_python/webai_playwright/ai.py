@@ -427,6 +427,17 @@ async def _dispatch_command(page: Page, command: Dict[str, Any]) -> Any:
         return result
 
     # ================================================
+    # Agentic Tool Use: Data Extraction (Decision 21)
+    # ================================================
+    if name in ("extract_text", "extractText"):
+        target = args.get("target") if isinstance(args, dict) and "target" in args else command.get("target", args)
+        return await pw.extract_text(active_page, target)
+
+    if name in ("extract_table", "extractTable"):
+        target = args.get("target") if isinstance(args, dict) and "target" in args else command.get("target", args)
+        return await pw.extract_table(active_page, target)
+
+    # ================================================
 
 
     raise ClientError(f"Unsupported command: {name}")
