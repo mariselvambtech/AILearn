@@ -264,3 +264,35 @@ class ScheduledRun(Base):
     
     def __repr__(self):
         return f"<ScheduledRun(id={self.id}, cron='{self.cron_expression}')>"
+
+
+class HITLMemory(Base):
+    """
+    Persistent store for Human-in-the-Loop learned recovery memories.
+    Stores user voice instructions, blocker context, live DOM excerpts, and recorded multi-action steps.
+    """
+    __tablename__ = 'hitl_learned_memory'
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True, index=True)
+    automation_id = Column(Integer, ForeignKey('automations.id'), nullable=True, index=True)
+    skill_name = Column(String(255), nullable=True, index=True)
+
+    url_pattern = Column(String(1000), nullable=False, index=True)
+    domain = Column(String(255), nullable=False, index=True)
+
+    blocker_context = Column(Text, nullable=True)
+    voice_context = Column(Text, nullable=True)
+    dom_excerpt = Column(Text, nullable=True)
+    learned_steps_json = Column(JSON, nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at_ist = Column(DateTime, server_default=FetchedValue())
+
+    # Relationships
+    user = relationship("User")
+    automation = relationship("Automation")
+
+    def __repr__(self):
+        return f"<HITLMemory(id={self.id}, domain='{self.domain}', skill='{self.skill_name}')>"
+

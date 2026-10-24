@@ -1,0 +1,114 @@
+[
+  {
+    "timestamp": 1792844492.2686114,
+    "ts": 1792844492.2686114,
+    "url": "https://sastra.edu/",
+    "action": "open"
+  },
+  {
+    "timestamp": 1792844499.5179024,
+    "ts": 1792844499.5179024,
+    "url": "",
+    "action": "click",
+    "name": "Academics",
+    "locators": [
+      {
+        "type": "text",
+        "value": "Academics"
+      }
+    ],
+    "target": {
+      "by": "text",
+      "text": "Academics",
+      "exact": true
+    }
+  },
+  {
+    "timestamp": 1792844510.958682,
+    "ts": 1792844510.958682,
+    "url": "",
+    "action": "click",
+    "name": "Schools",
+    "locators": [
+      {
+        "type": "text",
+        "value": "Schools"
+      }
+    ],
+    "target": {
+      "by": "text",
+      "text": "Schools",
+      "exact": true
+    }
+  },
+  {
+    "timestamp": 1792844515.1224034,
+    "ts": 1792844515.1224034,
+    "url": "",
+    "action": "click",
+    "name": "Admissions",
+    "locators": [
+      {
+        "type": "text",
+        "value": "Admissions"
+      }
+    ],
+    "target": {
+      "by": "text",
+      "text": "Admissions",
+      "exact": true
+    }
+  },
+  {
+    "timestamp": 1792844527.216587,
+    "ts": 1792844527.216587,
+    "url": "https://sastra.edu/admissions/ug-pg.html",
+    "action": "scroll_page",
+    "target": "up",
+    "name": "up",
+    "locators": null,
+    "delta_x": 0,
+    "delta_y": -1100,
+    "voice_context": "There is the courses offered at the Sanjavar campus.",
+    "full_voice_context": "There is the courses offered at the Sanjavar campus. I just keep it. Then the programs offered are listed in the page itself. You read and extract it.",
+    "timestamp_ms": 2812
+  },
+  {
+    "timestamp": 1792844527.21959,
+    "ts": 1792844527.21959,
+    "url": "https://sastra.edu/admissions/ug-pg.html",
+    "action": "scroll_page",
+    "target": "down",
+    "name": "down",
+    "locators": null,
+    "delta_x": 0,
+    "delta_y": 100,
+    "voice_context": "There is the courses offered at the Sanjavar campus.",
+    "full_voice_context": "There is the courses offered at the Sanjavar campus. I just keep it. Then the programs offered are listed in the page itself. You read and extract it.",
+    "timestamp_ms": 3919
+  },
+  {
+    "timestamp": 1792844532.8429255,
+    "ts": 1792844532.8429255,
+    "url": "https://sastra.edu/",
+    "action": "open"
+  },
+  {
+    "timestamp": 1792844537.2631953,
+    "ts": 1792844537.2631953,
+    "url": "",
+    "action": "click",
+    "name": "UG / PG Programmes",
+    "locators": [
+      {
+        "type": "text",
+        "value": "UG / PG Programmes"
+      }
+    ],
+    "target": {
+      "by": "text",
+      "text": "UG / PG Programmes",
+      "exact": false
+    }
+  }
+]

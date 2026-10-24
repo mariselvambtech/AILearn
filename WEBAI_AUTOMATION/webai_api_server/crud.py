@@ -596,3 +596,81 @@ def get_due_schedules(db: Session) -> List[models.ScheduledRun]:
             models.ScheduledRun.next_run_at <= now
         )
     ).all()
+
+
+# ===== HITL LEARNED MEMORY OPERATIONS =====
+
+import urllib.parse
+
+
+def _extract_domain_and_pattern(raw_url: str):
+    """Normalize url and extract hostname domain and pattern."""
+    if not raw_url:
+        return "", ""
+    parsed = urllib.parse.urlparse(raw_url)
+    domain = (parsed.netloc or "").lower().split(":")[0]
+    pattern = f"{parsed.scheme}://{parsed.netloc}{parsed.path}".rstrip("/") if parsed.netloc else raw_url.rstrip("/")
+    return domain, pattern
+
+
+def create_hitl_memory(
+    db: Session,
+    memory: schemas.HITLMemoryCreate,
+    user_id: Optional[int] = None
+) -> models.HITLMemory:
+    """Save a newly learned HITL recovery memory in the database."""
+    domain, pattern = _extract_domain_and_pattern(memory.url_pattern)
+    db_mem = models.HITLMemory(
+        user_id=user_id,
+        automation_id=memory.automation_id,
+        skill_name=memory.skill_name,
+        url_pattern=memory.url_pattern or pattern,
+        domain=memory.domain or domain,
+        blocker_context=memory.blocker_context,
+        voice_context=memory.voice_context,
+        dom_excerpt=memory.dom_excerpt,
+        learned_steps_json=memory.learned_steps_json,
+    )
+    db.add(db_mem)
+    db.commit()
+    db.refresh(db_mem)
+    return db_mem
+
+
+def get_hitl_memories(
+    db: Session,
+    url: str,
+    automation_id: Optional[int] = None,
+    skill_name: Optional[str] = None
+) -> List[models.HITLMemory]:
+    """
+    Retrieve learned HITL recovery memories matching exact url_pattern first,
+    falling back to domain matching, filtered by optional automation_id or skill_name.
+    """
+    domain, pattern = _extract_domain_and_pattern(url)
+
+    # 1. Try exact matching on url_pattern
+    filters = [models.HITLMemory.url_pattern == pattern]
+    if automation_id:
+        filters.append(models.HITLMemory.automation_id == automation_id)
+    if skill_name:
+        filters.append(models.HITLMemory.skill_name == skill_name)
+
+    results = db.query(models.HITLMemory).filter(and_(*filters)).order_by(models.HITLMemory.id.desc()).all()
+    if results:
+        return results
+
+    # 2. Fall back to domain matching
+    if domain:
+        domain_filters = [models.HITLMemory.domain == domain]
+        if automation_id:
+            domain_filters.append(models.HITLMemory.automation_id == automation_id)
+        if skill_name:
+            domain_filters.append(models.HITLMemory.skill_name == skill_name)
+
+        domain_results = db.query(models.HITLMemory).filter(and_(*domain_filters)).order_by(models.HITLMemory.id.desc()).all()
+        if domain_results:
+            return domain_results
+
+    return []
+

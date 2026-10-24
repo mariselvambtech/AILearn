@@ -155,3 +155,40 @@ class ScheduleResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+
+# ===== HITL LEARNED MEMORY SCHEMAS =====
+
+class HITLMemoryCreate(BaseModel):
+    url_pattern: str
+    domain: str
+    automation_id: Optional[int] = None
+    skill_name: Optional[str] = None
+    blocker_context: Optional[str] = None
+    voice_context: Optional[str] = None
+    dom_excerpt: Optional[str] = None
+    learned_steps_json: List[Dict[str, Any]]
+
+
+class HITLMemoryResponse(BaseModel):
+    id: int
+    user_id: Optional[int] = None
+    automation_id: Optional[int] = None
+    skill_name: Optional[str] = None
+    url_pattern: str
+    domain: str
+    blocker_context: Optional[str] = None
+    voice_context: Optional[str] = None
+    dom_excerpt: Optional[str] = None
+    learned_steps_json: List[Dict[str, Any]]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class HITLMemoryQuery(BaseModel):
+    url: str
+    automation_id: Optional[int] = None
+    skill_name: Optional[str] = None
+

@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "skill_name": "sastra courses",
+    "slug": "sastra_courses",
+    "description": "list courses in sastra university",
+    "skill_file": "sastra_courses.json",
+    "recorded_steps": "sastra_courses/recorded_steps.json"
+  }
+]

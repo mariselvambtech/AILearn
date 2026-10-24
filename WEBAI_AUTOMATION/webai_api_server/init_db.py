@@ -61,7 +61,7 @@ def main():
             for table in tables:
                 print(f"   - {table}")
             
-            expected_tables = ['users', 'automations', 'automation_configs', 'execution_history', 'scheduled_runs']
+            expected_tables = ['users', 'automations', 'automation_configs', 'execution_history', 'scheduled_runs', 'hitl_learned_memory']
             missing = [t for t in expected_tables if t not in tables]
             if missing:
                 print(f"\n⚠️ WARNING: Missing tables: {missing}")

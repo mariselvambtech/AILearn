@@ -2,7 +2,76 @@
 
 > **This file updates most frequently.** It tracks the current session state, recent changes, open questions, and immediate next steps.
 
-## Current Session (2026-09-20)
+## Current Session (2026-10-24)
+
+### Phase 29 Hotfix 2: Same-Tab Navigation HITL Panel & Telemetry Persistence + Anti-Scroll Extraction Directives (Rule 7 TDVC, Rule 11) ✅
+- **HITL Panel Re-Injection & Same-Tab Navigation Persistence (`hitl_plugin.py`):**
+  - Attached `domcontentloaded` listener on `p_target` and subsequent pages in `_inject_and_await_observer_mode()`, automatically re-injecting `#webai-hitl-observer-panel` and telemetry handlers when a link navigates within the same browser tab.
+  - Added a 1.0s periodic heartbeat loop (`_reinject_heartbeat`) to ensure the floating observer panel stays present even after dynamic page reloads.
+  - Cleaned up all `domcontentloaded` event listeners and cancelled the heartbeat task in the `finally:` block of `_inject_and_await_observer_mode()`.
+- **Pre-Unload Telemetry Sink & Clock Normalization (`hitl_plugin.py`):**
+  - Exposed Python binding `recordHITLTelemetry` on browser contexts and stored incoming events into `target_obj._webai_hitl_state["telemetry"]`.
+  - Stored `start_ms = int(time.time() * 1000)` in `_webai_hitl_state` upon intervention start, and normalized all `event["timestamp_ms"] = max(0, int(time.time() * 1000) - state["start_ms"])` in Python, keeping telemetry aligned with continuous audio recordings across page reloads.
+  - In `js_inject_code`, immediately flushed navigational clicks (`a[href], button, [type="submit"]`) and `beforeunload` events to `recordHITLTelemetry` before the browser window unloads.
+  - Combined and deduplicated Python-side and browser-side telemetry upon resolution.
+- **Mega-Menu Noise Stripping & Clean Body Text Extraction (`local_webai_server_guided.py`):**
+  - Enhanced `_prune_dom_snapshot(html, max_chars=12000)` to strip `<header>`, `<nav>`, `<footer>`, `<aside>`, `<script>`, `<style>`, `<noscript>`, `<svg>`, `<iframe>` blocks before parsing, preserving static content (`<table>`, `<td>`, `<li>`, `<p>`).
+  - Added fast client-side `executeScript` DOM clone extraction (`clone.querySelectorAll('header, nav, footer, aside, script, style, noscript, svg, iframe, #webai-hitl-observer-panel').forEach(el => el.remove())`) up to 12,000 characters with fallback to `getDOMSnapshot` + `_prune_dom_snapshot`.
+- **Anti-Scroll Prompt Directives & Redundant Scroll Interception (`local_webai_server_guided.py`):**
+  - Tracked `latest_transcription: str = ""` across HITL resolutions.
+  - Added explicit anti-scroll directive to `user_prompt`: `"CRITICAL: The entire readable body text of the page is already provided below in VISIBLE PAGE TEXT / CONTENT. Do NOT output scroll_page! Read the text below, extract the requested list/information, and immediately return [{"action": "done", "summary": "<extracted information or answer>}]."`
+  - Intercepted redundant `scroll_page` actions when `post_hitl_active` or informational query is active and user voice indicates reading (`listed`, `read`, `extract`, `page itself`, `courses`), re-prompting once to extract the summary directly.
+  - When `done` with `summary` executes and task/voice mentions `"excel"`, `"word"`, `"file"`, or `"extract"`, automatically saved extracted data to `extracted_output.txt`, `extracted_output.xlsx`, and `extracted_output.docx`.
+- **TDVC Test Suite & Regression Verification:**
+  - Added 2 new unit tests in `webai_local_server/tests/test_hitl_memory_and_multi_action.py`:
+    - `test_hitl_same_tab_navigation_preserves_telemetry_and_reinjects_panel` (PASS)
+    - `test_prune_dom_snapshot_strips_header_nav_and_preserves_tables` (PASS)
+  - Full suite verification: 71 passed, 4 skipped, 0 failed.
+  - Synchronized AST Knowledge Graph (`graphify update .`) and Mermaid diagrams (`scripts/graphify_to_mermaid.py`).
+- **2nd HITL Popup Stale Closure Fix (`hitl_plugin.py`):**
+  - Stored `_active_resolution_event` and `_active_resolved_payload` on `HITLPlugin` and attached active state dict `_webai_hitl_state = {"event": resolution_event, "payload": resolved_payload}` onto `target_obj` (context/page).
+  - Defined `on_resume_webai(source, payload=None)` to dynamically read `target_obj._webai_hitl_state`, populate payload, and trigger `event.set()`, guaranteeing that subsequent HITL calls on the same context/page seamlessly dispatch to the active event without getting stuck in dead closures.
+  - In `js_inject_code`, ensured that any existing `#webai-hitl-observer-panel` from previous timeouts is removed before mounting the fresh panel, and reset `window.__webai_telemetry = []` and `window.__webai_observer_start = Date.now()` at the start of each intervention.
+- **Cross-Venv `hitl_memory_store` Import Portability (`local_webai_server_guided.py`, `__init__.py`):**
+  - Dynamically added sibling `webai_playwright_python` directory to `sys.path` in `local_webai_server_guided.py`.
+  - Wrapped `from .ai import ai, ai_sync, close` in `webai_playwright/__init__.py` with a graceful `try...except ImportError` block so packages and submodules can be imported in environments (such as `webai_local_server/.venv`) without requiring `playwright` to be installed.
+- **Static Page Text & Course List Visibility for Informational / Post-HITL Tasks (`local_webai_server_guided.py`):**
+  - Enhanced `_prune_dom_snapshot()` to preserve static text from `<table>`, `<td>`, `<li>`, and `<p>` while also maintaining interactive elements.
+  - In `handle_client()`, tracked `post_hitl_active: bool = False` (set upon any HITL completion). When `expect.get("task_type") == "informational"` OR `post_hitl_active == True` OR `repeat_action_count >= 1`:
+    - Safely fetched and parsed `getDOMSnapshot` for both `dict` and `str` types, passing to `_prune_dom_snapshot()`.
+    - Injected `VISIBLE PAGE TEXT / CONTENT:\n{pruned_dom}` into `user_prompt`.
+    - Bypassed the restrictive `build_subgoal_prompt("act", system)` and provided an informational/post-HITL instruction allowing the LLM to return `[{"action": "done", "summary": "<extracted info>"}]` immediately once content is visible.
+- **TDVC Test Suite & Regression Verification:**
+  - Added unit tests in `webai_local_server/tests/test_hitl_memory_and_multi_action.py`:
+    - `test_hitl_second_popup_resumes_cleanly` (PASS)
+    - `test_ai_server_imports_hitl_memory_store` (PASS)
+    - `test_informational_and_post_hitl_includes_pruned_dom_text` (PASS)
+  - Executed full regression suite: 69 passed, 4 skipped, 0 failed.
+  - Updated AST Knowledge Graph (`graphify update .`) and Mermaid diagrams (`scripts/graphify_to_mermaid.py`).
+
+### Phase 29: Simultaneous Voice + Multi-Action HITL Recording, MSSQL HITL Learned Memory Store & Voice+DOM Self-Healing (Decision 21, Rule 7 TDVC) ✅
+- **Multi-Action & Simultaneous Speech Telemetry (`hitl_plugin.py`):**
+  - Injected real-time session clock (`window.__webai_observer_start`) and telemetry accumulator (`window.__webai_telemetry`).
+  - Added event listeners for `click` (shielding modal UI), `type` (debounced 400ms across inputs, textareas, contenteditables), `drag_and_drop` (HTML5 drop and mousemove fallback capturing source/target locators and coordinates), and `scroll_page` (debounced 350ms accumulating `deltaX`/`deltaY` wheel distance).
+  - Ensured `#webai-hitl-resume-btn` click handler inspects `document.activeElement` to flush uncommitted inputs before resolving `resumeWebAI`.
+  - Captured audio concurrently, transcribed segments via `ACTIVE_TRANSCRIBER.transcribe_segments()`, and aligned explanations with `AudioAligner`.
+- **MSSQL Learned Memory Store (`webai_api_server`):**
+  - Added `HITLMemory` model in `models.py` with `id`, `url_pattern`, `domain`, `skill_name`, `automation_id`, `blocker_context`, `voice_context`, `dom_excerpt`, `learned_steps_json` (JSON), and `created_at_ist` computed column.
+  - Added Pydantic schemas in `schemas.py` and CRUD operations in `crud.py` prioritizing exact `url_pattern` matches followed by `domain` fallback.
+  - Added `POST /hitl-memory` and `GET /hitl-memory` API endpoints in `main.py` with optional authentication via `get_optional_user`.
+  - Created database migration script `migrate_hitl_memory.py` registered in `init_db.py`.
+- **Modular Helper & Local Fallback (`hitl_memory_store.py`):**
+  - Implemented `save_hitl_memory(...)` and `lookup_hitl_memory(...)` with central API POST/GET and graceful local JSON fallback at `skills/hitl_memory.json`.
+- **Playback Support & Fallback Helpers:**
+  - Implemented `drag_and_drop_with_fallback` in `fallback_helpers.py` with locator `drag_to` and coordinate mouse emulation fallback.
+  - Added `scroll_wheel` in `playwright_actions.py` and dispatched in `ai.py` and Guided Server.
+- **Voice+DOM Self-Healing across Guided, Freeform, and SkillExecutor:**
+  - Guided & Freeform Server (`local_webai_server_guided.py`): Consolidated `_normalize_history_step` to preserve all multi-action fields, locators, and voice context; wired `_try_learned_recovery` into consecutive action failure and stuck loop circuit breakers; automatically saved learned memory post-HITL.
+  - `SkillExecutor` (`skill_executor.py`): Stored `recipe_path`, supported `drag_and_drop` and `scroll_page`, and implemented `_handle_stuck_recovery` on action failures and `SemanticVerificationError` (checking learned memory first, falling back to HITL, and updating the recipe file on disk).
+- **TDVC Test Suite & Regression Verification:**
+  - Authored `webai_local_server/tests/test_hitl_memory_and_multi_action.py` (6/6 PASS).
+  - Executed full regression suite: 66 passed, 4 skipped, 0 failed.
+  - Synchronized AST Knowledge Graph (`graphify update .`) and re-exported Mermaid diagrams (`scripts/graphify_to_mermaid.py`).
 
 ### Phase 28: Transcriber Strategy Pattern & SenseVoice Support (Decision 20, Rule 7 TDVC) ✅
 - **Transcriber Strategy Architecture (`audio_transcriber.py`):**

@@ -37,6 +37,8 @@ class HITLPlugin:
         self.whisper_model_size = whisper_model_size
         self._recorder: Optional[WebRecorder] = None
         self._is_intervening = False
+        self._active_resolution_event: Optional[asyncio.Event] = None
+        self._active_resolved_payload: Dict[str, Any] = {}
 
     def attach(self, recorder: WebRecorder) -> None:
         """Attach to WebRecorder event bus and subscribe to intervention requests."""
@@ -82,14 +84,30 @@ class HITLPlugin:
         resolution_event = asyncio.Event()
         resolved_payload: Dict[str, Any] = {}
 
+        self._active_resolution_event = resolution_event
+        self._active_resolved_payload = resolved_payload
+
+        # Expose binding globally on context if available, or page
+        target_obj = context if context else page
+
+        # Attach active state dict directly onto target_obj so existing exposed binding references latest invocation
+        start_ms = int(time.time() * 1000)
+        target_state = {
+            "event": resolution_event,
+            "payload": resolved_payload,
+            "telemetry": [],
+            "start_ms": start_ms,
+        }
+        setattr(target_obj, "_webai_hitl_state", target_state)
+
         def on_resume_webai(source, payload=None):
             nonlocal resolved_payload
             if isinstance(payload, dict):
-                resolved_payload = payload
+                p = payload
             elif isinstance(source, dict):
-                resolved_payload = source
+                p = source
             else:
-                resolved_payload = {
+                p = {
                     "status": "resolved",
                     "action": "observer_mode_complete",
                     "x": 0, "y": 0,
@@ -98,19 +116,149 @@ class HITLPlugin:
                     "textContent": "Resume AI",
                     "timestamp": time.time()
                 }
+
+            resolved_payload = p
+            self._active_resolved_payload = p
+
+            # Update target_obj._webai_hitl_state dynamically
+            state = getattr(target_obj, "_webai_hitl_state", None)
+            if state and isinstance(state, dict):
+                state["payload"] = p
+                ev = state.get("event")
+                if ev and isinstance(ev, asyncio.Event):
+                    ev.set()
+
             resolution_event.set()
 
-        # Expose binding globally on context if available, or page
-        target_obj = context if context else page
+        def on_record_telemetry(source, payload=None):
+            ev_data = payload if isinstance(payload, dict) else (source if isinstance(source, dict) else None)
+            if not ev_data or not isinstance(ev_data, dict):
+                return
+            state = getattr(target_obj, "_webai_hitl_state", None)
+            if state and isinstance(state.get("telemetry"), list):
+                # Safeguard 1: Normalize timestamp_ms against Python session start_ms
+                now_ms = int(time.time() * 1000)
+                st_ms = state.get("start_ms", now_ms)
+                ev_data["timestamp_ms"] = max(0, now_ms - st_ms)
+                
+                # Deduplicate by action, name, timestamp within 250ms window
+                t_list = state["telemetry"]
+                is_dup = any(
+                    existing.get("action") == ev_data.get("action")
+                    and existing.get("name") == ev_data.get("name")
+                    and abs(existing.get("timestamp_ms", 0) - ev_data["timestamp_ms"]) < 250
+                    for existing in t_list
+                )
+                if not is_dup:
+                    t_list.append(ev_data)
+
         try:
             if hasattr(target_obj, "expose_binding"):
                 await target_obj.expose_binding("resumeWebAI", on_resume_webai)
             elif hasattr(page, "expose_binding"):
                 await page.expose_binding("resumeWebAI", on_resume_webai)
         except Exception:
-            pass  # Already exposed
+            pass  # Already exposed; on_resume_webai closure or target_state dispatches cleanly
 
-        js_inject_code = """() => {
+        try:
+            if hasattr(target_obj, "expose_binding"):
+                await target_obj.expose_binding("recordHITLTelemetry", on_record_telemetry)
+            elif hasattr(page, "expose_binding"):
+                await page.expose_binding("recordHITLTelemetry", on_record_telemetry)
+        except Exception:
+            pass
+
+        js_inject_code = r"""() => {
+            window.__webai_observer_start = window.__webai_observer_start || Date.now();
+            window.__webai_telemetry = window.__webai_telemetry || [];
+
+            const existingPanel = document.getElementById('webai-hitl-observer-panel');
+            if (existingPanel) {
+                try { existingPanel.remove(); } catch (_) {}
+            }
+
+
+            function extract13Locators(el) {
+                if (!el || !el.getAttribute) return [];
+                const locs = [];
+                const clean = (s) => (s || '').replace(/[\r\n\t]+/g, ' ').trim();
+
+                // 1. test-id
+                const testId = el.getAttribute('data-testid') || el.getAttribute('data-test-id') || el.getAttribute('data-test');
+                if (testId) locs.push({ type: 'test-id', value: testId });
+
+                // 2. id
+                const isDynamicId = /^[0-9]/.test(el.id || '') || /^modal-[A-Za-z0-9]{4,}$/.test(el.id || '') || /^:[a-zA-Z0-9_-]+:$/.test(el.id || '') || /ember\d+/i.test(el.id || '') || /^id-\d+/i.test(el.id || '');
+                if (el.id && !isDynamicId) locs.push({ type: 'id', value: el.id });
+
+                // 3. name
+                const nameAttr = el.getAttribute('name');
+                if (nameAttr) locs.push({ type: 'name', value: nameAttr });
+
+                // 4. href
+                const href = (el.tagName && el.tagName.toLowerCase() === 'a') ? el.getAttribute('href') : null;
+                if (href && href.trim() && !href.startsWith('javascript:')) locs.push({ type: 'href', value: href.trim() });
+
+                // 5. placeholder
+                const ph = el.getAttribute('placeholder');
+                if (ph && clean(ph)) locs.push({ type: 'placeholder', value: clean(ph) });
+
+                // 6. alt
+                const alt = el.getAttribute('alt');
+                if (alt && clean(alt)) locs.push({ type: 'alt', value: clean(alt) });
+
+                // 7. aria-label
+                const aria = el.getAttribute('aria-label');
+                if (aria && clean(aria)) locs.push({ type: 'aria-label', value: clean(aria) });
+
+                // 8. title
+                const title = el.getAttribute('title');
+                if (title && clean(title)) locs.push({ type: 'title', value: clean(title) });
+
+                // 9. label
+                if (el.id) {
+                    try {
+                        const lbl = document.querySelector(`label[for="${CSS.escape(el.id)}"]`);
+                        if (lbl && clean(lbl.innerText)) locs.push({ type: 'label', value: clean(lbl.innerText) });
+                    } catch (_) {}
+                }
+
+                // 10. css
+                let css = (el.tagName || '').toLowerCase();
+                if (el.id && !isDynamicId) {
+                    css += '#' + el.id;
+                } else if (el.className && typeof el.className === 'string') {
+                    const classes = el.className.trim().split(/\s+/).filter(Boolean).slice(0, 2).join('.');
+                    if (classes) css += '.' + classes;
+                }
+                if (css) locs.push({ type: 'css', value: css });
+
+                // 11. role
+                const explicitRole = el.getAttribute('role');
+                const tag = (el.tagName || '').toLowerCase();
+                const role = explicitRole || (tag === 'button' ? 'button' : (tag === 'input' ? 'textbox' : (tag === 'a' ? 'link' : null)));
+                const textVal = clean(el.innerText || el.textContent || '');
+                if (role) locs.push({ type: 'role', value: role, name: textVal || aria || null });
+
+                // 12. text
+                if (textVal && textVal.length < 80) locs.push({ type: 'text', value: textVal });
+
+                // 13. xpath
+                function getXPath(node) {
+                    if (!node || node.nodeType !== 1) return '';
+                    if (node.id && !isDynamicId) return `//*[@id="${node.id}"]`;
+                    const sameTagSiblings = node.parentNode ? Array.from(node.parentNode.children).filter(c => c.tagName === node.tagName) : [];
+                    const idx = sameTagSiblings.length > 1 ? `[${sameTagSiblings.indexOf(node) + 1}]` : '';
+                    return `${node.parentNode ? getXPath(node.parentNode) : ''}/${node.tagName.toLowerCase()}${idx}`;
+                }
+                try {
+                    const xp = getXPath(el);
+                    if (xp) locs.push({ type: 'xpath', value: xp });
+                } catch (_) {}
+
+                return locs;
+            }
+
             if (!document.getElementById('webai-hitl-observer-panel')) {
                 const panel = document.createElement('div');
                 panel.id = 'webai-hitl-observer-panel';
@@ -168,6 +316,32 @@ class HITLPlugin:
                     btn.addEventListener('click', (e) => {
                         e.preventDefault();
                         e.stopPropagation();
+
+                        // Flush active element input/type before resolving
+                        try {
+                            const activeEl = document.activeElement;
+                            if (activeEl && !activeEl.closest('#webai-hitl-observer-panel')) {
+                                const activeTag = (activeEl.tagName || '').toLowerCase();
+                                if (activeTag === 'input' || activeTag === 'textarea' || activeEl.isContentEditable) {
+                                    const val = activeEl.value || activeEl.innerText || '';
+                                    if (val) {
+                                        const lastTel = window.__webai_telemetry[window.__webai_telemetry.length - 1];
+                                        if (!lastTel || lastTel.action !== 'type' || lastTel.value !== val) {
+                                            window.__webai_telemetry.push({
+                                                action: 'type',
+                                                tag: activeTag,
+                                                name: (activeEl.getAttribute('name') || activeEl.getAttribute('aria-label') || activeEl.placeholder || activeTag).substring(0, 100),
+                                                value: val,
+                                                url: window.location.href,
+                                                locators: extract13Locators(activeEl),
+                                                timestamp_ms: Date.now() - window.__webai_observer_start
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (_) {}
+
                         if (window.resumeWebAI) {
                             window.resumeWebAI({
                                 status: "resolved",
@@ -185,13 +359,10 @@ class HITLPlugin:
                 }
             }
 
-            // Initialize global telemetry store & handler
-            window.__webai_telemetry = window.__webai_telemetry || [];
-
-            if (!window.__webai_telemetry_handler) {
-                window.__webai_telemetry_handler = function(e) {
-                    // Ignore clicks originating inside the Observer Mode Panel
-                    if (e.target.closest('#webai-hitl-observer-panel')) return;
+            // 1. Click Listener with Semantic Filter & Shield 2 MutationObserver
+            if (!window.__webai_click_handler) {
+                window.__webai_click_handler = function(e) {
+                    if (e.target && e.target.closest && e.target.closest('#webai-hitl-observer-panel')) return;
 
                     const target = e.target;
                     const tag = (target.tagName || '').toLowerCase();
@@ -218,8 +389,6 @@ class HITLPlugin:
                     );
 
                     const hasText = text.length > 0;
-
-                    // SMART SEMANTIC FILTERING: Discard click if non-interactive tag AND no interactive role AND no text
                     if (!isInteractiveTag && !hasInteractiveRole && !hasText) {
                         return;
                     }
@@ -228,64 +397,262 @@ class HITLPlugin:
                     if (target.id) {
                         css += '#' + target.id;
                     } else if (target.className && typeof target.className === 'string') {
-                        const classes = target.className.trim().split(/\\s+/).filter(Boolean).slice(0, 2).join('.');
+                        const classes = target.className.trim().split(/\s+/).filter(Boolean).slice(0, 2).join('.');
                         if (classes) css += '.' + classes;
                     }
 
                     const telemetryEvent = {
+                        action: 'click',
                         tag: tag,
+                        name: text.substring(0, 100),
                         text: text.substring(0, 100),
                         css: css,
-                        timestamp: Date.now()
+                        x: e.clientX,
+                        y: e.clientY,
+                        url: window.location.href,
+                        locators: extract13Locators(target),
+                        timestamp_ms: Date.now() - window.__webai_observer_start
                     };
 
-                    // --- SHIELD 2: DOM Mutation & URL State Verification ---
                     const initialUrl = window.location.href;
-                    let stateChanged = false;
-
-                    let observer = null;
-                    try {
-                        observer = new MutationObserver(function(mutations) {
-                            for (const mutation of mutations) {
-                                // Ignore mutations occurring inside the Observer Panel itself
-                                if (mutation.target && mutation.target.closest && mutation.target.closest('#webai-hitl-observer-panel')) {
-                                    continue;
-                                }
-                                stateChanged = true;
-                                if (observer) observer.disconnect();
-                                break;
-                            }
-                        });
-                        observer.observe(document.body || document.documentElement, {
-                            childList: true,
-                            subtree: true,
-                            attributes: true,
-                            characterData: true
-                        });
-                    } catch (err) {
-                        stateChanged = true; // Fallback if observer cannot attach
-                    }
-
-                    setTimeout(function() {
-                        if (observer) observer.disconnect();
-                        const urlChanged = window.location.href !== initialUrl;
-
-                        if (stateChanged || urlChanged) {
-                            window.__webai_telemetry.push(telemetryEvent);
+                    const isNavigational = Boolean(target.closest('a[href], button, [type="submit"]'));
+                    if (isNavigational) {
+                        window.__webai_telemetry.push(telemetryEvent);
+                        if (window.recordHITLTelemetry) {
+                            try { window.recordHITLTelemetry(telemetryEvent); } catch (_) {}
                         }
-                    }, 800);
-                };
+                    } else {
+                        let stateChanged = false;
+                        let observer = null;
+                        try {
+                            observer = new MutationObserver(function(mutations) {
+                                for (const mutation of mutations) {
+                                    if (mutation.target && mutation.target.closest && mutation.target.closest('#webai-hitl-observer-panel')) {
+                                        continue;
+                                    }
+                                    stateChanged = true;
+                                    if (observer) observer.disconnect();
+                                    break;
+                                }
+                            });
+                            observer.observe(document.body || document.documentElement, {
+                                childList: true,
+                                subtree: true,
+                                attributes: true,
+                                characterData: true
+                            });
+                        } catch (err) {
+                            stateChanged = true;
+                        }
 
-                document.addEventListener('click', window.__webai_telemetry_handler, true);
+                        setTimeout(function() {
+                            if (observer) observer.disconnect();
+                            const urlChanged = window.location.href !== initialUrl;
+                            if (stateChanged || urlChanged) {
+                                window.__webai_telemetry.push(telemetryEvent);
+                                if (window.recordHITLTelemetry) {
+                                    try { window.recordHITLTelemetry(telemetryEvent); } catch (_) {}
+                                }
+                            }
+                        }, 800);
+                    }
+                };
+                document.addEventListener('click', window.__webai_click_handler, true);
+            }
+
+            // 2. Type Listener (Debounced input & change)
+            let inputDebounceTimer = null;
+            if (!window.__webai_type_handler) {
+                window.__webai_type_handler = function(e) {
+                    if (e.target && e.target.closest && e.target.closest('#webai-hitl-observer-panel')) return;
+                    const target = e.target;
+                    const tag = (target.tagName || '').toLowerCase();
+                    if (tag !== 'input' && tag !== 'textarea' && !target.isContentEditable) return;
+
+                    if (inputDebounceTimer) clearTimeout(inputDebounceTimer);
+                    inputDebounceTimer = setTimeout(function() {
+                        const val = target.value || target.innerText || '';
+                        const typeEvent = {
+                            action: 'type',
+                            tag: tag,
+                            name: (target.getAttribute('name') || target.getAttribute('aria-label') || target.placeholder || tag).substring(0, 100),
+                            value: val,
+                            url: window.location.href,
+                            locators: extract13Locators(target),
+                            timestamp_ms: Date.now() - window.__webai_observer_start
+                        };
+                        window.__webai_telemetry.push(typeEvent);
+                        if (window.recordHITLTelemetry) {
+                            try { window.recordHITLTelemetry(typeEvent); } catch (_) {}
+                        }
+                    }, 400);
+                };
+                document.addEventListener('input', window.__webai_type_handler, true);
+                document.addEventListener('change', window.__webai_type_handler, true);
+            }
+
+            // 3. Drag and Drop Listener (dragstart + drop & mousedown/mouseup > 20px)
+            let dragSourceEl = null;
+            let mouseDownInfo = null;
+
+            if (!window.__webai_dragstart_handler) {
+                window.__webai_dragstart_handler = function(e) {
+                    if (e.target && e.target.closest && e.target.closest('#webai-hitl-observer-panel')) return;
+                    dragSourceEl = e.target;
+                };
+                window.__webai_drop_handler = function(e) {
+                    if (e.target && e.target.closest && e.target.closest('#webai-hitl-observer-panel')) return;
+                    const dropTargetEl = e.target;
+                    if (dragSourceEl) {
+                        const dragEvent = {
+                            action: 'drag_and_drop',
+                            name: (dragSourceEl.getAttribute('aria-label') || dragSourceEl.id || dragSourceEl.tagName || 'drag').substring(0, 100),
+                            source_locators: extract13Locators(dragSourceEl),
+                            target_locators: extract13Locators(dropTargetEl),
+                            source_coords: { x: 0, y: 0 },
+                            target_coords: { x: e.clientX, y: e.clientY },
+                            url: window.location.href,
+                            timestamp_ms: Date.now() - window.__webai_observer_start
+                        };
+                        window.__webai_telemetry.push(dragEvent);
+                        if (window.recordHITLTelemetry) {
+                            try { window.recordHITLTelemetry(dragEvent); } catch (_) {}
+                        }
+                        dragSourceEl = null;
+                    }
+                };
+                window.__webai_mousedown_handler = function(e) {
+                    if (e.target && e.target.closest && e.target.closest('#webai-hitl-observer-panel')) return;
+                    mouseDownInfo = { x: e.clientX, y: e.clientY, target: e.target, time: Date.now() };
+                };
+                window.__webai_mouseup_handler = function(e) {
+                    if (!mouseDownInfo) return;
+                    const dx = e.clientX - mouseDownInfo.x;
+                    const dy = e.clientY - mouseDownInfo.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist > 20) {
+                        const srcEl = mouseDownInfo.target;
+                        const tgtEl = e.target;
+                        const pointerDragEvent = {
+                            action: 'drag_and_drop',
+                            name: (srcEl.getAttribute('aria-label') || srcEl.id || srcEl.tagName || 'pointer_drag').substring(0, 100),
+                            source_locators: extract13Locators(srcEl),
+                            target_locators: extract13Locators(tgtEl),
+                            source_coords: { x: mouseDownInfo.x, y: mouseDownInfo.y },
+                            target_coords: { x: e.clientX, y: e.clientY },
+                            url: window.location.href,
+                            timestamp_ms: Date.now() - window.__webai_observer_start
+                        };
+                        window.__webai_telemetry.push(pointerDragEvent);
+                        if (window.recordHITLTelemetry) {
+                            try { window.recordHITLTelemetry(pointerDragEvent); } catch (_) {}
+                        }
+                    }
+                    mouseDownInfo = null;
+                };
+                document.addEventListener('dragstart', window.__webai_dragstart_handler, true);
+                document.addEventListener('drop', window.__webai_drop_handler, true);
+                document.addEventListener('mousedown', window.__webai_mousedown_handler, true);
+                document.addEventListener('mouseup', window.__webai_mouseup_handler, true);
+            }
+
+            // 4. Scroll Page Listener (Accumulated wheel delta over 350ms window)
+            let wheelTimeout = null;
+            let wheelAccumX = 0;
+            let wheelAccumY = 0;
+
+            if (!window.__webai_wheel_handler) {
+                window.__webai_wheel_handler = function(e) {
+                    if (e.target && e.target.closest && e.target.closest('#webai-hitl-observer-panel')) return;
+                    wheelAccumX += e.deltaX;
+                    wheelAccumY += e.deltaY;
+
+                    if (wheelTimeout) clearTimeout(wheelTimeout);
+                    wheelTimeout = setTimeout(function() {
+                        const totalX = Math.round(wheelAccumX);
+                        const totalY = Math.round(wheelAccumY);
+                        wheelAccumX = 0;
+                        wheelAccumY = 0;
+                        const scrollEvent = {
+                            action: 'scroll_page',
+                            target: totalY >= 0 ? 'down' : 'up',
+                            delta_x: totalX,
+                            delta_y: totalY,
+                            url: window.location.href,
+                            timestamp_ms: Date.now() - window.__webai_observer_start
+                        };
+                        window.__webai_telemetry.push(scrollEvent);
+                        if (window.recordHITLTelemetry) {
+                            try { window.recordHITLTelemetry(scrollEvent); } catch (_) {}
+                        }
+                    }, 350);
+                };
+                document.addEventListener('wheel', window.__webai_wheel_handler, { capture: true, passive: true });
+            }
+
+            // 5. Unload Flush Listener for active inputs
+            if (!window.__webai_unload_handler) {
+                window.__webai_unload_handler = function() {
+                    try {
+                        const activeEl = document.activeElement;
+                        if (activeEl && !activeEl.closest('#webai-hitl-observer-panel')) {
+                            const activeTag = (activeEl.tagName || '').toLowerCase();
+                            if (activeTag === 'input' || activeTag === 'textarea' || activeEl.isContentEditable) {
+                                const val = activeEl.value || activeEl.innerText || '';
+                                if (val && window.recordHITLTelemetry) {
+                                    window.recordHITLTelemetry({
+                                        action: 'type',
+                                        tag: activeTag,
+                                        name: (activeEl.getAttribute('name') || activeEl.getAttribute('aria-label') || activeEl.placeholder || activeTag).substring(0, 100),
+                                        value: val,
+                                        url: window.location.href,
+                                        locators: extract13Locators(activeEl),
+                                        timestamp_ms: Date.now() - window.__webai_observer_start
+                                    });
+                                }
+                            }
+                        }
+                    } catch (_) {}
+                };
+                window.addEventListener('beforeunload', window.__webai_unload_handler, true);
             }
         }"""
 
         js_remove_code = """() => {
             const panel = document.getElementById('webai-hitl-observer-panel');
             if (panel) { panel.remove(); }
-            if (window.__webai_telemetry_handler) {
-                document.removeEventListener('click', window.__webai_telemetry_handler, true);
-                delete window.__webai_telemetry_handler;
+            if (window.__webai_click_handler) {
+                document.removeEventListener('click', window.__webai_click_handler, true);
+                delete window.__webai_click_handler;
+            }
+            if (window.__webai_type_handler) {
+                document.removeEventListener('input', window.__webai_type_handler, true);
+                document.removeEventListener('change', window.__webai_type_handler, true);
+                delete window.__webai_type_handler;
+            }
+            if (window.__webai_dragstart_handler) {
+                document.removeEventListener('dragstart', window.__webai_dragstart_handler, true);
+                delete window.__webai_dragstart_handler;
+            }
+            if (window.__webai_drop_handler) {
+                document.removeEventListener('drop', window.__webai_drop_handler, true);
+                delete window.__webai_drop_handler;
+            }
+            if (window.__webai_mousedown_handler) {
+                document.removeEventListener('mousedown', window.__webai_mousedown_handler, true);
+                delete window.__webai_mousedown_handler;
+            }
+            if (window.__webai_mouseup_handler) {
+                document.removeEventListener('mouseup', window.__webai_mouseup_handler, true);
+                delete window.__webai_mouseup_handler;
+            }
+            if (window.__webai_wheel_handler) {
+                document.removeEventListener('wheel', window.__webai_wheel_handler, true);
+                delete window.__webai_wheel_handler;
+            }
+            if (window.__webai_unload_handler) {
+                window.removeEventListener('beforeunload', window.__webai_unload_handler, true);
+                delete window.__webai_unload_handler;
             }
         }"""
 
@@ -310,9 +677,22 @@ class HITLPlugin:
             except Exception:
                 pass
 
+        # Attach domcontentloaded listener to re-inject panel on same-tab navigations
+        page_dom_listeners = []
+        def _attach_dom_listener(p_target: Page):
+            if hasattr(p_target, "on"):
+                def _on_dom_ready():
+                    asyncio.create_task(inject_into_page(p_target))
+                try:
+                    p_target.on("domcontentloaded", _on_dom_ready)
+                    page_dom_listeners.append((p_target, _on_dom_ready))
+                except Exception:
+                    pass
+
         # Inject into all existing pages in context
         pages_list = context.pages if context and hasattr(context, "pages") and isinstance(context.pages, (list, tuple)) else [page]
         for p in pages_list:
+            _attach_dom_listener(p)
             try:
                 test_eval = await p.evaluate(js_inject_code)
                 if isinstance(test_eval, dict):
@@ -325,6 +705,7 @@ class HITLPlugin:
         new_page_listener = None
         if context and hasattr(context, "on"):
             def _on_new_page(new_p: Page):
+                _attach_dom_listener(new_p)
                 async def _handle_new_tab():
                     try:
                         await new_p.wait_for_load_state("domcontentloaded", timeout=5000)
@@ -344,17 +725,61 @@ class HITLPlugin:
             except Exception:
                 pass
 
+        # Heartbeat loop to keep panel injected across same-tab navigations
+        async def _heartbeat_loop():
+            while not resolution_event.is_set():
+                try:
+                    all_pages = context.pages if context and hasattr(context, "pages") and isinstance(context.pages, (list, tuple)) else [page]
+                    for p in all_pages:
+                        if not p.is_closed():
+                            p_url = getattr(p, "url", "") or ""
+                            if p_url and p_url != "about:blank":
+                                has_panel = False
+                                try:
+                                    has_panel = await p.evaluate("() => Boolean(document.getElementById('webai-hitl-observer-panel'))")
+                                except Exception:
+                                    pass
+                                if not has_panel:
+                                    await inject_into_page(p)
+                except Exception:
+                    pass
+                await asyncio.sleep(1.0)
+
+        heartbeat_task = asyncio.create_task(_heartbeat_loop())
+
         try:
             await asyncio.wait_for(resolution_event.wait(), timeout=timeout_sec)
-            return resolved_payload or {
-                "status": "resolved",
-                "action": "observer_mode_complete",
-                "x": 0, "y": 0,
-                "targetTag": "RESUME_AI",
-                "targetId": "webai-hitl-resume-btn",
-                "textContent": "Resume AI",
-                "timestamp": time.time()
-            }
+            target_state = getattr(target_obj, "_webai_hitl_state", {})
+            res_dict = (
+                target_state.get("payload")
+                or self._active_resolved_payload
+                or resolved_payload
+                or {
+                    "status": "resolved",
+                    "action": "observer_mode_complete",
+                    "x": 0, "y": 0,
+                    "targetTag": "RESUME_AI",
+                    "targetId": "webai-hitl-resume-btn",
+                    "textContent": "Resume AI",
+                    "telemetry": [],
+                    "timestamp": time.time()
+                }
+            )
+            # Merge Python-side sink telemetry with browser payload telemetry
+            py_telemetry = target_state.get("telemetry") or []
+            browser_telemetry = res_dict.get("telemetry") or []
+            combined_telemetry = list(py_telemetry)
+            for b_step in browser_telemetry:
+                if not any(
+                    c.get("action") == b_step.get("action")
+                    and c.get("name") == b_step.get("name")
+                    and abs(c.get("timestamp_ms", 0) - b_step.get("timestamp_ms", 0)) < 250
+                    for c in combined_telemetry
+                ):
+                    combined_telemetry.append(b_step)
+            combined_telemetry.sort(key=lambda s: s.get("timestamp_ms", 0))
+            res_dict["telemetry"] = combined_telemetry
+            return res_dict
         except asyncio.TimeoutError:
             print(" [HITLPlugin] Timeout waiting for Resume AI click.")
             return {
@@ -363,6 +788,8 @@ class HITLPlugin:
                 "x": 0, "y": 0,
                 "targetTag": "TIMEOUT", "targetId": "",
                 "textContent": "Timeout waiting for Resume AI click",
+                "telemetry": [],
+                "timestamp": time.time()
             }
         except Exception as e:
             print(f" [HITLPlugin] Failed to inject/await Observer Mode panel: {e}")
@@ -372,8 +799,19 @@ class HITLPlugin:
                 "x": 0, "y": 0,
                 "targetTag": "ERROR", "targetId": "",
                 "textContent": str(e),
+                "telemetry": [],
+                "timestamp": time.time()
             }
         finally:
+            if heartbeat_task and not heartbeat_task.done():
+                heartbeat_task.cancel()
+            # Safeguard 2: Remove domcontentloaded listeners so panels are never re-injected after Observer Mode finishes
+            for p_item, fn in page_dom_listeners:
+                try:
+                    if hasattr(p_item, "remove_listener"):
+                        p_item.remove_listener("domcontentloaded", fn)
+                except Exception:
+                    pass
             # Unbind new page listener
             if context and hasattr(context, "remove_listener") and new_page_listener:
                 try:
@@ -398,7 +836,7 @@ class HITLPlugin:
             print(f" [HITLPlugin] Audio transcription fallback: {e}")
             return "User manually intervened in Observer Mode"
 
-    async def trigger_intervention(self, page: Page, payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def trigger_intervention(self, page: Page, payload: Optional[Dict[str, Any]] = None, timeout_sec: float = 60.0) -> Dict[str, Any]:
         """
         Main entrypoint called when human intervention is required.
         1. Speaks TTS audio cue asynchronously using context-aware prompt if provided.
@@ -447,17 +885,24 @@ class HITLPlugin:
             pass
 
         # Await Observer Mode resolution via 'Resume AI' button click across all tabs
-        click_data = await self._inject_and_await_observer_mode(page, timeout_sec=60.0)
+        click_data = await self._inject_and_await_observer_mode(page, timeout_sec=timeout_sec)
 
         # Stop audio recording
         is_recording_audio = False
         if audio_recorder_thread and audio_recorder_thread.is_alive():
             audio_recorder_thread.join(timeout=1.0)
 
-        # Step 4: Transcribe voice
+        # Step 4: Transcribe voice (segments & full text)
         transcription = ""
+        segments = []
         try:
-            transcription = self._transcribe_vocal_explanation(temp_audio_file)
+            if os.path.exists(temp_audio_file) and os.path.getsize(temp_audio_file) > 0:
+                try:
+                    if hasattr(ACTIVE_TRANSCRIBER, "transcribe_segments"):
+                        segments = ACTIVE_TRANSCRIBER.transcribe_segments(temp_audio_file)
+                except Exception as seg_err:
+                    print(f" [HITLPlugin] Segment transcription warning: {seg_err}")
+                transcription = self._transcribe_vocal_explanation(temp_audio_file)
         except Exception as e:
             print(f" [HITLPlugin] Voice transcription error: {e}")
 
@@ -471,10 +916,31 @@ class HITLPlugin:
             except Exception:
                 pass
 
+        # Extract and align telemetry steps
+        raw_telemetry = []
+        if isinstance(click_data, dict):
+            raw_telemetry = click_data.get("telemetry") or []
+
+        aligned_telemetry = [dict(step) for step in raw_telemetry]
+        if segments and aligned_telemetry:
+            try:
+                from ..audio_aligner import AudioAligner
+                aligner = AudioAligner(transcriber=ACTIVE_TRANSCRIBER)
+                aligned_telemetry = aligner.align_steps(aligned_telemetry, segments)
+            except Exception as align_err:
+                print(f" [HITLPlugin] AudioAligner alignment error: {align_err}")
+
+        # Attach vocal context so no instruction is lost
+        for step in aligned_telemetry:
+            if not step.get("voice_context") and transcription:
+                step["voice_context"] = transcription
+            step["full_voice_context"] = transcription
+
         resolution = {
             "status": "resolved",
             "action": "observer_mode_complete",
             "click": click_data,
+            "telemetry": aligned_telemetry,
             "audio_transcription": transcription,
             "timestamp": time.time(),
         }

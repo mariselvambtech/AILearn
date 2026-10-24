@@ -42,7 +42,8 @@ from .fallback_helpers import (
     click_with_fallback,
     type_with_fallback,
     extract_with_fallback,
-    select_with_fallback
+    select_with_fallback,
+    drag_and_drop_with_fallback
 )
 
 
@@ -121,11 +122,13 @@ class SkillExecutor:
     ) -> None:
         if isinstance(skill_recipe, (str, Path)):
             recipe_path = Path(skill_recipe)
+            self.recipe_path: Optional[Path] = recipe_path if recipe_path.exists() else None
             if recipe_path.exists():
                 self.recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
             else:
                 self.recipe = json.loads(str(skill_recipe))
         else:
+            self.recipe_path = None
             self.recipe = dict(skill_recipe)
 
         self.skill_name = self.recipe.get("skill_name", "Unnamed Skill")
@@ -134,6 +137,130 @@ class SkillExecutor:
         self.parameters_schema = self.recipe.get("parameters_schema", {})
         self.parameterized_steps = self.recipe.get("parameterized_steps", [])
         self.hitl_plugin = hitl_plugin
+
+    async def _handle_stuck_recovery(
+        self,
+        page: Page,
+        step: Dict[str, Any],
+        step_idx: int,
+        reason: str
+    ) -> bool:
+        """
+        Attempts self-healing:
+        Step 1: lookup_hitl_memory. If memories found, execute learned recovery steps.
+        Step 2: If no memory or recovery failed, trigger HITLPlugin intervention.
+        Step 3: Save new HITL memory and update recipe on disk.
+        """
+        try:
+            from .hitl_memory_store import lookup_hitl_memory
+            current_url = getattr(page, "url", "")
+            memories = lookup_hitl_memory(current_url, skill_name=self.skill_name)
+            if memories:
+                mem = memories[0]
+                learned_steps = mem.get("learned_steps_json") or []
+                safe_print(f" 🧠 [SkillExecutor] Found learned HITL memory for '{current_url}'. Applying Voice+DOM Self-Healing...")
+                if learned_steps:
+                    all_learned_ok = True
+                    for l_step in learned_steps:
+                        l_act = l_step.get("action")
+                        l_locs = l_step.get("locators") or []
+                        l_val = l_step.get("value")
+                        if l_act == "click":
+                            ok = await click_with_fallback(page, l_locs, expected_context=l_step.get("expected_context"))
+                        elif l_act == "type":
+                            ok = await type_with_fallback(page, l_locs, l_val or "")
+                        elif l_act in ("drag_and_drop", "drag"):
+                            ok = await drag_and_drop_with_fallback(
+                                page,
+                                l_locs,
+                                target_locators=l_step.get("target_locators") or [],
+                                source_coords=l_step.get("source_coords"),
+                                target_coords=l_step.get("target_coords")
+                            )
+                        elif l_act in ("scroll", "scroll_page", "scroll_wheel"):
+                            dx = float(l_step.get("delta_x") or l_step.get("deltaX") or 0)
+                            dy = float(l_step.get("delta_y") or l_step.get("deltaY") or 300)
+                            if hasattr(page, "mouse") and hasattr(page.mouse, "wheel"):
+                                await page.mouse.wheel(dx, dy)
+                            elif hasattr(page, "evaluate"):
+                                await page.evaluate(f"window.scrollBy({dx}, {dy})")
+                            ok = True
+                        elif l_act in ("goto", "open", "navigate"):
+                            if l_step.get("url"):
+                                await page.goto(l_step.get("url"), wait_until="domcontentloaded")
+                            ok = True
+                        else:
+                            ok = True
+                        if not ok:
+                            all_learned_ok = False
+                            break
+                    if all_learned_ok:
+                        safe_print(" ✅ [SkillExecutor] Successfully executed learned recovery steps!")
+                        return True
+        except Exception as rec_err:
+            logger.warning(f"Error during learned memory recovery: {rec_err}")
+
+        # Step 2: Fallback to HITLPlugin intervention
+        safe_print(f" ⚠️ [SkillExecutor] Stuck on step {step_idx} ('{step.get('name')}'). Launching HITL Observer Mode...")
+        hitl = getattr(self, "hitl_plugin", None)
+        if not hitl:
+            try:
+                from .plugins.hitl_plugin import HITLPlugin
+                hitl = HITLPlugin(
+                    tts_prompt=f"Action failed for {step.get('name')}. Please complete the action and click Resume AI."
+                )
+            except Exception as imp_err:
+                logger.error(f"Failed to instantiate HITLPlugin: {imp_err}")
+                hitl = None
+
+        if hitl and hasattr(hitl, "trigger_intervention"):
+            try:
+                payload = {
+                    "reason": reason,
+                    "message": f"Action failed for '{step.get('name')}': {reason}. Please complete the action on your screen and click Resume AI.",
+                    "step": step,
+                    "step_index": step_idx
+                }
+                resolution = await hitl.trigger_intervention(page, payload=payload)
+                safe_print(f" [SkillExecutor] HITL intervention resolved: {resolution.get('action', 'complete')}.")
+
+                telemetry = resolution.get("telemetry") or resolution.get("click", {}).get("telemetry") or []
+                voice_ctx = resolution.get("audio_transcription") or resolution.get("voice_context") or ""
+
+                # Step 3: Save new HITL memory
+                try:
+                    from .hitl_memory_store import save_hitl_memory
+                    current_url = getattr(page, "url", "")
+                    save_hitl_memory(
+                        url=current_url,
+                        voice_context=voice_ctx,
+                        learned_steps=telemetry,
+                        blocker_context=reason,
+                        skill_name=self.skill_name
+                    )
+                except Exception as save_err:
+                    logger.warning(f"Failed to save HITL memory: {save_err}")
+
+                # Update recipe on disk if possible
+                try:
+                    if telemetry and hasattr(self, "recipe") and "parameterized_steps" in self.recipe:
+                        first_locs = telemetry[0].get("locators")
+                        if first_locs and 0 <= step_idx - 1 < len(self.recipe["parameterized_steps"]):
+                            self.recipe["parameterized_steps"][step_idx - 1]["locators"] = first_locs
+                            if self.recipe_path and Path(self.recipe_path).exists():
+                                Path(self.recipe_path).write_text(json.dumps(self.recipe, indent=2), encoding="utf-8")
+                            default_recipe = Path("skills/synthesized_skill.json")
+                            if default_recipe.exists():
+                                default_recipe.write_text(json.dumps(self.recipe, indent=2), encoding="utf-8")
+                except Exception as recipe_save_err:
+                    logger.warning(f"Failed to update recipe file: {recipe_save_err}")
+
+                return True
+            except Exception as hitl_err:
+                logger.error(f"Error during HITL intervention: {hitl_err}")
+                return False
+
+        return False
 
     def resolve_steps(self, runtime_params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """
@@ -211,12 +338,48 @@ class SkillExecutor:
                     success = await click_with_fallback(page, locators, expected_context=expected_ctx)
                     if not success:
                         safe_print(f" ⚠️ Step {idx} click failed for '{name}'")
+                        recovered = await self._handle_stuck_recovery(page, step, idx, reason=f"Click failed for '{name}'")
+                        if not recovered:
+                            safe_print(f" ❌ Step {idx} recovery failed for '{name}'")
 
                 elif action == "type":
                     typed_text = value or ""
                     success = await type_with_fallback(page, locators, typed_text)
                     if not success:
                         safe_print(f" ⚠️ Step {idx} type failed for '{name}'")
+                        recovered = await self._handle_stuck_recovery(page, step, idx, reason=f"Type failed for '{name}'")
+                        if not recovered:
+                            safe_print(f" ❌ Step {idx} recovery failed for '{name}'")
+
+                elif action in ("drag_and_drop", "drag"):
+                    target_locs = step.get("target_locators") or []
+                    source_coords = step.get("source_coords")
+                    target_coords = step.get("target_coords")
+                    success = await drag_and_drop_with_fallback(
+                        page,
+                        locators,
+                        target_locators=target_locs,
+                        source_coords=source_coords,
+                        target_coords=target_coords
+                    )
+                    if not success:
+                        safe_print(f" ⚠️ Step {idx} drag_and_drop failed for '{name}'")
+                        recovered = await self._handle_stuck_recovery(page, step, idx, reason=f"Drag and drop failed for '{name}'")
+                        if not recovered:
+                            safe_print(f" ❌ Step {idx} recovery failed for '{name}'")
+
+                elif action in ("scroll", "scroll_page", "scroll_wheel"):
+                    delta_x = step.get("delta_x") or step.get("deltaX") or 0
+                    delta_y = step.get("delta_y") or step.get("deltaY") or step.get("value") or 300
+                    try:
+                        delta_x = float(delta_x)
+                        delta_y = float(delta_y)
+                    except (ValueError, TypeError):
+                        delta_x, delta_y = 0.0, 300.0
+                    if hasattr(page, "mouse") and hasattr(page.mouse, "wheel"):
+                        await page.mouse.wheel(delta_x, delta_y)
+                    elif hasattr(page, "evaluate"):
+                        await page.evaluate(f"window.scrollBy({delta_x}, {delta_y})")
 
                 elif action == "press_key":
                     key = step.get("key") or "Enter"
@@ -297,33 +460,9 @@ class SkillExecutor:
                     safe_print(f"  [OK] Assertion PASSED for '{target}' -> '{expected_val}'")
 
             except SemanticVerificationError as e:
-                logger.warning(f"Semantic verification failed on step {idx} ('{name}'): {e}. Triggering HITL intervention.")
-                safe_print(f" ⚠️ [SkillExecutor] Semantic verification failed on step {idx} ('{name}'): {e}. Launching HITL Observer Mode...")
-                hitl = getattr(self, "hitl_plugin", None)
-                if not hitl:
-                    try:
-                        from .plugins.hitl_plugin import HITLPlugin
-                        hitl = HITLPlugin(
-                            tts_prompt=f"Semantic check failed for {name}. Please complete the action and click Resume AI."
-                        )
-                    except Exception as imp_err:
-                        logger.error(f"Failed to instantiate HITLPlugin: {imp_err}")
-                        hitl = None
-
-                if hitl and hasattr(hitl, "trigger_intervention"):
-                    try:
-                        payload = {
-                            "reason": f"Semantic verification failed: {e}",
-                            "message": f"Semantic verification failed for '{step.get('expected_context') or name}'. Please complete the action on your screen and click Resume AI.",
-                            "step": step,
-                            "step_index": idx
-                        }
-                        resolution = await hitl.trigger_intervention(page, payload=payload)
-                        logger.info(f"HITL intervention resolved: {resolution}")
-                        safe_print(f" [SkillExecutor] HITL intervention resolved: {resolution.get('action', 'complete')}. Continuing automation.")
-                    except Exception as hitl_err:
-                        logger.error(f"Error during HITL intervention: {hitl_err}")
-                        safe_print(f"  [WARN] [SkillExecutor] HITL intervention handling error: {hitl_err}")
+                logger.warning(f"Semantic verification failed on step {idx} ('{name}'): {e}. Triggering recovery...")
+                safe_print(f" ⚠️ [SkillExecutor] Semantic verification failed on step {idx} ('{name}'): {e}. Launching recovery...")
+                await self._handle_stuck_recovery(page, step, idx, reason=f"Semantic verification failed: {e}")
 
                 # Check if a new tab was opened during manual intervention
                 if hasattr(page, "context") and page.context and hasattr(page.context, "pages"):
