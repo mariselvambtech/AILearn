@@ -1,16 +1,16 @@
-# Graph Report - AILearn  (2026-10-23)
+# Graph Report - AILearn  (2026-10-24)
 
 ## Corpus Check
-- 296 files · ~285,885 words
+- 301 files · ~295,010 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2772 nodes · 4233 edges · 296 communities (259 shown, 37 thin omitted)
-- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 154 edges (avg confidence: 0.6)
+- 2851 nodes · 4328 edges · 315 communities (270 shown, 45 thin omitted)
+- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 161 edges (avg confidence: 0.61)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `151700f5`
+- Built from commit: `f500429b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -200,18 +200,37 @@
 - test_full_flow.py
 - test_schema_changes.py
 - webai-playwright
+- FasterWhisperTranscriber
+- FakeKeyboard
+- .__init__
+- hitl_plugin.py
+- select_smart
+- FakeCDPSession
+- create_user
+- normalize_task
+- BaseTranscriber
+- Decision 14: Semantic Verification & Conditional Assertions
+- Decision 21: Simultaneous Voice + Multi-Action HITL Recording, MSSQL HITL Learned Memory Store & Voice+DOM Self-Healing
+- test_telemetry_injector.py
+- encryption.py
+- ._on_human_intervention_required
+- _fmt_target
+- datetime
+- BaseModel
+- RuntimeError
+- Path
 
 ## God Nodes (most connected - your core abstractions)
-1. `_dispatch_command()` - 50 edges
-2. `User` - 31 edges
-3. `Step` - 30 edges
-4. `WebRecorder` - 30 edges
-5. `handle_client()` - 27 edges
-6. `SkillSynthesizer` - 26 edges
-7. `Decision Log — WebAI Platform` - 25 edges
-8. `handle_client()` - 22 edges
-9. `HITLPlugin` - 21 edges
-10. `SkillExecutor` - 21 edges
+1. `_dispatch_command()` - 37 edges
+2. `User` - 33 edges
+3. `handle_client()` - 31 edges
+4. `Step` - 28 edges
+5. `WebRecorder` - 28 edges
+6. `Decision Log — WebAI Platform` - 26 edges
+7. `SkillSynthesizer` - 26 edges
+8. `HITLPlugin` - 24 edges
+9. `SkillExecutor` - 23 edges
+10. `handle_client()` - 22 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `Meta` --uses--> `User`  [INFERRED]
@@ -222,41 +241,41 @@
   mychatproject/chat/models.py → WEBAI_AUTOMATION/webai_api_server/models.py
 - `test_skill_synthesizer_expected_context()` --calls--> `SkillSynthesizer`  [INFERRED]
   WEBAI_AUTOMATION/scratch/test_semantic_verification.py → WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/skill_synthesizer.py
-- `winnow()` --indirect_call--> `i()`  [INFERRED]
-  mychatproject/staticfiles/admin/js/vendor/jquery/jquery.js → mychatproject/staticfiles/admin/js/vendor/select2/select2.full.min.js
+- `cacheAstral()` --indirect_call--> `l()`  [INFERRED]
+  mychatproject/staticfiles/admin/js/vendor/xregexp/xregexp.min.js → mychatproject/staticfiles/admin/js/vendor/select2/select2.full.min.js
 
 ## Import Cycles
 - 3-file cycle: `WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/__init__.py -> WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/ai.py -> WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/playwright_actions.py -> WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/__init__.py`
 
-## Communities (296 total, 37 thin omitted)
+## Communities (315 total, 45 thin omitted)
 
 ### Community 0 - "Recent Work Completed"
 Cohesion: 0.10
 Nodes (21): 7 Web Failure Scenario Fortification & Test Suite Verification ✅, API Server Startup Bug Fixes ✅, Auto SQL Upload in `record_then_run.py` ✅, Browser-driven UI verification (2026-07-29) ✅, Crawl4AI Integration & Semantic DOM Fingerprinting ✅, Database Migrations ✅, Graphify Knowledge Graph Integration ✅, Hermes 3 Model Integration ✅ (+13 more)
 
 ### Community 1 - "Active Context — WebAI Platform"
-Cohesion: 0.15
-Nodes (13): Current Session (2026-09-20), Phase 17: Distil-Whisper Transcription & Vocabulary Priming Upgrade (`audio_aligner.py`) ✅, Phase 18: Semantic Verification & Conditional Assertions (Decision 14, Rule 7 TDVC) ✅, Phase 19: New Tab Automatic Context Switching (`skill_executor.py`) (Rule 7 TDVC) ✅, Phase 20: Semantic Verification HITL Interception & Auto-Resumption (Rule 7 TDVC, Rule 9) ✅, Phase 21: Automation-to-Skill Mapping & Nested Dashboard Rendering (Rule 7 TDVC, Rule 3) ✅, Phase 22: Decoupled Skill Synthesis Subprocess Execution (`dash_synthesize.py`) (Rule 3, Rule 7 TDVC) ✅, Phase 23: Windows Console UTF-8 & Global `safe_print` Wrapper (`skill_executor.py`, `dashboard_server.py`) (Rule 3) ✅ (+5 more)
+Cohesion: 0.13
+Nodes (15): Current Session (2026-10-24), Phase 17: Distil-Whisper Transcription & Vocabulary Priming Upgrade (`audio_aligner.py`) ✅, Phase 18: Semantic Verification & Conditional Assertions (Decision 14, Rule 7 TDVC) ✅, Phase 19: New Tab Automatic Context Switching (`skill_executor.py`) (Rule 7 TDVC) ✅, Phase 20: Semantic Verification HITL Interception & Auto-Resumption (Rule 7 TDVC, Rule 9) ✅, Phase 21: Automation-to-Skill Mapping & Nested Dashboard Rendering (Rule 7 TDVC, Rule 3) ✅, Phase 22: Decoupled Skill Synthesis Subprocess Execution (`dash_synthesize.py`) (Rule 3, Rule 7 TDVC) ✅, Phase 23: Windows Console UTF-8 & Global `safe_print` Wrapper (`skill_executor.py`, `dashboard_server.py`) (Rule 3) ✅ (+7 more)
 
 ### Community 2 - "Open Questions / Decisions Pending"
 Cohesion: 0.15
 Nodes (11): DataExtractionPlugin, Any, Plugin that listens to data extraction events ('extract' and 'extract_table'), Attach plugin to WebRecorder instance by subscribing to event bus., Handle standard text/attribute extraction event., Handle table extraction event., Save single extraction to files immediately., Save extraction to Excel file. (+3 more)
 
 ### Community 3 - "Immediate Next Steps (If User Requests)"
-Cohesion: 0.10
-Nodes (19): main(), test_click_with_fallback_semantic_guard(), TDVC Test Suite: Verifying Structural CSS Demotion (:nth-child / :nth-of-type) i, DOM Scenario:     - Container with 3 children:       1. Header       2. <div cla, test_structural_css_demoted_behind_semantic_text(), click_with_fallback(), extract_table_data(), Helper functions for fallback extraction strategies.  This module provides heu (+11 more)
+Cohesion: 0.11
+Nodes (20): main(), test_click_with_fallback_semantic_guard(), TDVC Test Suite: Verifying Structural CSS Demotion (:nth-child / :nth-of-type) i, DOM Scenario:     - Container with 3 children:       1. Header       2. <div cla, test_structural_css_demoted_behind_semantic_text(), click_with_fallback(), _create_locator_obj(), _get_active_page() (+12 more)
 
 ### Community 4 - "Current Session (2026-07-18)"
 Cohesion: 0.18
 Nodes (19): buffer_log(), create_execution_record(), fetch_automation_steps(), flush_logs(), log(), main(), Run automation from API database - Simple file-based approach.  This script de, Save steps to JSON file (+11 more)
 
 ### Community 7 - "workflows/graphify.md"
-Cohesion: 0.07
-Nodes (51): cleanup_old_logs(), create_automation(), create_config(), create_log(), create_log_batch(), create_schedule(), delete_automation(), execute_automation() (+43 more)
+Cohesion: 0.06
+Nodes (64): datetime, LogBatchCreate, LogEntryCreate, Authentication and authorization utilities.  This file is the "bouncer" of the, cleanup_old_logs(), create_automation(), create_config(), create_log() (+56 more)
 
 ### Community 8 - "test_cdp_fixes.py"
-Cohesion: 0.17
-Nodes (12): Test suite for verifying CDP and Playwright Actions fixes, Test that cdp.get_dom_snapshot works correctly, Test that playwright_actions.get_snapshot works correctly, Test that cdp.get_interactive_elements works correctly, Test that playwright_actions.get_dom_snapshot works correctly, test_cdp_get_dom_snapshot(), test_cdp_get_interactive_elements(), test_playwright_actions_get_dom_snapshot() (+4 more)
+Cohesion: 0.11
+Nodes (17): Test suite for Phase 29: Simultaneous Voice + Multi-Action HITL Recording, MSSQL, Test creating and retrieving HITL learned memory via SQLAlchemy Session and CRUD, Test hitl_memory_store.py save and lookup with local JSON fallback., Verify drag_and_drop_with_fallback executes locator drag_to and coordinate fallb, Verify that when SkillExecutor action fails, it looks up learned memory and repl, Verify _normalize_history_step preserves multi-actions (drag_and_drop, scroll_pa, Verify that _prune_dom_snapshot extracts readable text from tables, lists, and h, Verify that _prune_dom_snapshot strips header, nav, and footer mega-menus     so (+9 more)
 
 ### Community 9 - "fallback_helpers.py"
 Cohesion: 0.08
@@ -284,7 +303,7 @@ Nodes (35): 1. Plan Caching Disabled, 2. No Explicit Navigation Validation, 3. V
 
 ### Community 17 - "Design Patterns"
 Cohesion: 0.06
-Nodes (31): 1. Browser Robot ↔ AI Brain (WebSocket), 2. Browser Robot ↔ API Server (HTTP REST), 3. AI Brain ↔ API Server (HTTP REST), 4. AI Brain ↔ Ollama (HTTP), Action Deduplication Circuit Breaker Pattern (Decision 17), Autonomous Navigation Hardening Patterns, Component Relationships, Critical Implementation Paths (+23 more)
+Nodes (32): 1. Browser Robot ↔ AI Brain (WebSocket), 2. Browser Robot ↔ API Server (HTTP REST), 3. AI Brain ↔ API Server (HTTP REST), 4. AI Brain ↔ Ollama (HTTP), Action Deduplication Circuit Breaker Pattern (Decision 17), Autonomous Navigation Hardening Patterns, Component Relationships, Critical Implementation Paths (+24 more)
 
 ### Community 18 - "graphify_to_mermaid.py"
 Cohesion: 0.27
@@ -303,8 +322,8 @@ Cohesion: 0.08
 Nodes (41): build_subgoal_prompt(), build_system_prompt(), cache_get_plan(), _cache_key(), cache_put_plan(), _compact_context(), _env(), _extract_json_array() (+33 more)
 
 ### Community 22 - "crud.py"
-Cohesion: 0.06
-Nodes (44): Base, create_automation(), create_execution(), delete_automation(), get_automation(), get_automation_config(), get_due_schedules(), get_execution() (+36 more)
+Cohesion: 0.05
+Nodes (57): Base, create_automation(), create_automation_config(), create_execution(), create_hitl_memory(), create_schedule(), delete_automation(), _extract_domain_and_pattern() (+49 more)
 
 ### Community 23 - "app.js"
 Cohesion: 0.18
@@ -367,12 +386,12 @@ Cohesion: 0.23
 Nodes (8): IntentRouter, Any, Extracts and binds JSON classification output from Ollama to full skill dict., Deterministic rule-based intent router when Ollama is offline or in test mode., Semantic Intent Router and Agentic Handoff Manager., Extracts parameter value from user prompt based on schema metadata and keywords., Main routing entry point. Passes prompt and skills to Ollama hermes3 or falls ba, Queries local Ollama hermes3 model for semantic intent matching and variable ext
 
 ### Community 38 - "validate_steps_payload"
-Cohesion: 0.22
-Nodes (9): TDVC Test Harness for Semantic Verification & Conditional Assertions (Decision 1, test_rich_snapshot_semantic_matching(), test_semantic_mismatch_raises_error(), test_skill_executor_assert_handler(), test_skill_executor_template_resolution(), test_skill_synthesizer_expected_context(), test_step_schema_extension(), Verifies that expected_context exists within the lowercase string values of the (+1 more)
+Cohesion: 0.17
+Nodes (12): TDVC Test Harness for Semantic Verification & Conditional Assertions (Decision 1, test_rich_snapshot_semantic_matching(), test_semantic_mismatch_raises_error(), test_skill_executor_assert_handler(), test_skill_executor_template_resolution(), test_skill_synthesizer_expected_context(), test_step_schema_extension(), Exception (+4 more)
 
 ### Community 39 - "Decision Log — WebAI Platform"
-Cohesion: 0.20
-Nodes (9): Context, Decision 14: Semantic Verification & Conditional Assertions, Decision 21: Jira Integration Approach (Pending), Decision 22: Variable Persistence Model (Pending), Decision, Decision Log — WebAI Platform, Future Decisions Pending, Impact (+1 more)
+Cohesion: 0.14
+Nodes (13): Context, Context, Decision 18: Skill Synthesis (Auto-Saving Successful Agentic Workflows), Decision 19: Dashboard Skill Management (Delete Functionality), Decision 22: Jira Integration Approach (Pending), Decision 22: Variable Persistence Model (Pending), Decision, Decision (+5 more)
 
 ### Community 40 - "Decision 1: Multi-Locator Fallback vs Single Selector"
 Cohesion: 0.29
@@ -388,7 +407,7 @@ Nodes (6): _check_servers(), main(), _obtain_api_key(), Full E2E Verification fo
 
 ### Community 43 - "derive_base_url"
 Cohesion: 0.06
-Nodes (14): computeStyleTests(), dataAttr(), finalPropName(), getData(), Identity(), leverageNative(), NOTE: This can be skipped if there are no unmatched elements (i.e., `matchedCoun, TODO: Now that all calls to _data and _removeData have been replaced (+6 more)
+Nodes (13): computeStyleTests(), dataAttr(), finalPropName(), getData(), Identity(), leverageNative(), NOTE: This can be skipped if there are no unmatched elements (i.e., `matchedCoun, TODO: Now that all calls to _data and _removeData have been replaced (+5 more)
 
 ### Community 44 - "Decision 4: Fernet Symmetric Encryption for Credentials"
 Cohesion: 0.33
@@ -440,47 +459,47 @@ Nodes (6): Alternatives Considered, Context, Decision, Decision 3: Local Ollama 
 
 ### Community 56 - "build_task_text"
 Cohesion: 0.12
-Nodes (45): _dispatch_command(), Internal dispatcher for AI commands against the active Playwright page.      D, _get_content_quads(), Get element quad coordinates.     Supports either backendNodeId (int) OR object, click(), click_and_input_cdp_element(), click_and_input_location(), click_by_label() (+37 more)
+Nodes (47): _dispatch_command(), Internal dispatcher for AI commands against the active Playwright page.      D, click(), click_and_input_cdp_element(), click_and_input_location(), click_by_label(), click_by_role(), click_by_text() (+39 more)
 
 ### Community 58 - "Decision 18: Probe-Tolerant WebSocket Server (process_request + logging filter)"
 Cohesion: 0.40
 Nodes (5): Alternatives Considered, Context, Decision 18: Probe-Tolerant WebSocket Server (process_request + logging filter), Decision, Impact
 
 ### Community 59 - "TestImportValidation"
-Cohesion: 0.07
-Nodes (18): FakeCDPSession, FakeContext, FakeKeyboard, FakeMouse, FakePage, FakePageForWindow, Test suite for the WebAI Playwright Client.  This module contains tests verify, # NOTE: webai_playwright/__init__.py exports `ai` function which can shadow subm (+10 more)
+Cohesion: 0.16
+Nodes (11): FakePage, FakePageForWindow, Test suite for the WebAI Playwright Client.  This module contains tests verify, # NOTE: webai_playwright/__init__.py exports `ai` function which can shadow subm, test_ai_happy_path_with_mock_ws(), test_ai_requires_token(), test_click_by_role_element_fallback(), test_execute_command_dispatch() (+3 more)
 
 ### Community 60 - "test_dashboard_ui.py"
 Cohesion: 0.67
 Nodes (3): check(), main(), Browser-driven UI test for the WebAI Dashboard front-end (scratch QA tool).  D
 
 ### Community 61 - "migrate_indexes.py"
-Cohesion: 0.08
-Nodes (23): add_log_retention_column(), Add missing log_retention_days column to automation_configs table, Apply a schema migration to add the `log_retention_days` column.          Adds, get_db(), init_db(), Database configuration and session management for MSSQL.  This file is the "ca, Run a trivial query (`SELECT 1`) to confirm the database is reachable.      Us, FastAPI dependency that yields a database session for one request.      FastAP (+15 more)
+Cohesion: 0.07
+Nodes (24): add_log_retention_column(), Add missing log_retention_days column to automation_configs table, Apply a schema migration to add the `log_retention_days` column.          Adds, get_db(), init_db(), Database configuration and session management for MSSQL.  This file is the "ca, Run a trivial query (`SELECT 1`) to confirm the database is reachable.      Us, FastAPI dependency that yields a database session for one request.      FastAP (+16 more)
 
 ### Community 63 - "Page"
-Cohesion: 0.08
-Nodes (26): TDVC Test Harness for AudioCapturePlugin & WebRecorder Synchronization. Verifies, test_audio_plugin_synchronization(), main(), Phase 1 Test Suite: test_event_bus_core.py  Tests the WebRecorder Event Bus pub/, Tests that WebRecorder correctly broadcasts click and type events     with full, Tests that if a subscriber plugin raises an exception during execution,     the, Tests that DataExtractionPlugin subscribes to extract channel and safely handles, test_data_extraction_plugin_subscription() (+18 more)
+Cohesion: 0.10
+Nodes (21): TDVC Test Harness for AudioCapturePlugin & WebRecorder Synchronization. Verifies, test_audio_plugin_synchronization(), main(), Phase 1 Test Suite: test_event_bus_core.py  Tests the WebRecorder Event Bus pub/, Tests that WebRecorder correctly broadcasts click and type events     with full, Tests that if a subscriber plugin raises an exception during execution,     the, Tests that DataExtractionPlugin subscribes to extract channel and safely handles, test_data_extraction_plugin_subscription() (+13 more)
 
 ### Community 64 - "Path"
 Cohesion: 0.10
 Nodes (3): AllowClear(), InputData(), MaximumSelectionLength()
 
 ### Community 65 - "HITLPlugin"
-Cohesion: 0.08
-Nodes (19): main(), Test suite for Phase 12 - Shield 2: DOM Mutation Verification.  Verifies that cl, Verify Shield 2 captures Button A (DOM mutation) and discards Button B (unrespon, test_shield_2_dom_mutation_verification(), Test suite for Phase 12 - JS Telemetry Injector with Smart Semantic Filtering., Verify JS telemetry listener captures valid clicks and filters dead spaces., test_smart_semantic_filtering_telemetry(), Verify HITLPlugin uses ACTIVE_TRANSCRIBER to transcribe vocal explanations. (+11 more)
+Cohesion: 0.17
+Nodes (10): Verify that a second HITL intervention on the same page/context resolves cleanly, Verify that clicking a link before same-tab navigation records telemetry via Pyt, test_hitl_same_tab_navigation_preserves_telemetry_and_reinjects_panel(), test_hitl_second_popup_resumes_cleanly(), Verify HITLPlugin uses ACTIVE_TRANSCRIBER to transcribe vocal explanations., test_hitl_plugin_integration(), HITLPlugin, Plugin that manages Human-in-the-Loop (HITL) fallback interventions     using C (+2 more)
 
 ### Community 66 - "Step"
-Cohesion: 0.08
-Nodes (23): TDVC Test Harness for SkillSynthesizer. Verifies Ollama synthesis, JSON parsing,, test_skill_synthesis(), fetch_automation(), main(), Any, CLI script to synthesize an AI Skill recipe from database automation steps.  Thi, Fetch an automation record and its recorded steps from the API server.      Args, Parse arguments, retrieve automation steps, synthesize the skill, and save it. (+15 more)
+Cohesion: 0.14
+Nodes (12): Any, Converts Step dataclasses or dicts into uniform dictionaries., Queries local Ollama hermes3 model for skill synthesis and auto-parameterization, Extracts JSON payload from LLM response content and preserves locators on matchi, Synthesizes recorded browser steps and voice context into reusable AI Skill reci, Extracts core semantic keyword from voice context or step name for pre-click ver, Rule-based fallback synthesizer when Ollama is offline.         Detects typed t, Converts text into a clean snake_case variable name. (+4 more)
 
 ### Community 67 - "handle_client"
-Cohesion: 0.09
-Nodes (27): run_e2e_test(), build_subgoal_prompt(), extract_primary_open_url(), extract_success_expectations(), _extract_urls(), _fmt_target(), _format_last_errors(), get_query_param() (+19 more)
+Cohesion: 0.08
+Nodes (40): run_e2e_test(), build_subgoal_prompt(), cache_get_plan(), _cache_key(), cache_put_plan(), _compact_context(), extract_primary_open_url(), extract_success_expectations() (+32 more)
 
 ### Community 68 - "ai.py"
-Cohesion: 0.20
-Nodes (29): CDPSession, clear_element(), click_element(), detach(), execute_script(), find_elements(), focus_element(), get() (+21 more)
+Cohesion: 0.14
+Nodes (36): CDPSession, Test that cdp.get_dom_snapshot works correctly, Test that cdp.get_interactive_elements works correctly, test_cdp_get_dom_snapshot(), test_cdp_get_interactive_elements(), test_get_interactive_elements_container_tagging(), clear_element(), click_element() (+28 more)
 
 ### Community 69 - "HITLPlugin"
 Cohesion: 0.16
@@ -488,11 +507,11 @@ Nodes (10): HITLPlugin, Any, Page, Transcribe PCM WAV audio using faster-whisper
 
 ### Community 70 - "Any"
 Cohesion: 0.15
-Nodes (17): cache_get_plan(), _cache_key(), cache_put_plan(), _load_cache(), _normalize_history_step(), Any, Normalizes an action dictionary executed during an autonomous session     into, Save the extracted data to a Microsoft Word document using python-docx. (+9 more)
+Nodes (11): TDVC Test Harness for SkillSynthesizer. Verifies Ollama synthesis, JSON parsing,, test_skill_synthesis(), fetch_automation(), main(), Any, CLI script to synthesize an AI Skill recipe from database automation steps.  Thi, Fetch an automation record and its recorded steps from the API server.      Args, Parse arguments, retrieve automation steps, synthesize the skill, and save it. (+3 more)
 
 ### Community 71 - "_compact_context"
-Cohesion: 0.13
-Nodes (15): LogRecord, _compact_context(), _EmptyProbeNoiseFilter, _env(), _http_health_response(), jdump(), llm_plan_chat(), main() (+7 more)
+Cohesion: 0.17
+Nodes (12): LogRecord, _EmptyProbeNoiseFilter, _env(), _http_health_response(), llm_plan_chat(), main(), ollama_chat(), Downgrade 'opening handshake failed' tracebacks caused by bare TCP probes. (+4 more)
 
 ### Community 72 - "AudioCapturePlugin"
 Cohesion: 0.18
@@ -511,20 +530,20 @@ Cohesion: 0.53
 Nodes (5): _evaluate_plan_reset(), Evaluates if the LLM action plan queue should be flushed based on execution stat, test_plan_flushed_on_hitl_resolution(), test_plan_flushed_on_max_failures(), test_plan_retained_on_normal_success()
 
 ### Community 76 - "MockPage"
-Cohesion: 0.07
-Nodes (32): dummy_wav(), DummySegment, Unit and integration tests for Audio Transcriber Strategy Pattern & Factory. Tes, Verify SenseVoiceTranscriber raises ImportError with pip instructions when funas, Creates a valid dummy WAV file >= 100 bytes., Verify get_transcriber factory returns expected strategy based on argument and e, Verify FasterWhisperTranscriber segments and text transcription., Verify SenseVoiceTranscriber generation, postprocessing, and 0..999999ms segment (+24 more)
+Cohesion: 0.16
+Nodes (14): dummy_wav(), Unit and integration tests for Audio Transcriber Strategy Pattern & Factory. Tes, Verify SenseVoiceTranscriber raises ImportError with pip instructions when funas, Creates a valid dummy WAV file >= 100 bytes., Verify get_transcriber factory returns expected strategy based on argument and e, Verify SenseVoiceTranscriber generation, postprocessing, and 0..999999ms segment, test_factory_model_selection(), test_sense_voice_missing_dependency_warning() (+6 more)
 
 ### Community 77 - "_compact_context"
 Cohesion: 0.36
 Nodes (7): action_listener_loop(), load_local_skills(), main(), Any, End-to-End Hybrid Test Orchestrator for WebAI Platform.  1. Accepts hardcoded pr, Discovers and loads synthesized skills from JSON files in the workspace., Listens for incoming AI action commands (command-request) from local_webai_serve
 
 ### Community 78 - "test_circuit_breaker_anti_loop.py"
-Cohesion: 0.09
-Nodes (28): Any, Verify circuit breaker resets repeat_action_count when URL changes., Verify circuit breaker resets repeat_action_count when action signature changes., Verify that an early done action with summary is accepted for informational quer, Simulates the circuit breaker logic implemented in handle_client loop.     Retur, Verify BASE_PROMPT includes read-first, dropdown toggle, and anti-loop directive, Verify informational queries ('check', 'find out', 'what is') are inferred corre, Verify normalize_task injects read-first, anti-loop, and dropdown requirements. (+20 more)
+Cohesion: 0.10
+Nodes (26): Any, Verify circuit breaker resets repeat_action_count when URL changes., Verify circuit breaker resets repeat_action_count when action signature changes., Verify that an early done action with summary is accepted for informational quer, Simulates the circuit breaker logic implemented in handle_client loop.     Retur, Verify BASE_PROMPT includes read-first, dropdown toggle, and anti-loop directive, Verify informational queries ('check', 'find out', 'what is') are inferred corre, Verify build_system_prompt injects informational template when task_type is info (+18 more)
 
 ### Community 81 - "Any"
-Cohesion: 0.10
-Nodes (18): TDVC Test Harness for AudioAligner Temporal Alignment Logic. Verifies time windo, test_audio_alignment_math(), TDVC Test Harness for AudioAligner VAD & Anti-Hallucination Configuration. Verif, Assert that AudioAligner.transcribe_audio calls model.transcribe with:     - vad, Assert that AudioAligner defaults to 'base.en' and falls back gracefully to 'bas, test_audio_vad_transcribe_kwargs(), test_model_upgrade_and_fallback(), ask_yes_no() (+10 more)
+Cohesion: 0.16
+Nodes (11): ask_yes_no(), main(), Verify AudioAligner integrates with transcriber strategy and aligns steps., test_audio_aligner_integration(), AudioAligner, Any, Utility class for transcribing audio and aligning voice context with recorded st, Forwarding method to underlying strategy model for backwards compatibility. (+3 more)
 
 ### Community 82 - "Page"
 Cohesion: 0.06
@@ -539,52 +558,52 @@ Cohesion: 0.13
 Nodes (16): Headless E2E Test for SkillExecutor Playwright Execution. Verifies loading synth, test_e2e_skill_playback(), TDVC Test Harness for SemanticVerificationError HITL Interception in SkillExecut, test_semantic_verification_triggers_hitl_and_resumes(), TDVC Test Harness for New Tab Context Switching in SkillExecutor. Tests: 1. Sing, test_new_tab_context_switch(), test_single_tab_invariant(), TDVC Test Harness for SkillExecutor Parameter Injection & Schema Resolution. Ver (+8 more)
 
 ### Community 85 - "save_synthesized_skill"
-Cohesion: 0.14
-Nodes (17): main(), Any, Exception, Path, Purely autonomous, blank-slate AI browser navigation entry point.  This script, Find the task prompt file, checking local and parent directories., Main execution loop for purely autonomous AI navigation., Exception or signal representing autonomous task completion. (+9 more)
+Cohesion: 0.11
+Nodes (21): Path, Verify save_synthesized_skill creates slug directory, recorded_steps.json, skill, Verify action normalization extracts clean, replay-compatible step structures., Verify that saving an updated skill with the same name updates the existing regi, test_normalize_history_step(), test_save_synthesized_skill_creates_expected_artifacts(), test_save_synthesized_skill_updates_existing_entry(), main() (+13 more)
 
 ### Community 86 - "TaskDone"
 Cohesion: 0.06
 Nodes (31): 1. Encrypted Credentials, 1. Password Hashing, 2. Encrypted Credentials, 2. Execution History, 3. API Key Authentication, 3. Template System, 4. Scheduled Runs, 4. Variable Substitution (+23 more)
 
 ### Community 88 - "_prune_dom_snapshot"
-Cohesion: 0.10
-Nodes (18): Ae(), B(), Be(), $e(), fe(), Ge(), ht(), Ie() (+10 more)
+Cohesion: 0.09
+Nodes (23): Ae(), B(), Be(), $e(), fe(), Ge(), ht(), Ie() (+15 more)
 
 ### Community 89 - ".json"
 Cohesion: 0.08
 Nodes (15): callDep(), ContainerCSS(), countResults(), DropdownCSS(), handler(), hasProp(), makeNormalize(), makeRelParts() (+7 more)
 
 ### Community 90 - "test_skill_mapping.py"
-Cohesion: 0.18
-Nodes (16): _load_recorded_steps(), main(), Execute an automation via the Guided Local AI Server.  This script represents, main(), Execute an automation derived from a natural language task (Standard Mode).  T, ai(), ai_sync(), close() (+8 more)
+Cohesion: 0.11
+Nodes (26): RuntimeError, test_action_listener_loop_mock(), _load_recorded_steps(), main(), Execute an automation via the Guided Local AI Server.  This script represents, main(), Execute an automation derived from a natural language task (Standard Mode).  T, test_execute_command_fallback_single_page() (+18 more)
 
 ### Community 91 - "test_run_hybrid.py"
 Cohesion: 0.20
-Nodes (4): MockKeyboard, MockPage, TDVC Test Suite for run_hybrid.py & TaskId Handoff Fix (Rule 7) Verifies: 1. tas, test_action_listener_loop_mock()
+Nodes (3): MockKeyboard, MockPage, TDVC Test Suite for run_hybrid.py & TaskId Handoff Fix (Rule 7) Verifies: 1. tas
 
 ### Community 92 - "test_unified_13_locators.py"
-Cohesion: 0.11
-Nodes (19): Test suite for verifying all 13 locator strategies in fallback_helpers.py.  This, Verify _create_locator_obj constructs valid locators for all 13 types., Verify click_with_fallback works with all 13 locator types including alt, aria-l, Verify type_with_fallback works with input locators including aria-label, title,, Verify extract_with_fallback extracts text/attribute for aria-label, alt, title,, Verify LOCATOR_PRIORITY is exact 13-key 0-indexed dict matching server., test_click_with_fallback_all_13_types(), test_create_locator_obj_all_13_types() (+11 more)
+Cohesion: 0.14
+Nodes (13): Test suite for verifying all 13 locator strategies in fallback_helpers.py.  This, Verify _create_locator_obj constructs valid locators for all 13 types., Verify click_with_fallback works with all 13 locator types including alt, aria-l, Verify type_with_fallback works with input locators including aria-label, title,, Verify extract_with_fallback extracts text/attribute for aria-label, alt, title,, Verify LOCATOR_PRIORITY is exact 13-key 0-indexed dict matching server., test_click_with_fallback_all_13_types(), test_create_locator_obj_all_13_types() (+5 more)
 
 ### Community 93 - "skill_executor.py"
 Cohesion: 0.09
 Nodes (28): cleanup_logs_for_execution(), create_log_batch(), create_log_entry(), delete_old_logs(), get_execution_logs(), get_log_stats(), datetime, Session (+20 more)
 
 ### Community 94 - "Any"
-Cohesion: 0.24
-Nodes (7): Any, Page, Path, Injects runtime parameters (or schema defaults) into step template placeholders, Replays resolved skill steps sequentially in Playwright with multi-locator fallb, Safely print to stdout, catching any encoding or I/O exceptions.     Prevents cr, safe_print()
+Cohesion: 0.22
+Nodes (10): Path, drag_and_drop_with_fallback(), Drag and drop with 13-rank locator resolution fallback and mouse coordinate fall, Any, Page, Attempts self-healing:         Step 1: lookup_hitl_memory. If memories found, ex, Injects runtime parameters (or schema defaults) into step template placeholders, Replays resolved skill steps sequentially in Playwright with multi-locator fallb (+2 more)
 
 ### Community 95 - "skill_synthesizer.py"
-Cohesion: 0.11
-Nodes (13): G(), _arrayLikeToArray(), augment(), cacheInvertedBmp(), charCode(), clipDuplicates(), copyRegex(), _createForOfIteratorHelper() (+5 more)
+Cohesion: 0.10
+Nodes (14): G(), _arrayLikeToArray(), augment(), cacheAstral(), cacheInvertedBmp(), charCode(), clipDuplicates(), copyRegex() (+6 more)
 
 ### Community 96 - "synthesize_automation_skill"
 Cohesion: 0.15
 Nodes (14): Tests for decoupled skill synthesis execution.  Validates that: 1. dash_synthesi, Verify that synthesize_automation_skill spawns dash_synthesize.py with the corre, Verify that CalledProcessError from subprocess.run is mapped to HTTPException(50, test_synthesize_endpoint_handles_called_process_error(), test_synthesize_endpoint_spawns_subprocess(), execute_skill_endpoint(), Path, Sanitize a skill filename using os.path.basename to guard against directory trav (+6 more)
 
 ### Community 97 - "execute_skill_endpoint"
-Cohesion: 0.12
-Nodes (26): create_automation_config(), create_schedule(), Save a user's personal config (variables + secrets) for an automation.      Ca, Update a user's config: variables, secrets, or the active flag.      Only supp, Create a recurring schedule for an automation using a cron expression.      Ca, update_automation_config(), Update details or steps of an existing automation.          Only fields provid, update_automation() (+18 more)
+Cohesion: 0.16
+Nodes (24): BaseModel, AutomationCreate, AutomationResponse, AutomationUpdate, AutomationWithSteps, Config, ConfigCreate, ConfigResponse (+16 more)
 
 ### Community 98 - "test_dashboard_skill_delete.py"
 Cohesion: 0.20
@@ -627,8 +646,8 @@ Cohesion: 0.29
 Nodes (7): Documentation Update: Virtual Environment Activation in `how_to_run.md` ✅, Phase 1: Audio Capture & Event Synchronization ✅, Phase 2: Local Transcription & Alignment ✅, Phase 3: AI Skill Synthesis & Auto-Parameterization ✅, Phase 4: Skill Execution Engine & Dynamic Replay ✅, Phase 5: Dashboard UI Integration & Skill Management ✅, Previous Session (2026-08-27)
 
 ### Community 108 - "_execute_command"
-Cohesion: 0.24
-Nodes (8): TDVC Assertion:     Assert that when Playwright throws a TimeoutError during com, Mock an AI server loop where an injected Playwright TimeoutError is simulated, test_client_handles_playwright_timeout(), test_server_dynamic_popup_retry_on_timeout(), test_execute_command_fallback_single_page(), test_execute_command_uses_active_page_from_context(), _execute_command(), Execute a single AI command against the active Playwright page with timeout safe
+Cohesion: 0.40
+Nodes (4): TDVC Assertion:     Assert that when Playwright throws a TimeoutError during com, Mock an AI server loop where an injected Playwright TimeoutError is simulated, test_client_handles_playwright_timeout(), test_server_dynamic_popup_retry_on_timeout()
 
 ### Community 109 - "dash_synthesize.py"
 Cohesion: 0.13
@@ -640,15 +659,15 @@ Nodes (22): 1. Brittle Selectors → Self-Healing Automation, 2. File-Based Reco
 
 ### Community 111 - "normalize_task"
 Cohesion: 0.17
-Nodes (18): ee(), L(), N(), p(), T(), A(), c(), e() (+10 more)
+Nodes (18): ee(), L(), N(), p(), T(), winnow(), A(), c() (+10 more)
 
 ### Community 112 - "ServerLogger"
 Cohesion: 0.11
 Nodes (11): ActionTimer, Any, Server-side logging module for the WebAI local WebSocket server.  This module, Convenience method for logging actions with standardized metadata, Context manager support, Context manager for timing actions, Manages server-side logging with buffering and batch sending to API, Initialize server logger                  Args:             api_url: API base (+3 more)
 
 ### Community 113 - "TestAuthEnforcement"
-Cohesion: 0.12
-Nodes (19): authenticate_user(), generate_api_key(), get_current_user_by_api_key(), get_current_user_by_token(), get_password_hash(), Session, Authentication and authorization utilities.  This file is the "bouncer" of the, Look up a user by username and check their password.      Used by the `POST /a (+11 more)
+Cohesion: 0.18
+Nodes (11): authenticate_user(), get_current_user_by_api_key(), get_current_user_by_token(), get_optional_user(), Session, Look up a user by username and check their password.      Used by the `POST /a, Decode a JWT token and return the matching user.      Verifies the signature (, FastAPI dependency that identifies the current user from their API key.      T (+3 more)
 
 ### Community 115 - ".get"
 Cohesion: 0.13
@@ -659,16 +678,16 @@ Cohesion: 0.14
 Nodes (14): Active Context  WebAI Platform, Client & Server Multi-Locator Priority Unification (13 Strategies) ✅, Dashboard Enhancements & Performance Optimization, Phase 12: JS Telemetry Injector (Shield 1: Smart Filtering & Shield 2: Mutation Verification) ✅, Phase 13: Dynamic Popup & Delayed DOM Re-hydration (Rule 7 TDVC) ✅, Phase 14: Audio Transcription VAD & Anti-Hallucination Upgrade (Rule 7 TDVC) ✅, Phase 15: Kimi K3 Provider Integration & Multimodal Visual-DOM Planning (Rule 7 TDVC) ✅, Phase 16: Multi-Skill Library Integration & Catalog Scanner (Rule 7 TDVC) ✅ (+6 more)
 
 ### Community 118 - "select_smart"
-Cohesion: 0.14
-Nodes (17): ElementHandle, Locator, ScrollType, Test suite for the WebAI Playwright Client.  This module contains tests verify, test_e2e_native_and_custom_dropdowns(), cdp_element_to_playwright_handle(), get_element_at_location(), get_page_screenshot() (+9 more)
+Cohesion: 0.10
+Nodes (22): ElementHandle, ScrollType, Test suite for verifying CDP and Playwright Actions fixes, Test that playwright_actions.get_snapshot works correctly, Test that playwright_actions.get_dom_snapshot works correctly, Test that playwright_actions.get_interactive_elements works correctly, test_playwright_actions_get_dom_snapshot(), test_playwright_actions_get_interactive_elements() (+14 more)
 
 ### Community 119 - "chat/views.py"
 Cohesion: 0.14
 Nodes (6): ChatMessageAdmin, Meta, UserRegisterForm, ChatMessage, register(), UserCreationForm
 
 ### Community 120 - "find"
-Cohesion: 0.18
-Nodes (17): addCombinator(), assert(), compile(), condense(), createPositionalPseudo(), elementMatcher(), find(), markFunction() (+9 more)
+Cohesion: 0.17
+Nodes (18): addCombinator(), assert(), compile(), condense(), createPositionalPseudo(), elementMatcher(), find(), markFunction() (+10 more)
 
 ### Community 121 - ".on"
 Cohesion: 0.22
@@ -683,12 +702,12 @@ Cohesion: 0.50
 Nodes (4): Context, Decision 17: Action Deduplication Circuit Breaker & Proactive HITL Escalation, Decision, Impact
 
 ### Community 124 - "Decision 18: Skill Synthesis (Auto-Saving Successful Agentic Workflows)"
-Cohesion: 0.50
-Nodes (4): Context, Decision 18: Skill Synthesis (Auto-Saving Successful Agentic Workflows), Decision, Impact
+Cohesion: 0.21
+Nodes (14): Verify that hitl_memory_store can be imported and executed from AI server contex, test_ai_server_imports_hitl_memory_store(), _extract_domain_and_pattern(), _lookup_from_local_file(), lookup_hitl_memory(), Any, Modular Client/Server HITL Learned Memory Store.  Provides persistent saving and, Saves a HITL learned memory record to the central API server (MSSQL)     and mir (+6 more)
 
 ### Community 125 - "Decision 19: Dashboard Skill Management (Delete Functionality)"
-Cohesion: 0.50
-Nodes (4): Context, Decision 19: Dashboard Skill Management (Delete Functionality), Decision, Impact
+Cohesion: 0.17
+Nodes (7): Any, Lazy initialization of FunASR SenseVoice model with graceful dependency warning., Transcribe audio using SenseVoice and clean rich tags with postprocess_utils., Returns a single segment spanning the entire audio session (0..999999 ms), Transcribe the audio file into timestamped segments.          Args:, Transcribe WAV audio into joined text., Transcribe WAV audio into timestamped segments in milliseconds.
 
 ### Community 126 - "Project Brief — WebAI Platform"
 Cohesion: 0.12
@@ -707,8 +726,8 @@ Cohesion: 0.15
 Nodes (13): Active Context — WebAI Platform, Active Files (Most Recently Modified), Current Session (2026-07-18), Current State of the Codebase, Immediate Next Steps (If User Requests), Key Context for Next Session, Option A: Implement Conditional Branching, Option B: Fix Known Issues (+5 more)
 
 ### Community 130 - "websocket_client.py"
-Cohesion: 0.26
-Nodes (12): websocket_url(), get_ws(), _is_ws_closed(), listen(), Any, RuntimeError, WebSocket Communication Client for the AI Brain.  This module establishes and ma, Listen for messages, passing each message to handler.     If handler returns Tru (+4 more)
+Cohesion: 0.24
+Nodes (13): websocket_url(), close_ws(), get_ws(), _is_ws_closed(), listen(), Any, RuntimeError, WebSocket Communication Client for the AI Brain.  This module establishes and ma (+5 more)
 
 ### Community 132 - "domManip"
 Cohesion: 0.20
@@ -739,8 +758,8 @@ Cohesion: 0.18
 Nodes (9): TDVC Test Suite for Automation-to-Skill Mapping: 1. SkillSynthesizer.synthesize(, Validates POST /api/automations/{automation_id}/synthesize endpoint workflow., Validates that synthesize() adds source_automation_id at root level of skill dic, Validates that save_skill writes source_automation_id to disk in both slug and m, Validates that list_skills includes source_automation_id in the response payload, test_list_skills_extracts_source_automation_id(), test_save_skill_persists_source_automation_id(), test_synthesize_endpoint() (+1 more)
 
 ### Community 139 - "encryption.py"
-Cohesion: 0.18
-Nodes (7): CredentialManager, generate_new_key(), Credential encryption/decryption using Fernet symmetric encryption.  This file, Print a fresh Fernet key to copy into the `.env` file.      Run this once when, Locks and unlocks user secrets using Fernet symmetric encryption.      A singl, Turn a dict of plain secrets into an encrypted string for DB storage., Turn an encrypted string from the DB back into the original dict.          Use
+Cohesion: 0.29
+Nodes (4): CredentialManager, Locks and unlocks user secrets using Fernet symmetric encryption.      A singl, Turn a dict of plain secrets into an encrypted string for DB storage., Turn an encrypted string from the DB back into the original dict.          Use
 
 ### Community 140 - "utils.py"
 Cohesion: 0.25
@@ -751,8 +770,8 @@ Cohesion: 0.20
 Nodes (8): TDVC Test Suite for Phase 6: Semantic Intent Router & Agentic Handoff Engine (Ru, test_intent_routing_and_variable_extraction(), test_no_matching_skill_fallback(), Validates that skills/*.json takes precedence and mirror synthesized_skill.json, test_safeguard_deduplication_in_scanner(), load_local_skills(), Semantic Intent Router & Agentic Handoff Module for WebAI Local AI Server.  Anal, Discovers and loads synthesized skills from JSON files in the workspace.      Sc
 
 ### Community 142 - "get_interactive_elements"
-Cohesion: 0.25
-Nodes (6): Test that playwright_actions.get_interactive_elements works correctly, test_playwright_actions_get_interactive_elements(), FakePage, Test suite for the WebAI Playwright Client.  This module contains tests verify, test_get_interactive_elements_calls_evaluate(), get_interactive_elements()
+Cohesion: 0.40
+Nodes (3): FakePage, Test suite for the WebAI Playwright Client.  This module contains tests verify, test_get_interactive_elements_calls_evaluate()
 
 ### Community 143 - "FakeCDP"
 Cohesion: 0.33
@@ -767,8 +786,8 @@ Cohesion: 0.36
 Nodes (4): Step-payload validation for the import endpoint., TestValidateStepsPayload, Validate an uploaded recording payload.      Args:         steps: Parsed JSON, validate_steps_payload()
 
 ### Community 148 - "test_skill_synthesis_auto_save.py"
-Cohesion: 0.29
-Nodes (7): Path, Verify save_synthesized_skill creates slug directory, recorded_steps.json, skill, Verify action normalization extracts clean, replay-compatible step structures., Verify that saving an updated skill with the same name updates the existing regi, test_normalize_history_step(), test_save_synthesized_skill_creates_expected_artifacts(), test_save_synthesized_skill_updates_existing_entry()
+Cohesion: 0.18
+Nodes (8): TDVC Test Harness for AudioAligner Temporal Alignment Logic. Verifies time windo, test_audio_alignment_math(), TDVC Test Harness for AudioAligner VAD & Anti-Hallucination Configuration. Verif, Assert that AudioAligner.transcribe_audio calls model.transcribe with:     - vad, Assert that AudioAligner defaults to 'base.en' and falls back gracefully to 'bas, test_audio_vad_transcribe_kwargs(), test_model_upgrade_and_fallback(), Audio Aligner Utility for WebAI Playwright Recorder.  Transcribes recorded sessi
 
 ### Community 150 - "nodeName"
 Cohesion: 0.29
@@ -787,20 +806,20 @@ Cohesion: 0.33
 Nodes (5): Variable: extracted_value, Variable: extracted_value, Variable: extracted_value, Variable: extracted_value, Variable: extracted_value
 
 ### Community 154 - "D"
-Cohesion: 0.33
-Nodes (6): kt(), m(), Tt(), Ut(), b(), D()
+Cohesion: 0.24
+Nodes (6): Any, Page, Spawns background daemon thread to run pyttsx3 TTS audio cue at 140 WPM with fri, Injects floating UI panel in Observer Mode across all context tabs and awaits us, Transcribe PCM WAV audio using active transcriber strategy., Main entrypoint called when human intervention is required.         1. Speaks T
 
 ### Community 155 - "login"
-Cohesion: 0.33
-Nodes (6): timedelta, create_access_token(), Build a signed JWT access token that proves a user is logged in.      The toke, login(), Authenticate a user using their username and password.          Validates the, LoginRequest
+Cohesion: 0.40
+Nodes (5): timedelta, create_access_token(), Build a signed JWT access token that proves a user is logged in.      The toke, login(), Authenticate a user using their username and password.          Validates the
 
 ### Community 156 - "Open Questions / Decisions Pending"
 Cohesion: 0.33
 Nodes (6): 1. Conditional Branching (Future Enhancement), 2. Variable Storage for Conditions, 3. Explicit Page Validation, 4. LOCATOR_PRIORITY Inconsistency, 5. Shim Module Bug, Open Questions / Decisions Pending
 
 ### Community 158 - "_send_command_response"
-Cohesion: 0.40
-Nodes (5): _send_command_response(), get_version(), _load_meta(), Any, Metadata definitions for the WebAI Playwright Client.  Maintains versioning, aut
+Cohesion: 0.50
+Nodes (4): get_version(), _load_meta(), Any, Metadata definitions for the WebAI Playwright Client.  Maintains versioning, aut
 
 ### Community 160 - "theme.js"
 Cohesion: 0.80
@@ -822,25 +841,69 @@ Nodes (3): Unit Tests for Action Normalization (Mocked - No Ollama Required), Te
 Cohesion: 0.67
 Nodes (3): DummyPage, Test suite for the WebAI Playwright Client.  This module contains tests verify, test_execute_command_semantic_dispatch()
 
+### Community 296 - "FasterWhisperTranscriber"
+Cohesion: 0.25
+Nodes (6): DummySegment, Verify FasterWhisperTranscriber segments and text transcription., test_faster_whisper_transcriber(), FasterWhisperTranscriber, faster-whisper transcription strategy utilizing hardware auto-detection (CUDA/CP, Lazy initialization of faster-whisper model.
+
+### Community 298 - ".__init__"
+Cohesion: 0.22
+Nodes (4): Page, Start recording session and broadcast recording_started event to plugins., Register and attach a plugin to this recorder event bus., Attaches the recorder to the BrowserContext and all current / newly opened tabs
+
+### Community 299 - "hitl_plugin.py"
+Cohesion: 0.25
+Nodes (5): main(), Test suite for Phase 12 - Shield 2: DOM Mutation Verification.  Verifies that cl, Verify Shield 2 captures Button A (DOM mutation) and discards Button B (unrespon, test_shield_2_dom_mutation_verification(), Human-in-the-Loop (HITL) Interactive Learning Plugin for WebAI Playwright Record
+
+### Community 300 - "select_smart"
+Cohesion: 0.33
+Nodes (6): Locator, Test suite for the WebAI Playwright Client.  This module contains tests verify, test_e2e_native_and_custom_dropdowns(), Works for:     - Native <select> (uses select_option)     - Custom dropdowns (, select_smart(), _target_locator()
+
+### Community 302 - "create_user"
+Cohesion: 0.33
+Nodes (6): generate_api_key(), get_password_hash(), Scramble a plain-text password into a bcrypt hash for safe storage.      The h, Create a long random API key for a user.      The key is what scripts (the bro, create_user(), Register a brand-new user: hash the password and mint an API key.      Called
+
+### Community 303 - "normalize_task"
+Cohesion: 0.33
+Nodes (6): Verify normalize_task injects read-first, anti-loop, and dropdown requirements., test_normalize_task_read_first_guidance(), _extract_urls(), _is_already_structured(), normalize_task(), Convert a short task into Goal/Requirements/Success Criteria form.
+
+### Community 304 - "BaseTranscriber"
+Cohesion: 0.33
+Nodes (4): Initialize AudioAligner with an explicit transcriber strategy, or fallback to AC, BaseTranscriber, Abstract Base Class for voice model transcription strategies., Transcribe the audio file directly into a clean, plain text string.          Arg
+
+### Community 305 - "Decision 14: Semantic Verification & Conditional Assertions"
+Cohesion: 0.50
+Nodes (4): Context, Decision 14: Semantic Verification & Conditional Assertions, Decision, Impact
+
+### Community 306 - "Decision 21: Simultaneous Voice + Multi-Action HITL Recording, MSSQL HITL Learned Memory Store & Voice+DOM Self-Healing"
+Cohesion: 0.50
+Nodes (4): Context, Decision 21: Simultaneous Voice + Multi-Action HITL Recording, MSSQL HITL Learned Memory Store & Voice+DOM Self-Healing, Decision, Impact
+
+### Community 307 - "test_telemetry_injector.py"
+Cohesion: 0.50
+Nodes (3): Test suite for Phase 12 - JS Telemetry Injector with Smart Semantic Filtering., Verify JS telemetry listener captures valid clicks and filters dead spaces., test_smart_semantic_filtering_telemetry()
+
+### Community 308 - "encryption.py"
+Cohesion: 0.50
+Nodes (3): generate_new_key(), Credential encryption/decryption using Fernet symmetric encryption.  This file, Print a fresh Fernet key to copy into the `.env` file.      Run this once when
+
 ## Knowledge Gaps
-- **422 isolated node(s):** `Config`, `state`, `webai-playwright`, `Migration`, `Migration` (+417 more)
+- **428 isolated node(s):** `Phase 29 Hotfix 2: Same-Tab Navigation HITL Panel & Telemetry Persistence + Anti-Scroll Extraction Directives (Rule 7 TDVC, Rule 11) ✅`, `Phase 29: Simultaneous Voice + Multi-Action HITL Recording, MSSQL HITL Learned Memory Store & Voice+DOM Self-Healing (Decision 21, Rule 7 TDVC) ✅`, `Phase 28: Transcriber Strategy Pattern & SenseVoice Support (Decision 20, Rule 7 TDVC) ✅`, `Phase 27: Dashboard Skill Management (Delete Functionality) (Decision 19, Rule 7 TDVC) ✅`, `Phase 26: Skill Synthesis (Auto-Saving Successful Agentic Workflows) (Decision 18, Rule 7 TDVC) ✅` (+423 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **37 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **45 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `save_synthesized_skill()` connect `save_synthesized_skill` to `test_skill_synthesis_auto_save.py`?**
-  _High betweenness centrality (0.058) - this node is a cross-community bridge._
-- **Why does `_normalize_history_step()` connect `Any` to `handle_client`, `test_skill_synthesis_auto_save.py`?**
-  _High betweenness centrality (0.057) - this node is a cross-community bridge._
-- **Why does `ai()` connect `test_skill_mapping.py` to `Any`, `websocket_client.py`, `save_synthesized_skill`?**
-  _High betweenness centrality (0.044) - this node is a cross-community bridge._
+- **Why does `handle_client()` connect `handle_client` to `_extract_json_array`, `_compact_context`, `test_phase8_autonomous_handoff.py`, `test_circuit_breaker_anti_loop.py`, `normalize_task`, `test_skill_mapping.py`, `Decision 18: Skill Synthesis (Auto-Saving Successful Agentic Workflows)`?**
+  _High betweenness centrality (0.063) - this node is a cross-community bridge._
+- **Why does `save_hitl_memory()` connect `Decision 18: Skill Synthesis (Auto-Saving Successful Agentic Workflows)` to `handle_client`, `dashboard_health`, `Any`?**
+  _High betweenness centrality (0.056) - this node is a cross-community bridge._
+- **Why does `HITLPlugin` connect `HITLPlugin` to `D`, `test_cdp_fixes.py`, `FasterWhisperTranscriber`, `.__init__`, `hitl_plugin.py`, `MockPage`, `test_telemetry_injector.py`, `dashboard_health`, `._on_human_intervention_required`, `build_task_text`, `test_skill_mapping.py`, `Any`, `Page`?**
+  _High betweenness centrality (0.033) - this node is a cross-community bridge._
 - **Are the 3 inferred relationships involving `User` (e.g. with `Meta` and `UserRegisterForm`) actually correct?**
   _`User` has 3 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `Config`, `state`, `webai-playwright` to the rest of the system?**
-  _422 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Are the 3 inferred relationships involving `handle_client()` (e.g. with `run_e2e_test()` and `RuntimeError`) actually correct?**
+  _`handle_client()` has 3 INFERRED edges - model-reasoned connections that need verification._
+- **What connects `Phase 29 Hotfix 2: Same-Tab Navigation HITL Panel & Telemetry Persistence + Anti-Scroll Extraction Directives (Rule 7 TDVC, Rule 11) ✅`, `Phase 29: Simultaneous Voice + Multi-Action HITL Recording, MSSQL HITL Learned Memory Store & Voice+DOM Self-Healing (Decision 21, Rule 7 TDVC) ✅`, `Phase 28: Transcriber Strategy Pattern & SenseVoice Support (Decision 20, Rule 7 TDVC) ✅` to the rest of the system?**
+  _428 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Recent Work Completed` be split into smaller, more focused modules?**
   _Cohesion score 0.09523809523809523 - nodes in this community are weakly interconnected._
-- **Should `Open Questions / Decisions Pending` be split into smaller, more focused modules?**
-  _Cohesion score 0.14619883040935672 - nodes in this community are weakly interconnected._
