@@ -4,6 +4,47 @@
     "domain": "sastra.edu",
     "automation_id": null,
     "skill_name": null,
+    "blocker_context": "[\"cannot access local variable 'url' where it is not associated with a value\"]",
+    "voice_context": "None",
+    "dom_excerpt": "URL: https://sastra.edu/admissions/ug-pg.html\nTITLE: UG / PG Programmes - SASTRA DEEMED UNIVERSITY\nVISIBLE INTERACTIVE ELEMENTS (partial):\n1. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"Facebook\", \"placeholder\": \"\", \"ariaLabel\": \"Facebook\", \"text\": \"\"}\n2. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"twitter\", \"placeholder\": \"\", \"ariaLabel\": \"twitter\", \"text\": \"\"}\n3. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"linkedin\", \"placeholder\": \"\", \"ariaLabel\": \"linkedin\", \"text\": \"\"}\n4. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"youtube\", \"placeholder\": \"\", \"ariaLabel\": \"youtube\", \"text\": \"\"}\n5. [FORM] {\"container\": \"FORM\", \"tag\": \"input\", \"role\": \"\", \"type\": \"text\", \"name\": \"Search\", \"placeholder\": \"\", \"ariaLabel\": \"Search\", \"text\": \"\"}\n6. [HEADER] {\"container\": \"HEADER\", \"tag\": \"select\", \"role\": \"\", \"type\": \"select-one\", \"name\": \"Login\\n\\t\\t\\t\\t\\t\\t\\tFaculty Web Interface\\n\\t\\t\\t\\t\\t\\t\\tStudent Web Interface\\n\\t\\t\\t\\t\\t\\t\\tParent Web Interface\\n\\t\\t\\t\\t\\t\\t\\tS\", \"placeholder\": \"\", \"ariaLabel\": \"\", \"text\": \"Login\\n\\t\\t\\t\\t\\t\\t\\tFaculty Web Interface\\n\\t\\t\\t\\t\\t\\t\\tStudent Web Interface\\n\\t\\t\\t\\t\\t\\t\\tParent Web Interface\\n\\t\\t\\t\\t\\t\\t\\tS\"}\n7. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"\", \"placeholder\": \"\", \"ariaLabel\": \"\", \"text\": \"\"}\n8. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"Home\", \"placeholder\": \"\", \"ariaLabel\": \"\", \"text\": \"Home\"}\n9. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"About\", \"placeholder\": \"\", \"ariaLabel\": \"\", \"text\": \"About\"}\n10. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"Academics\", \"placeholder\": \"\", \"ariaLabel\": \"\", \"text\": \"Academics\"}\n11. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"Admissions\", \"placeholder\": \"\", \"ariaLabel\": \"\", \"text\": \"Admission",
+    "learned_steps_json": [
+      {
+        "action": "scroll_page",
+        "target": "up",
+        "delta_x": 0,
+        "delta_y": -200,
+        "url": "https://sastra.edu/admissions/ug-pg.html",
+        "timestamp_ms": 8572,
+        "voice_context": "User completed actions in Observer Mode and clicked Resume AI",
+        "full_voice_context": "User completed actions in Observer Mode and clicked Resume AI"
+      },
+      {
+        "action": "scroll_page",
+        "target": "up",
+        "delta_x": 0,
+        "delta_y": -200,
+        "url": "https://sastra.edu/admissions/ug-pg.html",
+        "timestamp_ms": 47163,
+        "voice_context": "User completed actions in Observer Mode and clicked Resume AI",
+        "full_voice_context": "User completed actions in Observer Mode and clicked Resume AI"
+      }
+    ]
+  },
+  {
+    "url_pattern": "https://sastra.edu/admissions/ug-pg.html",
+    "domain": "sastra.edu",
+    "automation_id": null,
+    "skill_name": null,
+    "blocker_context": "[\"cannot access local variable 'url' where it is not associated with a value\"]",
+    "voice_context": "None",
+    "dom_excerpt": "URL: https://sastra.edu/admissions/ug-pg.html\nTITLE: UG / PG Programmes - SASTRA DEEMED UNIVERSITY\nVISIBLE INTERACTIVE ELEMENTS (partial):\n1. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"Facebook\", \"placeholder\": \"\", \"ariaLabel\": \"Facebook\", \"text\": \"\"}\n2. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"twitter\", \"placeholder\": \"\", \"ariaLabel\": \"twitter\", \"text\": \"\"}\n3. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"linkedin\", \"placeholder\": \"\", \"ariaLabel\": \"linkedin\", \"text\": \"\"}\n4. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"youtube\", \"placeholder\": \"\", \"ariaLabel\": \"youtube\", \"text\": \"\"}\n5. [FORM] {\"container\": \"FORM\", \"tag\": \"input\", \"role\": \"\", \"type\": \"text\", \"name\": \"Search\", \"placeholder\": \"\", \"ariaLabel\": \"Search\", \"text\": \"\"}\n6. [HEADER] {\"container\": \"HEADER\", \"tag\": \"select\", \"role\": \"\", \"type\": \"select-one\", \"name\": \"Login\\n\\t\\t\\t\\t\\t\\t\\tFaculty Web Interface\\n\\t\\t\\t\\t\\t\\t\\tStudent Web Interface\\n\\t\\t\\t\\t\\t\\t\\tParent Web Interface\\n\\t\\t\\t\\t\\t\\t\\tS\", \"placeholder\": \"\", \"ariaLabel\": \"\", \"text\": \"Login\\n\\t\\t\\t\\t\\t\\t\\tFaculty Web Interface\\n\\t\\t\\t\\t\\t\\t\\tStudent Web Interface\\n\\t\\t\\t\\t\\t\\t\\tParent Web Interface\\n\\t\\t\\t\\t\\t\\t\\tS\"}\n7. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"\", \"placeholder\": \"\", \"ariaLabel\": \"\", \"text\": \"\"}\n8. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"Home\", \"placeholder\": \"\", \"ariaLabel\": \"\", \"text\": \"Home\"}\n9. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"About\", \"placeholder\": \"\", \"ariaLabel\": \"\", \"text\": \"About\"}\n10. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"Academics\", \"placeholder\": \"\", \"ariaLabel\": \"\", \"text\": \"Academics\"}\n11. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"Admissions\", \"placeholder\": \"\", \"ariaLabel\": \"\", \"text\": \"Admission",
+    "learned_steps_json": []
+  },
+  {
+    "url_pattern": "https://sastra.edu/admissions/ug-pg.html",
+    "domain": "sastra.edu",
+    "automation_id": null,
+    "skill_name": null,
     "blocker_context": "",
     "voice_context": "There is the courses offered at the Sanjavar campus. I just keep it. Then the programs offered are listed in the page itself. You read and extract it.",
     "dom_excerpt": "URL: https://sastra.edu/admissions/ug-pg.html\nTITLE: UG / PG Programmes - SASTRA DEEMED UNIVERSITY\nVISIBLE INTERACTIVE ELEMENTS (partial):\n1. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"Facebook\", \"placeholder\": \"\", \"ariaLabel\": \"Facebook\", \"text\": \"\"}\n2. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"twitter\", \"placeholder\": \"\", \"ariaLabel\": \"twitter\", \"text\": \"\"}\n3. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"linkedin\", \"placeholder\": \"\", \"ariaLabel\": \"linkedin\", \"text\": \"\"}\n4. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"youtube\", \"placeholder\": \"\", \"ariaLabel\": \"youtube\", \"text\": \"\"}\n5. [FORM] {\"container\": \"FORM\", \"tag\": \"input\", \"role\": \"\", \"type\": \"text\", \"name\": \"Search\", \"placeholder\": \"\", \"ariaLabel\": \"Search\", \"text\": \"\"}\n6. [HEADER] {\"container\": \"HEADER\", \"tag\": \"select\", \"role\": \"\", \"type\": \"select-one\", \"name\": \"Login\\n\\t\\t\\t\\t\\t\\t\\tFaculty Web Interface\\n\\t\\t\\t\\t\\t\\t\\tStudent Web Interface\\n\\t\\t\\t\\t\\t\\t\\tParent Web Interface\\n\\t\\t\\t\\t\\t\\t\\tS\", \"placeholder\": \"\", \"ariaLabel\": \"\", \"text\": \"Login\\n\\t\\t\\t\\t\\t\\t\\tFaculty Web Interface\\n\\t\\t\\t\\t\\t\\t\\tStudent Web Interface\\n\\t\\t\\t\\t\\t\\t\\tParent Web Interface\\n\\t\\t\\t\\t\\t\\t\\tS\"}\n7. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"\", \"placeholder\": \"\", \"ariaLabel\": \"\", \"text\": \"\"}\n8. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"Home\", \"placeholder\": \"\", \"ariaLabel\": \"\", \"text\": \"Home\"}\n9. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"About\", \"placeholder\": \"\", \"ariaLabel\": \"\", \"text\": \"About\"}\n10. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"Academics\", \"placeholder\": \"\", \"ariaLabel\": \"\", \"text\": \"Academics\"}\n11. [HEADER] {\"container\": \"HEADER\", \"tag\": \"a\", \"role\": \"\", \"type\": \"\", \"name\": \"Admissions\", \"placeholder\": \"\", \"ariaLabel\": \"\", \"text\": \"Admission",
