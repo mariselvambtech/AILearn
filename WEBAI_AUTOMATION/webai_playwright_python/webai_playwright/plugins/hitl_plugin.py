@@ -77,7 +77,7 @@ class HITLPlugin:
         thread = threading.Thread(target=tts_thread, daemon=True)
         thread.start()
 
-    async def _inject_and_await_observer_mode(self, page: Page, timeout_sec: float = 60.0) -> Dict[str, Any]:
+    async def _inject_and_await_observer_mode(self, page: Page, timeout_sec: float = 120.0) -> Dict[str, Any]:
         """Injects floating UI panel in Observer Mode across all context tabs and awaits user clicking 'Resume AI'."""
         context: Optional[BrowserContext] = getattr(page, "context", None)
 
@@ -836,7 +836,7 @@ class HITLPlugin:
             print(f" [HITLPlugin] Audio transcription fallback: {e}")
             return "User manually intervened in Observer Mode"
 
-    async def trigger_intervention(self, page: Page, payload: Optional[Dict[str, Any]] = None, timeout_sec: float = 60.0) -> Dict[str, Any]:
+    async def trigger_intervention(self, page: Page, payload: Optional[Dict[str, Any]] = None, timeout_sec: float = 120.0) -> Dict[str, Any]:
         """
         Main entrypoint called when human intervention is required.
         1. Speaks TTS audio cue asynchronously using context-aware prompt if provided.

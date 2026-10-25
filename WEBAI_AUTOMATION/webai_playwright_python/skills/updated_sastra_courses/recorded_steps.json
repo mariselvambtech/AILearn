@@ -1,0 +1,52 @@
+[
+  {
+    "timestamp": 1792948652.7827942,
+    "ts": 1792948652.7827942,
+    "url": "https://sastra.edu/",
+    "action": "open"
+  },
+  {
+    "timestamp": 1792948659.062441,
+    "ts": 1792948659.062441,
+    "url": "",
+    "action": "click",
+    "name": "Admissions",
+    "locators": [
+      {
+        "type": "role",
+        "value": "link",
+        "name": "Admissions"
+      }
+    ],
+    "target": {
+      "by": "role",
+      "role": "link",
+      "name": "Admissions",
+      "exact": true
+    }
+  },
+  {
+    "timestamp": 1792948663.0848222,
+    "ts": 1792948663.0848222,
+    "url": "https://sastra.edu/",
+    "action": "open"
+  },
+  {
+    "timestamp": 1792948667.867748,
+    "ts": 1792948667.867748,
+    "url": "",
+    "action": "click",
+    "name": "UG / PG Programmes",
+    "locators": [
+      {
+        "type": "text",
+        "value": "UG / PG Programmes"
+      }
+    ],
+    "target": {
+      "by": "text",
+      "text": "UG / PG Programmes",
+      "exact": false
+    }
+  }
+]

@@ -5,5 +5,12 @@
     "description": "list courses in sastra university",
     "skill_file": "sastra_courses.json",
     "recorded_steps": "sastra_courses/recorded_steps.json"
+  },
+  {
+    "skill_name": "updated sastra courses",
+    "slug": "updated_sastra_courses",
+    "description": "list courses in sastra",
+    "skill_file": "updated_sastra_courses.json",
+    "recorded_steps": "updated_sastra_courses/recorded_steps.json"
   }
 ]
