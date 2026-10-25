@@ -65,7 +65,7 @@ class HITLPlugin:
 
                 clean_prompt = (prompt or self.tts_prompt).strip()
                 if "consecutive_action_failures" in clean_prompt.lower():
-                    clean_prompt = "I am having trouble proceeding. Please select the shirt and size you want on your screen, then click Resume AI."
+                    clean_prompt = "I am having trouble proceeding. Please click the correct element on your screen, then click Resume AI."
                 elif "timeout" in clean_prompt.lower():
                     clean_prompt = "Observer mode timed out. Please click Resume AI when you are ready."
 
