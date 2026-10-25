@@ -1,3 +1,66 @@
+def _auto_export_summary(task_text: str, summary_text: str, log_prefix: str = "") -> list:
+    import re
+    from pathlib import Path
+    if not summary_text:
+        return []
+    cleaned_lines = [
+        line for line in summary_text.splitlines()
+        if not line.strip().lower().startswith("note: i cannot directly")
+        and not line.strip().lower().startswith("note: i am a browser automation agent")
+        and not line.strip().lower().startswith("note: the visible element list")
+    ]
+    t_low = (task_text or "").lower()
+    want_word = any(k in t_low for k in ("word", ".docx", "doc"))
+    want_excel = any(k in t_low for k in ("excel", ".xlsx", "spreadsheet", "sheet"))
+    if not (want_word or want_excel):
+        return []
+    out_dir = Path(__file__).resolve().parents[2] / "webai_playwright_python"
+    if not out_dir.exists():
+        out_dir = Path.cwd()
+    saved = []
+    if want_word:
+        try:
+            from docx import Document
+            doc = Document()
+            doc.add_heading("Extracted Course / Data Report", level=1)
+            for line in cleaned_lines:
+                s = line.strip()
+                if not s:
+                    continue
+                if s.endswith(":") and not s[0].isdigit():
+                    doc.add_heading(s.rstrip(":"), level=2)
+                else:
+                    doc.add_paragraph(s)
+            docx_path = out_dir / "extracted_data.docx"
+            doc.save(str(docx_path))
+            saved.append(str(docx_path))
+        except Exception as exc:
+            print(f"{log_prefix} ?? Word export error: {exc}")
+    if want_excel:
+        try:
+            import pandas as pd
+            rows = []
+            cat = "General"
+            for line in cleaned_lines:
+                s = line.strip()
+                if not s:
+                    continue
+                if s.endswith(":") and not s[0].isdigit():
+                    cat = s.rstrip(":")
+                elif re.match(r"^(\d+[\.\)]|\-|\?)\s+", s):
+                    item = re.sub(r"^(\d+[\.\)]|\-|\?)\s+", "", s).strip()
+                    rows.append({"Category": cat, "Programme": item})
+            if not rows:
+                rows = [{"Category": "Extracted Data", "Programme": l.strip()} for l in cleaned_lines if l.strip()]
+            xlsx_path = out_dir / "extracted_data.xlsx"
+            pd.DataFrame(rows).to_excel(str(xlsx_path), index=False)
+            saved.append(str(xlsx_path))
+        except Exception as exc:
+            print(f"{log_prefix} ?? Excel export error: {exc}")
+    for f in saved:
+        print(f"{log_prefix} ?? Saved extracted data to: {f}")
+    return saved
+
 import asyncio
 import hashlib
 import http
@@ -1291,6 +1354,7 @@ async def handle_client(ws: Any):
 
     async def exec_action(act: Dict[str, Any]) -> None:
         nonlocal did_any_action, session_action_history
+        url = primary_url or ""
 
         kind = (act.get("action") or "").strip().lower()
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
