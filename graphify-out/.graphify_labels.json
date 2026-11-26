@@ -309,6 +309,7 @@
   "307": "test_telemetry_injector.py",
   "308": "encryption.py",
   "309": "Exception",
+  "310": "run_from_task_txt_guided.py",
   "311": "datetime",
   "312": "BaseModel",
   "313": "RuntimeError",

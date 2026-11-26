@@ -1,33 +1,11 @@
 <!-- converted from extracted_data.docx -->
 
-Extracted Data
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## Variable: extracted_value
-Value: Tamil Nadu
-Type: text
-URL: https://en.wikipedia.org/wiki/Tamil_Nadu
-Timestamp: 2026-02-09 10:47:02
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## Variable: extracted_value
-Value: Tamil Nadu
-Type: text
-URL: https://en.wikipedia.org/wiki/Tamil_Nadu
-Timestamp: 2026-02-09 10:51:05
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## Variable: extracted_value
-Value: Tamil Nadu
-Type: text
-URL: https://en.wikipedia.org/wiki/Tamil_Nadu
-Timestamp: 2026-02-09 10:51:24
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## Variable: extracted_value
-Value: Tamil Nadu
-Type: text
-URL: https://en.wikipedia.org/wiki/Tamil_Nadu
-Timestamp: 2026-02-09 10:52:42
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## Variable: extracted_value
-Value: Tamil Nadu
-Type: text
-URL: https://en.wikipedia.org/wiki/Tamil_Nadu
-Timestamp: 2026-02-10 11:08:43
+# Extracted Course / Data Report
+## List of UG/PG programmes offered at SASTRA
+## B.Tech. Programmes (UG)
+1. B.Tech. Aerospace Engineering
+2. B.Tech. Bioengineering
+## M.Tech. Programmes (PG)
+1. M.Tech. Integrated Biotechnology
+## Other UG/PG Programmes
+- B.Optom
