@@ -150,3 +150,14 @@ powershell
 $env:TOKEN="local_dummy_token"
 $env:WEBSOCKET_PROTOCOL="ws"
 $env:WEBSOCKET_HOST="localhost:8765"
+
+
+## 7. Run a Pure Autonomous Freeform TaskNote: 
+
+Guided mode (replaying pre-recorded steps with existing locators) intentionally bypasses the LLM. To test the visual LLM, run the blank-slate autonomous runner (run_autonomous.py), which captures live page screenshots and sends them to the model.   
+
+1. Set your task prompt in webai_playwright_python/generated_task.txt (or create one):PlaintextOpen https://en.wikipedia.org and search for "Artificial Intelligence"
+
+2. In Terminal , run the autonomous client:PowerShellcd webai_playwright_python
+.\.venv\Scripts\Activate.ps1
+python run_autonomous.py

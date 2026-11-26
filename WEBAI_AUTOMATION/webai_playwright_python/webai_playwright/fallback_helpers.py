@@ -480,16 +480,16 @@ async def extract_with_fallback(page, locators: List[Dict], extract_type: str,
     raise Exception(error_report)
 
 
-async def extract_table_data(page, table_selector: str, column_indices: List[int], 
-                             columns: List[str], max_pages: int = 1, 
+async def extract_table_data(target_or_page, table_selector: Any = "table", column_indices: Optional[List[int]] = None, 
+                             columns: Optional[List[str]] = None, max_pages: int = 1, 
                              wait_per_page: float = 2.0, page_timeout: float = 10.0,
-                             retry_attempts: int = 3) -> Dict:
+                             retry_attempts: int = 3, **kwargs) -> Dict:
     """
     Extract table data with pagination support and robust change detection.
     
     Args:
-        page: Playwright page
-        table_selector: CSS selector for the table
+        target_or_page: Playwright Page or Locator object
+        table_selector: CSS selector for the table, or Locator if target_or_page is page
         column_indices: List of column indices to extract
         columns: List of column names corresponding to indices
         max_pages: Maximum number of pages to extract (pagination)
@@ -500,28 +500,82 @@ async def extract_table_data(page, table_selector: str, column_indices: List[int
     Returns:
         Dict with success, data (list of row dicts), and row_count
     """
-    print(f"[DATA] Extracting table: {table_selector}")
+    column_indices = column_indices or []
+    columns = columns or []
+
+    # Determine if target_or_page is a Locator or Page
+    try:
+        from playwright.async_api import Locator, Page
+        is_page = isinstance(target_or_page, Page)
+        is_loc = isinstance(target_or_page, Locator)
+    except ImportError:
+        is_page = False
+        is_loc = False
+
+    if is_loc or (hasattr(target_or_page, "first") and not hasattr(target_or_page, "goto") and not is_page):
+        locator = target_or_page
+        print(f"[DATA] Extracting table from Locator: {locator}")
+    elif hasattr(table_selector, "first") and (not hasattr(table_selector, "goto")):
+        locator = table_selector
+        print(f"[DATA] Extracting table from table_selector Locator: {locator}")
+    elif hasattr(target_or_page, "locator"):
+        # target_or_page is page, table_selector is string or locator
+        selector_str = str(table_selector or "table")
+        print(f"[DATA] Extracting table: {selector_str}")
+        locator = target_or_page.locator(selector_str)
+    else:
+        locator = target_or_page
+
     print(f"   Columns: {columns}")
     print(f"   Max pages: {max_pages}, Wait: {wait_per_page}s, Timeout: {page_timeout}s, Retries: {retry_attempts}")
     
     try:
-        # JavaScript to extract table data with enhanced pagination
-        result = await page.evaluate("""
-            async (config) => {
-                const { tableSelector, columnIndices, columns, maxPages, 
+        # JavaScript evaluated directly on the resolved table DOM element via Playwright Locator
+        result = await locator.first.evaluate("""
+            async (table, config) => {
+                const { columnIndices, columns, maxPages, 
                         waitPerPage, pageTimeout, retryAttempts } = config;
                 
+                if (!table) {
+                    console.error('[ERROR] Table element not found');
+                    return { success: false, data: [], row_count: 0, error: 'Table not found' };
+                }
+
                 // Helper: Extract rows from current table state
-                function extractPageRows(table, indices, colNames) {
-                    const rows = Array.from(table.querySelectorAll('tbody tr'));
+                function extractPageRows(tableNode, indices, colNames) {
+                    let activeIndices = indices || [];
+                    let activeColNames = colNames || [];
+                    
+                    // Auto-detect columns and indices if not provided
+                    if (!activeColNames.length || !activeIndices.length) {
+                        const headerCells = Array.from(tableNode.querySelectorAll('thead th, thead td, tr:first-child th, tr:first-child td'));
+                        if (headerCells.length > 0) {
+                            activeColNames = headerCells.map((th, i) => th.innerText.trim() || `Column_${i+1}`);
+                            activeIndices = activeColNames.map((_, i) => i);
+                        }
+                    }
+
+                    let rows = Array.from(tableNode.querySelectorAll('tbody tr'));
+                    if (!rows.length) {
+                        const allTrs = Array.from(tableNode.querySelectorAll('tr'));
+                        rows = allTrs.length > 1 ? allTrs.slice(1) : allTrs;
+                    }
+
                     return rows.map(row => {
                         const cells = Array.from(row.querySelectorAll('td, th'));
                         const rowData = {};
-                        indices.forEach((idx, i) => {
-                            if (idx < cells.length) {
-                                rowData[colNames[i]] = cells[idx].innerText.trim();
-                            }
-                        });
+                        if (!activeIndices.length) {
+                            cells.forEach((cell, idx) => {
+                                rowData[`Column_${idx+1}`] = cell.innerText.trim();
+                            });
+                        } else {
+                            activeIndices.forEach((idx, i) => {
+                                if (idx < cells.length) {
+                                    const colName = activeColNames[i] || `Column_${i+1}`;
+                                    rowData[colName] = cells[idx].innerText.trim();
+                                }
+                            });
+                        }
                         return rowData;
                     }).filter(row => Object.keys(row).length > 0);
                 }
@@ -545,13 +599,6 @@ async def extract_table_data(page, table_selector: str, column_indices: List[int
                         }
                     }
                     return null;
-                }
-                
-                // Main extraction logic
-                const table = document.querySelector(tableSelector);
-                if (!table) {
-                    console.error('[ERROR] Table not found:', tableSelector);
-                    return { success: false, data: [], row_count: 0, error: 'Table not found' };
                 }
                 
                 console.log('[DATA] Table found:', table);
@@ -637,7 +684,6 @@ async def extract_table_data(page, table_selector: str, column_indices: List[int
                 return { success: true, data: allData, row_count: allData.length };
             }
         """, {
-            "tableSelector": table_selector,
             "columnIndices": column_indices,
             "columns": columns,
             "maxPages": max_pages,
