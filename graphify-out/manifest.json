@@ -215,8 +215,8 @@
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_local_server/webai_local_server/local_webai_server_guided.py": {
-    "mtime": 1793866544.694093,
-    "ast_hash": "a8b3993cad87aa506d9b7d2ee66822f2",
+    "mtime": 1795713789.2904575,
+    "ast_hash": "40617b2e045a44b3397a3a81c77c7073",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_local_server/webai_local_server/local_webai_server_not needed.py": {
@@ -330,8 +330,8 @@
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/ai.py": {
-    "mtime": 1792939922.8023617,
-    "ast_hash": "db1ccaa82e2a240d09b74699382c681f",
+    "mtime": 1795713789.2924578,
+    "ast_hash": "e797329274bfebeeb5a065f5916f1aea",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/cdp.py": {
@@ -350,8 +350,8 @@
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/fallback_helpers.py": {
-    "mtime": 1792939922.8033643,
-    "ast_hash": "4957d4621b514427a9b944d84af33801",
+    "mtime": 1795713789.2924578,
+    "ast_hash": "ea28ae5a399eb00a3f17d05667f4b63a",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/meta.py": {
@@ -360,8 +360,8 @@
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/playwright_actions.py": {
-    "mtime": 1792939922.8033643,
-    "ast_hash": "0150746153b32596be135c187d219f02",
+    "mtime": 1795713789.2934575,
+    "ast_hash": "084f94dc5b7e38ffae714ae8da82c351",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/recorder.py": {
@@ -985,18 +985,18 @@
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/memory-bank/activeContext.md": {
-    "mtime": 1793866703.3718498,
-    "ast_hash": "3f246fdded9fc4c768023599acdbed5b",
+    "mtime": 1795713789.2874577,
+    "ast_hash": "2e3d7c0011dc99284c20e55f7ef535ea",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/memory-bank/decisionLog.md": {
-    "mtime": 1792939922.8003173,
-    "ast_hash": "58017379efd9f5cd43c01660cc6b7b03",
+    "mtime": 1795713789.288458,
+    "ast_hash": "f751a1cab48f2e25139242fbfa25f2b8",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/memory-bank/how_to_run.md": {
-    "mtime": 1792939922.8008287,
-    "ast_hash": "eb7c6bcde86c66003b6bec612f0946c8",
+    "mtime": 1795713789.2894576,
+    "ast_hash": "51cce94b055fdfec41920c42354d4bb0",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/memory-bank/productContext.md": {
@@ -1005,8 +1005,8 @@
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/memory-bank/progress.md": {
-    "mtime": 1793866703.3728497,
-    "ast_hash": "ccbf24ff6ce74836c3505b9f95ccf68c",
+    "mtime": 1795713789.2894576,
+    "ast_hash": "36db4b0f3bd084227212c7e0fface55b",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/memory-bank/projectbrief.md": {
@@ -1060,7 +1060,7 @@
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_playwright_python/generated_task.txt": {
-    "mtime": 1793864795.3822355,
+    "mtime": 1795713886.7880454,
     "ast_hash": "472d4d15942d3e8d193dff6fb4ee53ae",
     "semantic_hash": ""
   },
@@ -1464,11 +1464,6 @@
     "ast_hash": "ddfa3c6ea365fe976325230f1a2fd38c",
     "semantic_hash": ""
   },
-  "WEBAI_AUTOMATION/generated_task.txt": {
-    "mtime": 1792939922.799291,
-    "ast_hash": "601fedf7372433271411718a3885ff5a",
-    "semantic_hash": ""
-  },
   "WEBAI_AUTOMATION/test.txt": {
     "mtime": 1785731761.4158878,
     "ast_hash": "a7545849f7613e78737eefd035987be7",
@@ -1525,8 +1520,8 @@
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_playwright_python/webai_playwright/plugins/hitl_plugin.py": {
-    "mtime": 1792945442.9187956,
-    "ast_hash": "d9c39905e7e1b40a9621ba888c5c0d29",
+    "mtime": 1795713789.2934575,
+    "ast_hash": "ad9b2deb37f49acfc1899549b564c026",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/extracted_data.txt": {
@@ -1690,8 +1685,8 @@
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_playwright_python/skills/skills_registry.json": {
-    "mtime": 1793870845.3843884,
-    "ast_hash": "9f5b715a1bd5b1b4ffd1c1784633749c",
+    "mtime": 1795713789.2914574,
+    "ast_hash": "bf3cf9ea4ea8a303143c284dc063c6b4",
     "semantic_hash": ""
   },
   "WEBAI_AUTOMATION/webai_playwright_python/test_audio_transcriber.py": {
@@ -1817,6 +1812,16 @@
   "graphify-out/converted/extracted_data_59d0f164.md": {
     "mtime": 1795713761.8738222,
     "ast_hash": "e377b28c30bad1a86c6bbdfd813d7141",
+    "semantic_hash": ""
+  },
+  "WEBAI_AUTOMATION/webai_local_server/tests/test_agentic_data_extraction.py": {
+    "mtime": 1795713789.2894576,
+    "ast_hash": "d6254248f6708d88d3c102b5c18e44f5",
+    "semantic_hash": ""
+  },
+  "WEBAI_AUTOMATION/webai_playwright_python/test_agentic_extraction.py": {
+    "mtime": 1795713789.2914574,
+    "ast_hash": "3c11c8b8f0cc20f68f9b7f7fca1be977",
     "semantic_hash": ""
   }
 }
