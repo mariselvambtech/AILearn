@@ -2,7 +2,7 @@
   {
     "skill_name": "sastra courses",
     "slug": "sastra_courses",
-    "description": "list courses in sastra university",
+    "description": "list the courses",
     "skill_file": "sastra_courses.json",
     "recorded_steps": "sastra_courses/recorded_steps.json"
   },
@@ -12,5 +12,12 @@
     "description": "list courses in sastra",
     "skill_file": "updated_sastra_courses.json",
     "recorded_steps": "updated_sastra_courses/recorded_steps.json"
+  },
+  {
+    "skill_name": "sasstra courses",
+    "slug": "sasstra_courses",
+    "description": "list courses",
+    "skill_file": "sasstra_courses.json",
+    "recorded_steps": "sasstra_courses/recorded_steps.json"
   }
 ]

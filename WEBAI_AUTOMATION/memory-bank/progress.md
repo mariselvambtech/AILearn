@@ -6,6 +6,8 @@
 
 | Feature | Status | Phase | Notes |
 |---------|--------|-------|-------|
+| **Phase 29 Hotfix 3: Local Variable os Scoping & Clean TaskDone Exception Propagation** | ✅ Working | Phase 29 Hotfix 3 | Removed inner import os in exec_action resolving UnboundLocalError, added except TaskDone: raise in action execution loops preventing 	ask-complete from mistriggering HITL recovery memories |
+
 | **Phase 29 Hotfix 2: Same-Tab Navigation HITL Panel & Telemetry Persistence + Anti-Scroll Extraction Directives** | ✅ Working | Phase 29 Hotfix 2 | `domcontentloaded` + heartbeat panel re-injection in `hitl_plugin.py`, `recordHITLTelemetry` pre-unload sink & clock normalization, `<header>`/`<nav>` noise stripping via `executeScript` & `_prune_dom_snapshot`, anti-scroll prompt directives & interceptor, and auto-save to `.txt`/`.xlsx`/`.docx` |
 | **Phase 29 Hotfix: 2nd HITL Popup Freeze Fix, Cross-Venv Portability & Static Text Visibility** | ✅ Working | Phase 29 Hotfix | Dynamic `target_obj._webai_hitl_state` binding & stale closure resolution in `hitl_plugin.py`, cross-venv `hitl_memory_store` portability in `local_webai_server_guided.py` & `__init__.py`, and static text DOM pruning + informational prompt bypass |
 | **Simultaneous Voice + Multi-Action HITL Recording & MSSQL Memory Store** | ✅ Working | Phase 29 (Decision 21) | Multi-action event capture (`click`, `type`, `drag_and_drop`, `scroll_page`), active element flush, 350ms wheel accumulation, `AudioAligner` temporal alignment, MSSQL `hitl_learned_memory` table + API endpoints + local JSON fallback, Voice+DOM Self-Healing in Guided/Freeform/SkillExecutor |
