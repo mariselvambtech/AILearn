@@ -2,6 +2,34 @@
 
 > **This file updates most frequently.** It tracks the current session state, recent changes, open questions, and immediate next steps.
 
+## Current Session (2026-11-05)
+
+### Phase 29 Hotfix 4: Dynamic Target Directory Resolution (`D:\output`), Structured Multi-Format Auto-Export & Prompt Awareness (Rule 7 TDVC) ✅
+- **Dynamic Target Directory Resolution & Auto-Export (`local_webai_server_guided.py`):**
+  - Enhanced `_auto_export_summary()` with regex `(?<![A-Za-z0-9])([A-Za-z]:[\\/][^ \t\r\n,\"'<>]*)` to accurately extract target directories (e.g. `D:\output`) without colliding with `https://` protocols.
+  - Automatically creates destination directories and writes structured `.xlsx` (with `Category` and `Programme` tables), `.docx` (with formatted headings), and `.txt` files directly to the user's requested directory.
+  - Filtered out AI disclaimers (e.g. *"requires local file-system access, which is outside the scope of browser automation..."*) from both exported documents and the final client summary payload.
+  - Guarded terminal output with graceful fallback for Windows `cp1252` encoding environments to avoid `UnicodeEncodeError`.
+- **System Prompt & Anti-Disclaimer Guidance:**
+  - Added `LOCAL FILE EXPORT RULE` to `BASE_PROMPT` and the informational subgoal prompt explicitly notifying the LLM planner that local file exports are handled automatically by the backend, instructing it to emit clean extracted content in `summary` without file-system access disclaimers.
+- **TDVC Test Suite & Regression Verification:**
+  - Authored `test_auto_export_summary_custom_folder_and_cleanup` in `webai_local_server/tests/test_done_action_and_export.py` asserting destination folder resolution, multi-format file generation, and disclaimer stripping (3/3 PASS).
+  - Executed full regression suite: 26 passed, 4 skipped across dashboard and action normalization.
+  - Synchronized AST Knowledge Graph (`graphify update .`) and Mermaid diagrams (`scripts/graphify_to_mermaid.py`).
+
+
+### Phase 29 Hotfix 3: Local Variable `os` Scoping & Clean `TaskDone` Exception Propagation in `local_webai_server_guided.py` (Rule 7 TDVC) ✅
+- **Local Variable `os` UnboundLocalError Resolution (`local_webai_server_guided.py`):**
+  - Removed delayed `import os` statements inside `if save_options:` branches (lines 1661 & 1757) within `exec_action()`, allowing all calls (including informational export logging at lines 1889, 1894, 1899) to reference module-level `import os`.
+  - Added docstring and explicit return typing `-> Any:` to `exec_action`.
+- **Clean `TaskDone` Exception Propagation:**
+  - Added `except TaskDone: raise` handlers before generic `except Exception as e:` blocks in `planned` execution (line 2171), `plan` execution (line 2532), and `_try_learned_recovery` (line 1935).
+  - Prevents successful task completions (`action == "done"`) from being misclassified as consecutive action failures and erroneously triggering HITL recovery memories on disconnected WebSockets.
+- **TDVC Test Suite & Regression Verification:**
+  - Authored `webai_local_server/tests/test_done_action_and_export.py` covering extraction helper writes (`.txt`, `.xlsx`, `.docx`) and `TaskDone` exception hierarchy filtering (2/2 PASS).
+  - Executed regression suite: 32 tests passed across action normalization, dashboard, and done export suites.
+  - Synchronized AST Knowledge Graph (`graphify update .`) and Mermaid diagrams (`scripts/graphify_to_mermaid.py`).
+
 ## Current Session (2026-10-24)
 
 ### Phase 29 Hotfix 2: Same-Tab Navigation HITL Panel & Telemetry Persistence + Anti-Scroll Extraction Directives (Rule 7 TDVC, Rule 11) ✅

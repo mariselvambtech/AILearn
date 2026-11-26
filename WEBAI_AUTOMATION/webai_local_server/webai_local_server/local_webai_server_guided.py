@@ -1,4 +1,9 @@
 def _auto_export_summary(task_text: str, summary_text: str, log_prefix: str = "") -> list:
+    """
+    Automatically export extracted informational summary text to Word (.docx), Excel (.xlsx),
+    and Text (.txt) files. Dynamically extracts target directories (e.g. D:\\output) from task_text
+    and strips browser-automation disclaimers.
+    """
     import re
     from pathlib import Path
     if not summary_text:
@@ -8,15 +13,34 @@ def _auto_export_summary(task_text: str, summary_text: str, log_prefix: str = ""
         if not line.strip().lower().startswith("note: i cannot directly")
         and not line.strip().lower().startswith("note: i am a browser automation agent")
         and not line.strip().lower().startswith("note: the visible element list")
+        and not line.strip().lower().startswith("note: the course list has been extracted")
+        and "outside the scope of browser automation" not in line.lower()
+        and "requires local file-system access" not in line.lower()
     ]
     t_low = (task_text or "").lower()
     want_word = any(k in t_low for k in ("word", ".docx", "doc"))
-    want_excel = any(k in t_low for k in ("excel", ".xlsx", "spreadsheet", "sheet"))
-    if not (want_word or want_excel):
+    want_excel = any(k in t_low for k in ("excel", ".xlsx", "spreadsheet", "sheet", "csv"))
+    want_text = any(k in t_low for k in ("text", ".txt", "file", "extract", "store", "save"))
+    if not (want_word or want_excel or want_text):
         return []
-    out_dir = Path(__file__).resolve().parents[2] / "webai_playwright_python"
+
+    # Check for explicitly requested directory (e.g. D:\\output or C:\path)
+    out_dir = None
+    path_match = re.search(r"(?<![A-Za-z0-9])([A-Za-z]:[\\/][^ \t\r\n,\"'<>]*)", task_text or "")
+    if path_match:
+        cand_str = path_match.group(1).rstrip("\\/.")
+        try:
+            cand = Path(cand_str)
+            cand.mkdir(parents=True, exist_ok=True)
+            out_dir = cand
+        except Exception as dir_err:
+            print(f"{log_prefix} ⚠️ Could not create requested directory '{cand_str}': {dir_err}")
+
+    if not out_dir:
+        out_dir = Path(__file__).resolve().parents[2] / "webai_playwright_python"
     if not out_dir.exists():
         out_dir = Path.cwd()
+
     saved = []
     if want_word:
         try:
@@ -35,7 +59,8 @@ def _auto_export_summary(task_text: str, summary_text: str, log_prefix: str = ""
             doc.save(str(docx_path))
             saved.append(str(docx_path))
         except Exception as exc:
-            print(f"{log_prefix} ?? Word export error: {exc}")
+            print(f"{log_prefix} ⚠️ Word export error: {exc}")
+
     if want_excel:
         try:
             import pandas as pd
@@ -56,9 +81,22 @@ def _auto_export_summary(task_text: str, summary_text: str, log_prefix: str = ""
             pd.DataFrame(rows).to_excel(str(xlsx_path), index=False)
             saved.append(str(xlsx_path))
         except Exception as exc:
-            print(f"{log_prefix} ?? Excel export error: {exc}")
+            print(f"{log_prefix} ⚠️ Excel export error: {exc}")
+
+    if want_text:
+        try:
+            txt_path = out_dir / "extracted_data.txt"
+            with open(txt_path, "w", encoding="utf-8") as f:
+                f.write("\n".join(cleaned_lines) + "\n")
+            saved.append(str(txt_path))
+        except Exception as exc:
+            print(f"{log_prefix} ⚠️ Text export error: {exc}")
+
     for f in saved:
-        print(f"{log_prefix} ?? Saved extracted data to: {f}")
+        try:
+            print(f"{log_prefix} 💾 Saved extracted data to: {f}")
+        except UnicodeEncodeError:
+            print(f"{log_prefix} [Saved] Saved extracted data to: {f}")
     return saved
 
 import asyncio
@@ -522,6 +560,8 @@ BASE_PROMPT = (
     "READ-FIRST RULE: For informational queries ('check', 'find out', 'what is', 'read'), inspect visible text and page elements first. If the requested information is already visible, output {\"action\": \"done\", \"summary\": \"<found info>\"} immediately without clicking.\n"
     "DROPDOWN MENU RULE: Recognize dropdown menu toggles (e.g. navigation menu bars, header expanders, hamburger toggles). Target specific child links directly instead of clicking toggles repeatedly.\n"
     "ANTI-LOOP RULE: Never emit the exact same action and target if the previous step did not result in a URL or DOM change. If an action fails or causes no state transition, try an alternative action, scroll, or request_help.\n"
+
+    "LOCAL FILE EXPORT RULE: If the user request asks to save or store extracted data into Excel, Word, or a local folder (e.g. D:\\output), do NOT decline or output disclaimers about browser filesystem access. Simply extract the complete data into the 'summary' field of the 'done' action. The server automatically exports your summary to the requested files and folder.\n"
     "UNIVERSAL WEB SEMANTICS:\n"
     "1. VERBS VS. NOUNS: Navigation links in headers/nav (e.g., 'Cart', 'Menu', 'Login') are NOUNS used for viewing pages. Call-to-action buttons (e.g., 'Add to Cart', 'Buy Now', 'Submit') are VERBS used to execute actions.\n"
     "2. CONTEXT AWARENESS: If the user's intent is to perform an action on a specific item (e.g., purchasing, submitting), prioritize elements located in the 'main' or 'form' containers over elements in 'header' or 'nav'.\n"
@@ -1413,7 +1453,14 @@ async def handle_client(ws: Any):
 
         return act
 
-    async def exec_action(act: Dict[str, Any]) -> None:
+    async def exec_action(act: Dict[str, Any]) -> Any:
+        """
+        Execute an action dictionary produced by the planner or guided step sequence.
+
+        Raises:
+            TaskDone: When the action is 'done' and the task has successfully completed.
+            RuntimeError: For unsupported actions or missing required arguments.
+        """
         nonlocal did_any_action, session_action_history
         url = primary_url or ""
 
@@ -1719,7 +1766,6 @@ async def handle_client(ws: Any):
                 mode = save_options.get('mode', 'append')
                 
                 # Auto-create folder if needed
-                import os
                 if not os.path.exists(folder):
                     try:
                         os.makedirs(folder, exist_ok=True)
@@ -1906,7 +1952,6 @@ async def handle_client(ws: Any):
                 mode = save_options.get('mode', 'append')
                 
                 # Auto-create folder if needed
-                import os
                 if not os.path.exists(folder):
                     try:
                         os.makedirs(folder, exist_ok=True)
@@ -2026,31 +2071,31 @@ async def handle_client(ws: Any):
                 print(f"{log_prefix} 🎉 Informational query completed with summary: {summary}")
                 # Auto-save extraction if requested in task_text or latest_transcription
                 check_str = (task_text + " " + latest_transcription).lower()
-                if any(w in check_str for w in ["excel", "word", "file", "extract"]):
-                    save_payload = {
-                        "name": "Extracted Summary",
-                        "value": summary,
-                        "extract_type": "text",
-                        "url": url,
-                    }
-                    txt_path = "extracted_output.txt"
-                    xlsx_path = "extracted_output.xlsx"
-                    docx_path = "extracted_output.docx"
-                    try:
-                        _save_txt_extraction(txt_path, "new", save_payload)
-                        print(f"{log_prefix} 💾 Saved text summary to: {os.path.abspath(txt_path)}")
-                    except Exception as e_txt:
-                        print(f"{log_prefix} ⚠️ Text save warning: {e_txt}")
-                    try:
-                        _save_excel_extraction(xlsx_path, "new", save_payload)
-                        print(f"{log_prefix} 💾 Saved Excel summary to: {os.path.abspath(xlsx_path)}")
-                    except Exception as e_xl:
-                        print(f"{log_prefix} ⚠️ Excel save warning: {e_xl}")
-                    try:
-                        _save_word_extraction(docx_path, "new", save_payload)
-                        print(f"{log_prefix} 💾 Saved Word summary to: {os.path.abspath(docx_path)}")
-                    except Exception as e_doc:
-                        print(f"{log_prefix} ⚠️ Word save warning: {e_doc}")
+                if any(w in check_str for w in ["excel", "word", "file", "extract", "store", "save"]):
+                    exported_files = _auto_export_summary(task_text, summary, log_prefix=log_prefix)
+                    if exported_files:
+                        export_dir = Path(exported_files[0]).parent
+                        clean_lines = [
+                            l for l in summary.splitlines()
+                            if "outside the scope of browser automation" not in l.lower()
+                            and "requires local file-system access" not in l.lower()
+                        ]
+                        cleaned_summary = "\n".join(clean_lines).strip()
+                        file_names = ", ".join(Path(f).name for f in exported_files)
+                        result_payload["result"] = f"{cleaned_summary}\n\n[Auto-Export]: Extracted data successfully saved to {export_dir} ({file_names})"
+                    else:
+                        save_payload = {
+                            "name": "Extracted Summary",
+                            "value": summary,
+                            "extract_type": "text",
+                            "url": url,
+                        }
+                        try:
+                            _save_txt_extraction("extracted_output.txt", "new", save_payload)
+                            _save_excel_extraction("extracted_output.xlsx", "new", save_payload)
+                            _save_word_extraction("extracted_output.docx", "new", save_payload)
+                        except Exception as save_err:
+                            print(f"{log_prefix} ⚠️ Fallback save warning: {save_err}")
             await send_json(result_payload)
             raise TaskDone()
 
@@ -2082,6 +2127,8 @@ async def handle_client(ws: Any):
                 await exec_action(norm_st)
             print(f"{log_prefix} ✅ Self-healed {len(steps)} steps from learned memory.")
             return True
+        except TaskDone:
+            raise
         except Exception as rec_err:
             print(f"{log_prefix} ⚠️ [HITL Memory Recovery Error]: {rec_err}")
             return False
@@ -2537,6 +2584,8 @@ async def handle_client(ws: Any):
                         + "CRITICAL: The readable body text of the page is already provided below in VISIBLE PAGE TEXT / CONTENT. "
                         + "Do NOT output scroll_page! Read the text below, extract the requested list/information, "
                         + "and immediately return [{\"action\": \"done\", \"summary\": \"<extracted information or answer>\"}]. "
+                        + "If the user requested saving to Excel, Word, or a local folder, do NOT output disclaimers about file access—the system automatically converts and saves your summary to Excel and Word in the user's requested folder. "
+
                         + "You do NOT need to click or scroll if the answer is already visible."
                     )
                 else:

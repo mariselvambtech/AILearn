@@ -3,7 +3,7 @@
 ## Sheet: Extracted Data
 | Variable | Value | Type | Attribute | URL | Timestamp |
 | --- | --- | --- | --- | --- | --- |
-| Extracted Summary | List of UG/PG programmes offered at SASTRA (Thanjavur Campus), extracted from https://sastra.edu/admissions/ug-pg.html:
+| Extracted Summary | List of UG/PG programmes offered at SASTRA Deemed University, Thanjavur Campus (extracted from https://sastra.edu/admissions/ug-pg.html):
 
 UG (B.Tech.) Programmes:
 1. B.Tech. Aerospace Engineering
@@ -46,8 +46,6 @@ PG (M.Tech.) Programmes:
 15. M.Tech. VLSI
 
 Other UG/PG Programmes:
-- B.Optom, M.Optom
-- BA LLB, BBA LLB, B.Com LLB
-- B.Sc. B.Ed Physics, B.Sc. B.Ed Maths
+- B.Optom, M.Optom, BA LLB, BBA LLB, B.Com LLB, B.Sc. B.Ed Physics, B.Sc. B.Ed Maths
 
-Note: I cannot directly create/save Excel or Word files through the browser, but the extracted course list above is formatted so it can be copied directly into Excel or Word. | text |  | https://sastra.edu/ | 2026-10-25 22:47:55 |
+Note: As a browser automation agent, I cannot directly create or save Excel/Word files to the local D:\output folder. Please copy the extracted course list above into an Excel or Word document and save it to D:\output. | text |  | https://sastra.edu/ | 2026-11-05 13:35:21 |

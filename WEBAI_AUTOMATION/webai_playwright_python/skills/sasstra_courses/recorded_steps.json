@@ -1,0 +1,104 @@
+[
+  {
+    "timestamp": 1793865825.1580083,
+    "ts": 1793865825.1580083,
+    "url": "https://sastra.edu/",
+    "action": "open"
+  },
+  {
+    "timestamp": 1793865858.5115402,
+    "ts": 1793865858.5115402,
+    "url": "",
+    "action": "click",
+    "name": "Academics",
+    "locators": [
+      {
+        "type": "role",
+        "value": "link",
+        "name": "Academics"
+      }
+    ],
+    "target": {
+      "by": "role",
+      "role": "link",
+      "name": "Academics",
+      "exact": false
+    }
+  },
+  {
+    "timestamp": 1793865875.572718,
+    "ts": 1793865875.572718,
+    "url": "https://sastra.edu/",
+    "action": "open"
+  },
+  {
+    "timestamp": 1793865881.8675609,
+    "ts": 1793865881.8675609,
+    "url": "",
+    "action": "click",
+    "name": "Admissions",
+    "locators": [
+      {
+        "type": "text",
+        "value": "Admissions"
+      }
+    ],
+    "target": {
+      "by": "text",
+      "text": "Admissions",
+      "exact": true
+    }
+  },
+  {
+    "timestamp": 1793865894.0043542,
+    "ts": 1793865894.0043542,
+    "url": "https://sastra.edu/admissions/ug-pg.html",
+    "action": "scroll_page",
+    "target": "up",
+    "name": "up",
+    "locators": null,
+    "delta_x": 0,
+    "delta_y": -200,
+    "voice_context": "User completed actions in Observer Mode and clicked Resume AI",
+    "full_voice_context": "User completed actions in Observer Mode and clicked Resume AI",
+    "timestamp_ms": 8572
+  },
+  {
+    "timestamp": 1793865894.0093555,
+    "ts": 1793865894.0093555,
+    "url": "https://sastra.edu/admissions/ug-pg.html",
+    "action": "scroll_page",
+    "target": "up",
+    "name": "up",
+    "locators": null,
+    "delta_x": 0,
+    "delta_y": -200,
+    "voice_context": "User completed actions in Observer Mode and clicked Resume AI",
+    "full_voice_context": "User completed actions in Observer Mode and clicked Resume AI",
+    "timestamp_ms": 47163
+  },
+  {
+    "timestamp": 1793865898.5358438,
+    "ts": 1793865898.5358438,
+    "url": "https://sastra.edu/",
+    "action": "open"
+  },
+  {
+    "timestamp": 1793865905.986172,
+    "ts": 1793865905.986172,
+    "url": "",
+    "action": "click",
+    "name": "UG / PG Programmes",
+    "locators": [
+      {
+        "type": "text",
+        "value": "UG / PG Programmes"
+      }
+    ],
+    "target": {
+      "by": "text",
+      "text": "UG / PG Programmes",
+      "exact": false
+    }
+  }
+]
